@@ -2,6 +2,7 @@ import { CSSProperties, JSX } from 'react';
 export interface IconProps {
 	fill?: string;
 	size?: number;
+	id?: string;
 }
 
 interface IconButtonProps
@@ -14,6 +15,7 @@ interface IconButtonProps
 export function IconButton(props: IconButtonProps) {
 	return (
 		<button
+			id={props.id}
 			className='hover:cursor-pointer'
 			{...props}>
 			{props.icon}

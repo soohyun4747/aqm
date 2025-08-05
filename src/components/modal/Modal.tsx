@@ -8,14 +8,21 @@ interface ModalProps extends ModalHeaderProps, ModalFooterProps {
 
 export function Modal(props: ModalProps) {
 	return (
-		<div className='flex flex-col w-[416px] md:w-[640px]'>
-			<ModalHeader />
-			<div className='p-5 border-l border-r border-Gray-200'>{props.content}</div>
-			<ModalFooter
-				firstBtnProps={props.firstBtnProps}
-				secondBtnProps={props.secondBtnProps}
-				thirdBtnProps={props.thirdBtnProps}
-			/>
+		<div className='fixed top-0 left-0 w-[100vw] h-[100vh] bg-black/40 flex items-center justify-center px-[20px] md:px-0 z-[2]'>
+			<div className='flex flex-col w-[416px] md:w-[640px]'>
+				<ModalHeader
+					title={props.title}
+					onClose={props.onClose}
+				/>
+				<div className='p-5 border-l border-r border-Gray-200 bg-white'>
+					{props.content}
+				</div>
+				<ModalFooter
+					firstBtnProps={props.firstBtnProps}
+					secondBtnProps={props.secondBtnProps}
+					thirdBtnProps={props.thirdBtnProps}
+				/>
+			</div>
 		</div>
 	);
 }

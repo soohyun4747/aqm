@@ -8,7 +8,7 @@ export interface ModalFooterProps {
 
 export function ModalFooter(props: ModalFooterProps) {
 	return (
-		<div className='md:w-[640px] w-[416px] p-5 pt-0 flex items-center justify-between border border-Gray-200 border-t-0 rounded-bl-[8px] rounded-br-[8px]'>
+		<div className='md:w-[640px] w-[416px] p-5 pt-0 flex items-center justify-between border border-Gray-200 border-t-0 rounded-bl-[8px] rounded-br-[8px] bg-white'>
 			<div>
 				{props.thirdBtnProps && (
 					<Button

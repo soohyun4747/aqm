@@ -86,6 +86,13 @@
 		font-weight: 600;
 		line-height: 24px;
 	}
+	.heading-sm {
+		font-family: Pretendard;
+		font-size: 18px;
+		font-style: normal;
+		font-weight: 600;
+		line-height: 22px;
+	}
 
 	.body-lg-semibold {
 		font-family: Pretendard;

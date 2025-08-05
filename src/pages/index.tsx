@@ -5,6 +5,7 @@ import { ButtonLg } from '@/components/buttons/ButtonLg';
 import { ButtonSm } from '@/components/buttons/ButtonSm';
 import { CalendarTopbar } from '@/components/CalendarTopbar';
 import { Checkbox } from '@/components/Checkbox';
+import { GNB } from '@/components/GNB';
 import { Modal } from '@/components/modal/Modal';
 import { Radio } from '@/components/Radio';
 
@@ -124,7 +125,7 @@ function MainPage() {
 				/>
 			</div>
 			<CalendarTopbar />
-			<Modal
+			{/* <Modal
 				content={<p>hello</p>}
 				firstBtnProps={{ children: 'close' }}
 				secondBtnProps={{ children: 'hello' }}
@@ -134,7 +135,8 @@ function MainPage() {
 				firstBtnProps={{ children: 'close' }}
 				secondBtnProps={{ children: 'hello' }}
 				thirdBtnProps={{ children: 'cancel' }}
-			/>
+			/> */}
+			<GNB/>
 		</div>
 	);
 }
