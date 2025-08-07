@@ -4,7 +4,7 @@ import { Popover } from './Popover';
 import { Building } from './icons/Building';
 import { Clock } from './icons/Clock';
 
-const serviceNames = {
+export const serviceNames = {
 	aqm: 'AQM 검사',
 	hepa: 'HEPA 필터 교체',
 	voc: 'VOC 필터 교체',
@@ -27,11 +27,13 @@ function NotiCount({ count, id }: { count: number; id: string }) {
 
 interface Notification {
 	type: 'request' | 'cancel';
-	service: 'aqm' | 'hepa' | 'voc' | 'as';
+	service: ServiceType;
 	notifiedDateTime: Date;
 	subject: string;
 	dateTime: Date;
 }
+
+export type ServiceType = 'aqm' | 'hepa' | 'voc' | 'as';
 
 export const NotificationBell = () => {
 	//notis는 global state로 관리
@@ -183,7 +185,9 @@ export const NotificationListItem = ({
 	return (
 		<div className='border border-Gray-200 rounded-[8px] bg-Gray-50 p-4 flex flex-col gap-[8px]'>
 			<div className='flex items-center justify-between'>
-				<p className='body-md-medium md:body-lg-medium text-Gray-900'>{title}</p>
+				<p className='body-md-medium md:body-lg-medium text-Gray-900'>
+					{title}
+				</p>
 				<p className='body-sm-regular md:body-md-regular text-Gray-500'>
 					{getRelativeTime(notifiedDateTime)}
 				</p>
@@ -194,7 +198,9 @@ export const NotificationListItem = ({
 						size={12}
 						fill='#6B7280'
 					/>
-					<p className='body-sm-regular md:body-md-regular text-Gray-500'>{subject}</p>
+					<p className='body-sm-regular md:body-md-regular text-Gray-500'>
+						{subject}
+					</p>
 				</div>
 				<div className='flex items-center gap-1'>
 					<Clock

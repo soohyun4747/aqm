@@ -6,6 +6,8 @@ import { ButtonSm } from '@/components/buttons/ButtonSm';
 import { CalendarTopbar } from '@/components/CalendarTopbar';
 import { Checkbox } from '@/components/Checkbox';
 import { GNB } from '@/components/GNB';
+import { Menu } from '@/components/icons/Menu';
+import { InputBox } from '@/components/InputBox';
 import { Modal } from '@/components/modal/Modal';
 import { Radio } from '@/components/Radio';
 
@@ -137,6 +139,7 @@ function MainPage() {
 				thirdBtnProps={{ children: 'cancel' }}
 			/> */}
 			<GNB/>
+			<InputBox label='first name' desc='write your first name'/>
 		</div>
 	);
 }

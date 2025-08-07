@@ -122,6 +122,13 @@
 		font-weight: 500;
 		line-height: 18px;
 	}
+	.body-md-regular {
+		font-family: Pretendard;
+		font-size: 14px;
+		font-style: normal;
+		font-weight: 400;
+		line-height: 18px;
+	}
 	.body-md-underline {
 		font-family: Pretendard;
 		font-size: 14px;
