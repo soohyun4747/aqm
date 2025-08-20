@@ -3,6 +3,7 @@ import { ButtonGroup } from '@/components/ButtonGroup';
 import { Button } from '@/components/buttons/Button';
 import { ButtonLg } from '@/components/buttons/ButtonLg';
 import { ButtonSm } from '@/components/buttons/ButtonSm';
+import { Calendar } from '@/components/calendar/Calendar';
 import { CalendarTopbar } from '@/components/CalendarTopbar';
 import { Checkbox } from '@/components/Checkbox';
 import { GNB } from '@/components/GNB';
@@ -13,7 +14,7 @@ import { Radio } from '@/components/Radio';
 
 function MainPage() {
 	return (
-		<div className='flex flex-col gap-4 p-10'>
+		<div className='flex flex-col gap-4 py-10'>
 			<div className='flex gap-2'>
 				<ButtonLg>Button Text</ButtonLg>
 				<ButtonLg variant='primaryOutline'>Button Text</ButtonLg>
@@ -138,8 +139,15 @@ function MainPage() {
 				secondBtnProps={{ children: 'hello' }}
 				thirdBtnProps={{ children: 'cancel' }}
 			/> */}
-			<GNB/>
-			<InputBox label='first name' desc='write your first name'/>
+			<GNB />
+			<InputBox
+				label='first name'
+				desc='write your first name'
+			/>
+			<Calendar
+				year={2025}
+				month={8}
+			/>
 		</div>
 	);
 }

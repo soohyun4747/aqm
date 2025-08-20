@@ -1,22 +1,45 @@
 import { formatToHHMM } from '@/utils/time';
 import { serviceNames, ServiceType } from '../Notification';
+import { isToday } from '@/utils/date';
 
 interface DateSectionProps {
 	value: number;
+	isToday: boolean;
 	schedules: UserSchedule[];
+	disabled?: boolean;
 }
 
 export function DateSection(props: DateSectionProps) {
 	return (
-		<div className='p-2 flex flex-col gap-4'>
-			<p
-				style={{ color: '#111928' }}
-				className='body-lg-medium'>
-				{props.value}
-			</p>
-			<div className='flex flex-col gap-2'>
+		<div
+			style={{ background: props.disabled ? '#F9FAFB' : 'white' }}
+			className='p-2 flex flex-col gap-4 h-[60px] md:h-[192px] flex-1 border-b border-r border-Gray-100'>
+			<div
+				style={{
+					background: props.isToday ? '#FF5A1F' : 'transparent',
+				}}
+				className='px-1.5 rounded-full w-fit'>
+				<p
+					style={{
+						color: props.isToday
+							? 'white'
+							: props.disabled
+							? '#6B7280'
+							: '#111928',
+					}}
+					className='body-md-medium md:body-lg-medium w-fit'>
+					{props.value}
+				</p>
+			</div>
+			<div className='flex md:flex-col md:gap-2'>
 				{props.schedules.map((schedule) => (
-					<DateSchedule {...schedule} />
+					<>
+						{schedule.scheduleType === 'requested' ? (
+							<RequestedSchedule {...schedule} />
+						) : (
+							<ConfirmedSchedule {...schedule} />
+						)}
+					</>
 				))}
 			</div>
 		</div>
@@ -26,13 +49,27 @@ export function DateSection(props: DateSectionProps) {
 interface UserSchedule {
 	date: Date;
 	serviceType: ServiceType;
+	scheduleType: ScheduleType;
 }
 
-const DateSchedule = ({ date, serviceType }: UserSchedule) => {
+export type ScheduleType = 'confirmed' | 'requested';
+
+const RequestedSchedule = ({ date, serviceType }: UserSchedule) => {
 	return (
-		<div className='px-2 py-1 flex items-center gap-2 rounded-[8px]'>
+		<div className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Orange-100'>
 			<OrangeDonut />
-			<p className='body-md-medium text-Orange-800 overflow-hidden text-ellipsis'>
+			<p className='hidden md:block body-md-medium text-Orange-800'>
+				{formatToHHMM(date)} {serviceNames[serviceType]}
+			</p>
+		</div>
+	);
+};
+
+const ConfirmedSchedule = ({ date, serviceType }: UserSchedule) => {
+	return (
+		<div className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Green-100'>
+			<GreenCircle />
+			<p className='hidden md:block body-md-medium text-Green-800'>
 				{formatToHHMM(date)} {serviceNames[serviceType]}
 			</p>
 		</div>
@@ -51,8 +88,14 @@ const OrangeDonut = () => {
 				cx='4'
 				cy='4'
 				r='3.5'
-				stroke='#8A2C0D'
+				className='stroke-[#FF5A1F] md:stroke-[#8A2C0D]'
 			/>
 		</svg>
+	);
+};
+
+const GreenCircle = () => {
+	return (
+		<div className='rounded-full size-[8px] bg-[#0E9F6E] md:bg-[#03543F]'/>
 	);
 };
