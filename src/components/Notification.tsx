@@ -3,13 +3,7 @@ import { Bell } from './icons/Bell';
 import { Popover } from './Popover';
 import { Building } from './icons/Building';
 import { Clock } from './icons/Clock';
-
-export const serviceNames = {
-	aqm: 'AQM 검사',
-	hepa: 'HEPA 필터 교체',
-	voc: 'VOC 필터 교체',
-	as: '장비 설치/AS',
-};
+import { serviceNames } from './calendar/Shedule';
 
 function NotiCount({ count, id }: { count: number; id: string }) {
 	return (

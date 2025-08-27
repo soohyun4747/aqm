@@ -1,5 +1,8 @@
 import { getMonthGrid, isToday } from '@/utils/date';
 import { DateSection } from './DateSection';
+import { useEffect, useState } from 'react';
+import { ISchedule, Schedule } from './Shedule';
+import { useScreenTypeStore } from '@/stores/screenTypeStore';
 
 const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
@@ -11,50 +14,98 @@ interface CalendarProps {
 const today = new Date();
 
 export function Calendar(props: CalendarProps) {
+	const [selectedDate, setSelectedDate] = useState<Date>();
+	const [selectedDateSchedules, setSelectedDateSchedules] = useState<
+		ISchedule[]
+	>([]); // ISchedule[]
+	const [schedules, setSchedules] = useState<ISchedule[]>([
+		{
+			date: today,
+			serviceType: 'aqm',
+			scheduleType: 'confirmed',
+			companyId: 'a',
+		},
+		{
+			date: today,
+			serviceType: 'hepa',
+			scheduleType: 'requested',
+			companyId: 'a',
+		},
+		{
+			date: today,
+			serviceType: 'hepa',
+			scheduleType: 'requested',
+			companyId: 'a',
+		},
+	]); // ISchedule[]
+
+	const screenType = useScreenTypeStore((state) => state.screenType);
+
+	useEffect(() => {
+		//schedules filtered by selectedDate
+		if (selectedDate) {
+			const filtered = schedules.filter((schedule) => {
+				return (
+					schedule.date.getFullYear() ===
+						selectedDate.getFullYear() &&
+					schedule.date.getMonth() === selectedDate.getMonth() &&
+					schedule.date.getDate() === selectedDate.getDate()
+				);
+			});
+			setSelectedDateSchedules(filtered);
+		} else {
+			setSelectedDateSchedules([]);
+		}
+	}, [selectedDate]);
+
 	return (
-		<div
-			style={{
-				boxShadow:
-					'0 1px 3px 0 rgba(0, 0, 0, 0.10), 0 1px 2px -1px rgba(0, 0, 0, 0.10)',
-			}}
-			className='rounded-[8px]'>
-			<div className='flex items-center'>
-				{weekLabels.map((label, i) => (
-					<DayLabel
-						isFirst={i === 0 ? true : false}
-						isLast={i === weekLabels.length - 1 ? true : false}
-						day={label}
-					/>
-				))}
-			</div>
-			{getMonthGrid(props.year, props.month).map((row) => (
+		<div className='flex flex-col'>
+			<div
+				style={{
+					boxShadow:
+						'0 1px 3px 0 rgba(0, 0, 0, 0.10), 0 1px 2px -1px rgba(0, 0, 0, 0.10)',
+				}}
+				className='rounded-[8px]'>
 				<div className='flex items-center'>
-					{row.map((cell) => (
-						<DateSection
-							value={cell.day}
-							schedules={[
-								{
-									date: today,
-									serviceType: 'aqm',
-									scheduleType: 'confirmed',
-								},
-								{
-									date: today,
-									serviceType: 'hepa',
-									scheduleType: 'requested',
-								},
-								{
-									date: today,
-									serviceType: 'hepa',
-									scheduleType: 'requested',
-								},
-							]}
-							disabled={cell.inCurrentMonth ? false : true}
-							isToday={isToday(cell.date)}
+					{weekLabels.map((label, i) => (
+						<DayLabel
+							isFirst={i === 0 ? true : false}
+							isLast={i === weekLabels.length - 1 ? true : false}
+							day={label}
 						/>
 					))}
 				</div>
-			))}
+				{getMonthGrid(props.year, props.month).map((row) => (
+					<div className='flex items-center'>
+						{row.map((cell) => (
+							<DateSection
+								date={cell.date}
+								value={cell.day}
+								schedules={schedules.filter((schedule) => {
+									return (
+										schedule.date.getFullYear() ===
+											cell.date.getFullYear() &&
+										schedule.date.getMonth() ===
+											cell.date.getMonth() &&
+										schedule.date.getDate() ===
+											cell.date.getDate()
+									);
+								})}
+								disabled={cell.inCurrentMonth ? false : true}
+								selectedDate={selectedDate}
+								onSelectDate={(date) => setSelectedDate(date)}
+							/>
+						))}
+					</div>
+				))}
+			</div>
+			{screenType === 'mobile' && (
+				<div className='p-4 flex flex-col gap-3'>
+					{selectedDateSchedules.map((schedule) => (
+						<Schedule {...schedule} />
+					))}
+				</div>
+			)}
 		</div>
 	);
 }

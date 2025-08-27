@@ -1,31 +1,53 @@
 import { formatToHHMM } from '@/utils/time';
-import { serviceNames, ServiceType } from '../Notification';
-import { isToday } from '@/utils/date';
+import { ISchedule, serviceNames } from './Shedule';
+import { useScreenTypeStore } from '@/stores/screenTypeStore';
+import { areSameDate, isToday } from '@/utils/date';
+import { useState } from 'react';
+import { ScheduleDetailModal } from '../ScheduleDetailModal';
+import { ScheduleEditModal } from '../ScheduleEditModal';
 
 interface DateSectionProps {
+	date: Date;
 	value: number;
-	isToday: boolean;
-	schedules: UserSchedule[];
+	schedules: ISchedule[];
 	disabled?: boolean;
+	selectedDate?: Date;
+	onSelectDate?: (date: Date) => void;
+	onSelectSchedule?: (schedule: ISchedule) => void;
 }
 
 export function DateSection(props: DateSectionProps) {
+	const screenType = useScreenTypeStore((state) => state.screenType);
+
 	return (
 		<div
+			onClick={() => {
+				if (screenType === 'mobile' && props.onSelectDate) {
+					props.onSelectDate(props.date);
+				}
+			}}
 			style={{ background: props.disabled ? '#F9FAFB' : 'white' }}
 			className='p-2 flex flex-col gap-4 h-[60px] md:h-[192px] flex-1 border-b border-r border-Gray-100'>
 			<div
 				style={{
-					background: props.isToday ? '#FF5A1F' : 'transparent',
+					background: isToday(props.date)
+						? '#FF5A1F'
+						: props.selectedDate &&
+						  areSameDate(props.date, props.selectedDate)
+						? 'black'
+						: 'transparent',
 				}}
 				className='px-1.5 rounded-full w-fit'>
 				<p
 					style={{
-						color: props.isToday
-							? 'white'
-							: props.disabled
-							? '#6B7280'
-							: '#111928',
+						color:
+							isToday(props.date) ||
+							(props.selectedDate &&
+								areSameDate(props.date, props.selectedDate))
+								? 'white'
+								: props.disabled
+								? '#6B7280'
+								: '#111928',
 					}}
 					className='body-md-medium md:body-lg-medium w-fit'>
 					{props.value}
@@ -46,33 +68,81 @@ export function DateSection(props: DateSectionProps) {
 	);
 }
 
-interface UserSchedule {
-	date: Date;
-	serviceType: ServiceType;
-	scheduleType: ScheduleType;
-}
-
 export type ScheduleType = 'confirmed' | 'requested';
 
-const RequestedSchedule = ({ date, serviceType }: UserSchedule) => {
+const RequestedSchedule = (schedule: ISchedule) => {
+	const [openDetailModal, setOpenDetailModal] = useState(false);
+	const [openEditModal, setOpenEditModal] = useState(false);
+	const screenType = useScreenTypeStore((state) => state.screenType);
+
 	return (
-		<div className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Orange-100'>
-			<OrangeDonut />
-			<p className='hidden md:block body-md-medium text-Orange-800'>
-				{formatToHHMM(date)} {serviceNames[serviceType]}
-			</p>
-		</div>
+		<>
+			<div
+				onClick={() => {
+					if (screenType === 'pc') {
+						setOpenDetailModal(true);
+					}
+				}}
+				className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Orange-100 hover:cursor-pointer'>
+				<OrangeDonut />
+				<p className='hidden md:block body-md-medium text-Orange-800'>
+					{formatToHHMM(schedule.date)}{' '}
+					{serviceNames[schedule.serviceType]}
+				</p>
+			</div>
+			{openDetailModal && (
+				<ScheduleDetailModal
+					schedule={schedule}
+					onClose={() => setOpenDetailModal(false)}
+					editModalOpen={() => setOpenEditModal(true)}
+				/>
+			)}
+			{openEditModal && (
+				<ScheduleEditModal
+					schedule={schedule}
+					onClose={() => setOpenEditModal(false)}
+					onEdit={() => {}}
+				/>
+			)}
+		</>
 	);
 };
 
-const ConfirmedSchedule = ({ date, serviceType }: UserSchedule) => {
+const ConfirmedSchedule = (schedule: ISchedule) => {
+	const [openDetailModal, setOpenDetailModal] = useState(false);
+	const [openEditModal, setOpenEditModal] = useState(false);
+	const screenType = useScreenTypeStore((state) => state.screenType);
+
 	return (
-		<div className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Green-100'>
-			<GreenCircle />
-			<p className='hidden md:block body-md-medium text-Green-800'>
-				{formatToHHMM(date)} {serviceNames[serviceType]}
-			</p>
-		</div>
+		<>
+			<div
+				onClick={() => {
+					if (screenType === 'pc') {
+						setOpenDetailModal(true);
+					}
+				}}
+				className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Green-100 hover:cursor-pointer'>
+				<GreenCircle />
+				<p className='hidden md:block body-md-medium text-Green-800'>
+					{formatToHHMM(schedule.date)}{' '}
+					{serviceNames[schedule.serviceType]}
+				</p>
+			</div>
+			{openDetailModal && (
+				<ScheduleDetailModal
+					schedule={schedule}
+					onClose={() => setOpenDetailModal(false)}
+					editModalOpen={() => setOpenEditModal(true)}
+				/>
+			)}
+			{openEditModal && (
+				<ScheduleEditModal
+					schedule={schedule}
+					onClose={() => setOpenEditModal(false)}
+					onEdit={() => {}}
+				/>
+			)}
+		</>
 	);
 };
 
@@ -96,6 +166,6 @@ const OrangeDonut = () => {
 
 const GreenCircle = () => {
 	return (
-		<div className='rounded-full size-[8px] bg-[#0E9F6E] md:bg-[#03543F]'/>
+		<div className='rounded-full size-[8px] bg-[#0E9F6E] md:bg-[#03543F]' />
 	);
 };

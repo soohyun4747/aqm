@@ -6,11 +6,14 @@ import { ButtonSm } from '@/components/buttons/ButtonSm';
 import { Calendar } from '@/components/calendar/Calendar';
 import { CalendarTopbar } from '@/components/CalendarTopbar';
 import { Checkbox } from '@/components/Checkbox';
+import { FileUpload } from '@/components/FileUpload';
+import { FileUploadDrop } from '@/components/FileUploadDrop';
 import { GNB } from '@/components/GNB';
 import { Menu } from '@/components/icons/Menu';
 import { InputBox } from '@/components/InputBox';
 import { Modal } from '@/components/modal/Modal';
 import { Radio } from '@/components/Radio';
+import { SearchField } from '@/components/SearchField';
 
 function MainPage() {
 	return (
@@ -148,6 +151,9 @@ function MainPage() {
 				year={2025}
 				month={8}
 			/>
+			<SearchField searchValue={''}/>
+			<FileUploadDrop/>
+			<FileUpload/>
 		</div>
 	);
 }

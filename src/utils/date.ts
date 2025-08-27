@@ -76,3 +76,40 @@ export function isToday(date: Date): boolean {
 		date.getDate() === today.getDate()
 	);
 }
+
+export function formatDate(date: Date) {
+	const year = date.getFullYear();
+	const month = date.getMonth() + 1;
+	const day = date.getDate();
+	return `${year}년 ${month.toString().padStart(2, '0')}월 ${day
+		.toString()
+		.padStart(2, '0')}일`;
+}
+
+export function formatTime(date: Date) {
+	const hours = date.getHours();
+	const minutes = date.getMinutes();
+
+	//오후 2:00 이런 형식으로
+	const period = hours >= 12 ? '오후' : '오전';
+	const formattedHours = hours % 12 === 0 ? 12 : hours % 12;
+	const formattedMinutes = minutes.toString().padStart(2, '0');
+	return `${period} ${formattedHours}:${formattedMinutes}`;
+}
+
+export function formatDateTime(date: Date) {
+	//2025.01.01 오후 2:00와 같은 형식으로
+	const year = date.getFullYear();
+	const month = (date.getMonth() + 1).toString().padStart(2, '0');
+	const day = date.getDate().toString().padStart(2, '0');
+	const time = formatTime(date);
+	return `${year}.${month}.${day} ${time}`;
+}
+
+export function areSameDate(date1: Date, date2: Date): boolean {
+	return (
+		date1.getFullYear() === date2.getFullYear() &&
+		date1.getMonth() === date2.getMonth() &&
+		date1.getDate() === date2.getDate()
+	);
+}
