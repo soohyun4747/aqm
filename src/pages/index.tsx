@@ -12,10 +12,16 @@ import { GNB } from '@/components/GNB';
 import { Menu } from '@/components/icons/Menu';
 import { InputBox } from '@/components/InputBox';
 import { Modal } from '@/components/modal/Modal';
+import { Pagination } from '@/components/datagrid/Pagination';
 import { Radio } from '@/components/Radio';
 import { SearchField } from '@/components/SearchField';
+import { useState } from 'react';
+import { DataGrid } from '@/components/datagrid/DataGrid';
+import { BarChart } from '@/components/BarChart';
 
 function MainPage() {
+	const [page, setPage] = useState(1);
+
 	return (
 		<div className='flex flex-col gap-4 py-10'>
 			<div className='flex gap-2'>
@@ -151,9 +157,83 @@ function MainPage() {
 				year={2025}
 				month={8}
 			/>
-			<SearchField searchValue={''}/>
-			<FileUploadDrop/>
-			<FileUpload/>
+			<SearchField searchValue={''} />
+			<FileUploadDrop />
+			<FileUpload />
+			<DataGrid
+				totalRows={320}
+				pageSize={10}
+				columns={[
+					{ headerName: 'ID', field: 'id', style: { width: 60 } },
+					{ headerName: 'Name', field: 'name' },
+					{ headerName: 'Age', field: 'age' },
+					{ headerName: 'Email', field: 'email' },
+				]}
+				rows={[
+					// {
+					// 	id: 1,
+					// 	name: 'Alice',
+					// 	age: 28,
+					// 	email: 'alice@example.com',
+					// },
+					// { id: 2, name: 'Bob', age: 34, email: 'bob@example.com' },
+					// {
+					// 	id: 3,
+					// 	name: 'Charlie',
+					// 	age: 22,
+					// 	email: 'charlie@example.com',
+					// },
+					// {
+					// 	id: 4,
+					// 	name: 'David',
+					// 	age: 45,
+					// 	email: 'david@example.com',
+					// },
+					// { id: 5, name: 'Eve', age: 31, email: 'eve@example.com' },
+					// {
+					// 	id: 6,
+					// 	name: 'Frank',
+					// 	age: 27,
+					// 	email: 'frank@example.com',
+					// },
+					// {
+					// 	id: 7,
+					// 	name: 'Grace',
+					// 	age: 29,
+					// 	email: 'grace@example.com',
+					// },
+					// {
+					// 	id: 8,
+					// 	name: 'Heidi',
+					// 	age: 36,
+					// 	email: 'heidi@example.com',
+					// },
+					// { id: 9, name: 'Ivan', age: 40, email: 'ivan@example.com' },
+					// {
+					// 	id: 10,
+					// 	name: 'Judy',
+					// 	age: 25,
+					// 	email: 'judy@example.com',
+					// },
+				]}
+				currentPage={1}
+				totalPages={32}
+				onPageChange={(value) => setPage(value)}
+			/>
+			<BarChart
+				safeStandard={'0-50'}
+				warningStandard={'51-100'}
+				dangerStandard={'> 100'}
+				maxValue={180}
+				unit='µg/m³'
+				data={[
+					{ label: 'Location A', value: 30 },
+					{ label: 'Location B', value: 80 },
+					{ label: 'Location C', value: 120 },
+					{ label: 'Location D', value: 60 },
+					{ label: 'Location E', value: 150 },
+				]}
+			/>
 		</div>
 	);
 }
