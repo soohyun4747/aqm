@@ -8,6 +8,7 @@ import { IconButton } from './IconButton';
 import { Menu } from './icons/Menu';
 import { ChevronRight } from './icons/ChevronRight';
 import { useEffect, useState } from 'react';
+import { userTypes, useUserStore } from '@/stores/userStore';
 
 const adminPathTitles: { [key: string]: string } = {
 	'/admin': '캘린더',
@@ -15,14 +16,21 @@ const adminPathTitles: { [key: string]: string } = {
 	'/admin/services': '관리기록',
 };
 
-const pathTitles = {
+const companyPathTitles: { [key: string]: string } = {
 	'/': '캘린더',
+	'/services': '관리기록',
 };
 
 const menuId = 'menu';
 
 export function GNB() {
 	const [menuOpen, setMenuOpen] = useState(false);
+	const user = useUserStore((state) => state.user);
+
+	const pathTitles =
+		user?.userType === userTypes.company
+			? companyPathTitles
+			: adminPathTitles;
 
 	const router = useRouter();
 	const screenType = useScreenTypeStore((state) => state.screenType);
@@ -58,12 +66,11 @@ export function GNB() {
 							width={157.33}
 							height={28}
 						/>
-						{Object.values(adminPathTitles).map((menu) => (
+						{Object.values(pathTitles).map((menu) => (
 							<p
 								style={{
 									color:
-										adminPathTitles[router.pathname] ===
-										menu
+										pathTitles[router.pathname] === menu
 											? '#1C64F2'
 											: '#111928',
 								}}
@@ -97,7 +104,7 @@ export function GNB() {
 							<NotificationMob />
 							<IconButton
 								id={menuId}
-								icon={<Menu id={menuId}/>}
+								icon={<Menu id={menuId} />}
 								onClick={() => setMenuOpen(true)}
 							/>
 							<ProfileInitial
@@ -113,13 +120,12 @@ export function GNB() {
 									'0px 4px 6px -1px rgba(0,0,0,0.1), 0px 2px 4px -2px rgba(0,0,0,0.05)',
 							}}
 							className='flex flex-col bg-white '>
-							{Object.values(adminPathTitles).map((menu, i) => (
+							{Object.values(pathTitles).map((menu, i) => (
 								<>
 									{i !== 0 && (
 										<div className='h-[1px] self-stretch bg-Gray-100' />
 									)}
-									{adminPathTitles[menu] ===
-									router.pathname ? (
+									{pathTitles[menu] === router.pathname ? (
 										<div className='px-4 py-3 items-center justify-between'>
 											<p className='body-md-medium text-Primary-600'>
 												{menu}

@@ -113,3 +113,5 @@ export function areSameDate(date1: Date, date2: Date): boolean {
 		date1.getDate() === date2.getDate()
 	);
 }
+
+export const today = new Date();

@@ -1,239 +1,59 @@
-import { Alert } from '@/components/alert/Alert';
-import { ButtonGroup } from '@/components/ButtonGroup';
-import { Button } from '@/components/buttons/Button';
-import { ButtonLg } from '@/components/buttons/ButtonLg';
-import { ButtonSm } from '@/components/buttons/ButtonSm';
 import { Calendar } from '@/components/calendar/Calendar';
 import { CalendarTopbar } from '@/components/CalendarTopbar';
-import { Checkbox } from '@/components/Checkbox';
-import { FileUpload } from '@/components/FileUpload';
-import { FileUploadDrop } from '@/components/FileUploadDrop';
+import { Card } from '@/components/Card';
 import { GNB } from '@/components/GNB';
-import { Menu } from '@/components/icons/Menu';
-import { InputBox } from '@/components/InputBox';
-import { Modal } from '@/components/modal/Modal';
-import { Pagination } from '@/components/datagrid/Pagination';
-import { Radio } from '@/components/Radio';
-import { SearchField } from '@/components/SearchField';
+import { today } from '@/utils/date';
 import { useState } from 'react';
-import { DataGrid } from '@/components/datagrid/DataGrid';
-import { BarChart } from '@/components/BarChart';
 
 function MainPage() {
-	const [page, setPage] = useState(1);
+	const [year, setYear] = useState(today.getFullYear());
+	const [month, setMonth] = useState(today.getMonth());
 
 	return (
-		<div className='flex flex-col gap-4 py-10'>
-			<div className='flex gap-2'>
-				<ButtonLg>Button Text</ButtonLg>
-				<ButtonLg variant='primaryOutline'>Button Text</ButtonLg>
-				<ButtonLg
-					variant='primaryOutline'
-					disabled>
-					Button Text
-				</ButtonLg>
-				<ButtonLg variant='alternative'>Button Text</ButtonLg>
-				<ButtonLg
-					variant='alternative'
-					disabled>
-					Button Text
-				</ButtonLg>
-				<ButtonLg variant='danger'>Button Text</ButtonLg>
-				<ButtonLg
-					variant='danger'
-					disabled>
-					Button Text
-				</ButtonLg>
-			</div>
-			<div className='flex gap-2'>
-				<Button>Button Text</Button>
-				<Button variant='primaryOutline'>Button Text</Button>
-				<Button
-					variant='primaryOutline'
-					disabled>
-					Button Text
-				</Button>
-				<Button variant='alternative'>Button Text</Button>
-				<Button
-					variant='alternative'
-					disabled>
-					Button Text
-				</Button>
-				<Button variant='danger'>Button Text</Button>
-				<Button
-					variant='danger'
-					disabled>
-					Button Text
-				</Button>
-			</div>
-			<div className='flex gap-2'>
-				<ButtonSm>Button Text</ButtonSm>
-				<ButtonSm variant='primaryOutline'>Button Text</ButtonSm>
-				<ButtonSm
-					variant='primaryOutline'
-					disabled>
-					Button Text
-				</ButtonSm>
-				<ButtonSm variant='alternative'>Button Text</ButtonSm>
-				<ButtonSm
-					variant='alternative'
-					disabled>
-					Button Text
-				</ButtonSm>
-				<ButtonSm variant='danger'>Button Text</ButtonSm>
-				<ButtonSm
-					variant='danger'
-					disabled>
-					Button Text
-				</ButtonSm>
-			</div>
-			<div className='flex gap-2'>
-				<Radio
-					label={'Write label text here'}
-					subLabel='Some helper text here'
-				/>
-				<Radio
-					selected
-					label={'Write label text here'}
-					subLabel='Some helper text here'
-				/>
-				<Radio
-					disabled
-					selected
-					label={'Write label text here'}
-					subLabel='Some helper text here'
-				/>
-			</div>
-			<div className='flex gap-2'>
-				<Checkbox
-					label={'Write label text here'}
-					subLabel='Some helper text here'
-				/>
-				<Checkbox
-					selected
-					label={'Write label text here'}
-					subLabel='Some helper text here'
-				/>
-				<Checkbox
-					disabled
-					selected
-					label={'Write label text here'}
-					subLabel='Some helper text here'
-				/>
-			</div>
-			<div className='flex gap-2'>
-				<ButtonGroup
-					buttons={[
-						{ label: 'Calendar View', id: 'calendar' },
-						{ label: 'List View', id: 'list' },
-					]}
-				/>
-				<ButtonGroup
-					buttons={[
-						{ label: 'Calendar View', id: 'calendar' },
-						{ label: 'List View', id: 'list' },
-					]}
-					selectedId={'calendar'}
-				/>
-			</div>
-			<CalendarTopbar />
-			{/* <Modal
-				content={<p>hello</p>}
-				firstBtnProps={{ children: 'close' }}
-				secondBtnProps={{ children: 'hello' }}
-			/>
-			<Alert
-				content={<p>hello</p>}
-				firstBtnProps={{ children: 'close' }}
-				secondBtnProps={{ children: 'hello' }}
-				thirdBtnProps={{ children: 'cancel' }}
-			/> */}
+		<div className='flex flex-col'>
 			<GNB />
-			<InputBox
-				label='first name'
-				desc='write your first name'
+			<CalendarTopbar
+				year={year}
+				month={month}
+				onClickCalendarView={function (): void {
+					throw new Error('Function not implemented.');
+				}}
+				onClickListView={function (): void {
+					throw new Error('Function not implemented.');
+				}}
+				onClickToday={function (): void {
+					throw new Error('Function not implemented.');
+				}}
+				onClickAddNewSchedule={function (): void {
+					throw new Error('Function not implemented.');
+				}}
+				onClickPrevMonth={function (): void {
+					throw new Error('Function not implemented.');
+				}}
+				onClickNextMonth={function (): void {
+					throw new Error('Function not implemented.');
+				}}
 			/>
-			<Calendar
-				year={2025}
-				month={8}
-			/>
-			<SearchField searchValue={''} />
-			<FileUploadDrop />
-			<FileUpload />
-			<DataGrid
-				totalRows={320}
-				pageSize={10}
-				columns={[
-					{ headerName: 'ID', field: 'id', style: { width: 60 } },
-					{ headerName: 'Name', field: 'name' },
-					{ headerName: 'Age', field: 'age' },
-					{ headerName: 'Email', field: 'email' },
-				]}
-				rows={[
-					// {
-					// 	id: 1,
-					// 	name: 'Alice',
-					// 	age: 28,
-					// 	email: 'alice@example.com',
-					// },
-					// { id: 2, name: 'Bob', age: 34, email: 'bob@example.com' },
-					// {
-					// 	id: 3,
-					// 	name: 'Charlie',
-					// 	age: 22,
-					// 	email: 'charlie@example.com',
-					// },
-					// {
-					// 	id: 4,
-					// 	name: 'David',
-					// 	age: 45,
-					// 	email: 'david@example.com',
-					// },
-					// { id: 5, name: 'Eve', age: 31, email: 'eve@example.com' },
-					// {
-					// 	id: 6,
-					// 	name: 'Frank',
-					// 	age: 27,
-					// 	email: 'frank@example.com',
-					// },
-					// {
-					// 	id: 7,
-					// 	name: 'Grace',
-					// 	age: 29,
-					// 	email: 'grace@example.com',
-					// },
-					// {
-					// 	id: 8,
-					// 	name: 'Heidi',
-					// 	age: 36,
-					// 	email: 'heidi@example.com',
-					// },
-					// { id: 9, name: 'Ivan', age: 40, email: 'ivan@example.com' },
-					// {
-					// 	id: 10,
-					// 	name: 'Judy',
-					// 	age: 25,
-					// 	email: 'judy@example.com',
-					// },
-				]}
-				currentPage={1}
-				totalPages={32}
-				onPageChange={(value) => setPage(value)}
-			/>
-			<BarChart
-				safeStandard={'0-50'}
-				warningStandard={'51-100'}
-				dangerStandard={'> 100'}
-				maxValue={180}
-				unit='µg/m³'
-				data={[
-					{ label: 'Location A', value: 30 },
-					{ label: 'Location B', value: 80 },
-					{ label: 'Location C', value: 120 },
-					{ label: 'Location D', value: 60 },
-					{ label: 'Location E', value: 150 },
-				]}
-			/>
+			<div className='flex gap-4 p-6'>
+				<Calendar
+					year={year}
+					month={month}
+				/>
+				<div className='flex flex-col gap-4'>
+					<Card
+						content={
+							<div className='flex flex-col gap-6'>
+								<p className='text-Gray-900 heading-md'>
+									다가오는 일정
+								</p>
+								<div className='flex flex-col gap-3'>
+									<p></p>
+								</div>
+							</div>
+						}
+					/>
+				</div>
+			</div>
 		</div>
 	);
 }

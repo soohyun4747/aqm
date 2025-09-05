@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react';
 
 interface ButtonGroupProps {
-	buttons: { id: string; label: string }[];
+	buttons: { id: string; label: string, onClick?: () => void}[];
 	selectedId?: string;
 	className?: string;
 	style?: CSSProperties;

@@ -1,7 +1,7 @@
 import { Check } from './icons/Check';
 
 interface CheckboxProps {
-	selected?: boolean;
+	checked?: boolean;
 	label: string;
 	subLabel?: string;
 	disabled?: boolean;
@@ -14,7 +14,7 @@ export function Checkbox(props: CheckboxProps) {
 			onClick={props.onClick}
 			className='flex gap-2 hover:cursor-pointer'>
 			<CheckboxButton
-				selected={props.selected}
+				checked={props.checked}
 				disabled={props.disabled}
 			/>
 			<div className='flex flex-col gap-1'>
@@ -26,7 +26,7 @@ export function Checkbox(props: CheckboxProps) {
 				<p
 					style={{ color: props.disabled ? '#9CA3AF' : '#6B7280' }}
 					className='body-sm-regular'>
-					{props.label}
+					{props.subLabel}
 				</p>
 			</div>
 		</div>
@@ -34,20 +34,20 @@ export function Checkbox(props: CheckboxProps) {
 }
 
 const CheckboxButton = ({
-	selected,
+	checked,
 	disabled,
 }: {
-	selected?: boolean;
+	checked?: boolean;
 	disabled?: boolean;
 }) => {
 	return (
 		<div
 			style={{
-				borderWidth: !disabled && selected ? 0 : 0.5,
-				background: !disabled && selected ? '#1A56DB' : '#F9FAFB',
+				borderWidth: !disabled && checked ? 0 : 0.5,
+				background: !disabled && checked ? '#1A56DB' : '#F9FAFB',
 			}}
 			className='rounded-[4px] size-4 border-Gray-300 flex items-center justify-center'>
-			{!disabled && selected && <Check fill='white' size={10} />}
+			{!disabled && checked && <Check fill='white' size={10} />}
 		</div>
 	);
 };

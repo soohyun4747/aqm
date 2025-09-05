@@ -6,7 +6,7 @@ import { useScreenTypeStore } from '@/stores/screenTypeStore';
 
 const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
-interface CalendarProps {
+export interface CalendarProps {
 	year: number;
 	month: number;
 }
@@ -59,7 +59,7 @@ export function Calendar(props: CalendarProps) {
 	}, [selectedDate]);
 
 	return (
-		<div className='flex flex-col'>
+		<div className='flex flex-col flex-1'>
 			<div
 				style={{
 					boxShadow:
