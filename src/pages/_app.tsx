@@ -1,10 +1,19 @@
-import { screenTypes, useScreenTypeStore } from '@/stores/screenTypeStore';
-import '@/styles/globals.css';
+import '@/src/styles/globals.css';
 import { AppProps } from 'next/app';
 import { useEffect } from 'react';
+import { screenTypes, useScreenTypeStore } from '../stores/screenTypeStore';
+import { ICompany, useUserStore } from '../stores/userStore';
+import { fetchProfileWithId } from '../utils/supabse/profile';
+import { fetchCompanyWithCompanyId } from '../utils/supabse/company';
+import { useRouter, usePathname } from 'next/navigation';
+import { fetchSession } from '../utils/supabse/session';
 
 function App({ Component, pageProps }: AppProps) {
 	const setScreenType = useScreenTypeStore((state) => state.setScreenType);
+	const setUser = useUserStore((state) => state.setUser);
+
+	const router = useRouter();
+	const pathname = usePathname();
 
 	useEffect(() => {
 		const checkIsMobile = () => {
@@ -17,6 +26,56 @@ function App({ Component, pageProps }: AppProps) {
 		window.addEventListener('resize', checkIsMobile);
 		return () => window.removeEventListener('resize', checkIsMobile);
 	}, [setScreenType]);
+
+	// ✅ 이미 로그인된 세션이 있는지 체크 → 있으면 프로필/회사 불러와 저장 후 이동
+	useEffect(() => {
+		let ignore = false;
+		(async () => {
+			try {
+				const session = await fetchSession();
+				const authUser = session?.user;
+				if (!authUser) return;
+
+				const profile = await fetchProfileWithId(authUser.id);
+				if (!profile) return;
+
+				let company: ICompany | undefined;
+				if (profile.role === 'company' && profile.company_id) {
+					company = await fetchCompanyWithCompanyId(
+						profile.company_id
+					);
+				}
+
+				if (!ignore) {
+					setUser({
+						id: authUser.id,
+						userType: profile.role,
+						company,
+					});
+
+					// ✅ role과 pathname 기준으로 라우팅 분기
+					if (
+						profile.role === 'admin' &&
+						!pathname.startsWith('/admin')
+					) {
+						router.replace('/admin/calendar');
+					} else if (
+						profile.role === 'company' &&
+						pathname.startsWith('/admin')
+					) {
+						router.replace('/calendar');
+					}
+				}
+			} catch (e) {
+				console.error('session bootstrap error:', e);
+				router.replace('/');
+			}
+		})();
+
+		return () => {
+			ignore = true;
+		};
+	}, [setUser, router, pathname]);
 
 	return <Component {...pageProps} />;
 }

@@ -1,10 +1,10 @@
-import { formatToHHMM } from '@/utils/time';
+import { formatToHHMM } from '@/src/utils/time';
 import { ISchedule, serviceNames } from './Shedule';
-import { useScreenTypeStore } from '@/stores/screenTypeStore';
-import { areSameDate, isToday } from '@/utils/date';
+import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
+import { areSameDate, isToday } from '@/src/utils/date';
 import { useState } from 'react';
-import { ScheduleDetailModal } from '../ScheduleDetailModal';
-import { ScheduleEditModal } from '../ScheduleEditModal';
+import { ScheduleDetailModal } from '../modals/ScheduleDetailModal';
+import { ScheduleEditModal } from '../modals/ScheduleEditModal';
 
 interface DateSectionProps {
 	date: Date;

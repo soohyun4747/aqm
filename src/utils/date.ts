@@ -115,3 +115,10 @@ export function areSameDate(date1: Date, date2: Date): boolean {
 }
 
 export const today = new Date();
+
+export function monthRangeISO(year: number, month1to12: number) {
+	const from = new Date(Date.UTC(year, month1to12 - 1, 1));
+	const toExcl = new Date(Date.UTC(year, month1to12, 1)); // 다음달 1일
+	const toISO = (d: Date) => d.toISOString().slice(0, 10); // YYYY-MM-DD
+	return { from: toISO(from), toExclusive: toISO(toExcl) };
+}

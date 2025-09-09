@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Clock } from './icons/Clock';
-import { formatTime } from '@/utils/date';
+import { formatTime } from '@/src/utils/date';
 
 interface TimePickerProps {
 	date: Date;

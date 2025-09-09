@@ -2,22 +2,22 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { NotificationBell } from './Notification';
 import { ProfileInitial } from './ProfileInitial';
-import { screenTypes, useScreenTypeStore } from '@/stores/screenTypeStore';
+import { screenTypes, useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { NotificationMob } from './NotificationMob';
 import { IconButton } from './IconButton';
 import { Menu } from './icons/Menu';
 import { ChevronRight } from './icons/ChevronRight';
 import { useEffect, useState } from 'react';
-import { userTypes, useUserStore } from '@/stores/userStore';
+import { userTypes, useUserStore } from '@/src/stores/userStore';
 
 const adminPathTitles: { [key: string]: string } = {
-	'/admin': '캘린더',
+	'/admin/calendar': '캘린더',
 	'/admin/users': '고객목록',
 	'/admin/services': '관리기록',
 };
 
 const companyPathTitles: { [key: string]: string } = {
-	'/': '캘린더',
+	'/calendar': '캘린더',
 	'/services': '관리기록',
 };
 
@@ -66,8 +66,11 @@ export function GNB() {
 							width={157.33}
 							height={28}
 						/>
-						{Object.values(pathTitles).map((menu) => (
+						{Object.values(pathTitles).map((menu, i) => (
 							<p
+								onClick={() =>
+									router.push(Object.keys(pathTitles)[i])
+								}
 								style={{
 									color:
 										pathTitles[router.pathname] === menu

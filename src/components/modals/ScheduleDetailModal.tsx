@@ -1,6 +1,6 @@
-import { formatDateTime } from '@/utils/date';
-import { ISchedule, serviceNames } from './calendar/Shedule';
-import { Modal } from './modal/Modal';
+import { formatDateTime } from '@/src/utils/date';
+import { ISchedule, serviceNames } from '../calendar/Shedule';
+import { Modal } from '../modal/Modal';
 
 export const ScheduleDetailModal = (props: {
 	schedule: ISchedule;

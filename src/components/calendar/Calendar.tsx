@@ -1,14 +1,15 @@
-import { getMonthGrid, isToday } from '@/utils/date';
+import { getMonthGrid, isToday } from '@/src/utils/date';
 import { DateSection } from './DateSection';
 import { useEffect, useState } from 'react';
 import { ISchedule, Schedule } from './Shedule';
-import { useScreenTypeStore } from '@/stores/screenTypeStore';
+import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 
 const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 
 export interface CalendarProps {
 	year: number;
 	month: number;
+	schedules: ISchedule[]
 }
 
 const today = new Date();
@@ -17,34 +18,14 @@ export function Calendar(props: CalendarProps) {
 	const [selectedDate, setSelectedDate] = useState<Date>();
 	const [selectedDateSchedules, setSelectedDateSchedules] = useState<
 		ISchedule[]
-	>([]); // ISchedule[]
-	const [schedules, setSchedules] = useState<ISchedule[]>([
-		{
-			date: today,
-			serviceType: 'aqm',
-			scheduleType: 'confirmed',
-			companyId: 'a',
-		},
-		{
-			date: today,
-			serviceType: 'hepa',
-			scheduleType: 'requested',
-			companyId: 'a',
-		},
-		{
-			date: today,
-			serviceType: 'hepa',
-			scheduleType: 'requested',
-			companyId: 'a',
-		},
-	]); // ISchedule[]
+	>([]);
 
 	const screenType = useScreenTypeStore((state) => state.screenType);
 
 	useEffect(() => {
 		//schedules filtered by selectedDate
 		if (selectedDate) {
-			const filtered = schedules.filter((schedule) => {
+			const filtered = props.schedules.filter((schedule) => {
 				return (
 					schedule.date.getFullYear() ===
 						selectedDate.getFullYear() &&
@@ -81,7 +62,7 @@ export function Calendar(props: CalendarProps) {
 							<DateSection
 								date={cell.date}
 								value={cell.day}
-								schedules={schedules.filter((schedule) => {
+								schedules={props.schedules.filter((schedule) => {
 									return (
 										schedule.date.getFullYear() ===
 											cell.date.getFullYear() &&

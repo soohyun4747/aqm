@@ -1,15 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Badge } from '../Badge';
 import { Button } from '../buttons/Button';
-import { Dropdown } from '../Dropdown';
 import { Clock } from '../icons/Clock';
-import { Modal } from '../modal/Modal';
-import { ServiceType } from '../Notification';
 import { ScheduleType } from './DateSection';
-import { DatePicker } from '../DatePicker';
-import { TimePicker } from '../TimePicker';
-import { InputBox } from '../InputBox';
-import { ScheduleEditModal } from '../ScheduleEditModal';
+import { ScheduleEditModal } from '../modals/ScheduleEditModal';
+import { ServiceType } from '@/src/pages/admin/users/edit';
 
 export interface ISchedule {
 	date: Date;
@@ -26,9 +21,19 @@ export const serviceNames: { [key: string]: string } = {
 	as: '장비 설치/AS',
 };
 
+export const getServiceDropdownOptions = () => {
+	const options = Object.keys(serviceNames).map((serviceId) => ({
+		label: serviceNames[serviceId],
+		value: serviceId,
+	}));
+	options.unshift({ label: '서비스 선택', value: '' });
+
+	return options;
+};
+
 export function Schedule(props: ISchedule) {
 	const [openEditModal, setOpenEditModal] = useState(false);
-    const [openDetailModal, setOpenDetailModal] = useState(false);
+	const [openDetailModal, setOpenDetailModal] = useState(false);
 
 	return (
 		<>

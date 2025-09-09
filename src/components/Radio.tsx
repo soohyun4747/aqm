@@ -24,7 +24,7 @@ export function Radio(props: RadioProps) {
 				<p
 					style={{ color: props.disabled ? '#9CA3AF' : '#6B7280' }}
 					className='body-sm-regular'>
-					{props.label}
+					{props.subLabel}
 				</p>
 			</div>
 		</div>

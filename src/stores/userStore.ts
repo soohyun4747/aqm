@@ -8,22 +8,22 @@ export const userTypes = {
 export type UserType = (typeof userTypes)[keyof typeof userTypes];
 
 interface UserStore {
-	user: User | undefined;
-	setUser: (value: User | undefined) => void;
+	user: IUser | undefined;
+	setUser: (value: IUser | undefined) => void;
 }
 
-export interface User {
+export interface IUser {
 	id: string;
 	userType: UserType;
-	company: Company | null;
+	company: ICompany | undefined;
 }
 
-export interface Company {
+export interface ICompany {
   id: string;
   name: string;
-  phone?: string;
-  email?: string;
-  address?: string;
+  phone: string;
+  email: string;
+  address: string;
   floorImagePath?: string;
 }
 

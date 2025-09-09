@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { Calendar } from './icons/Calendar';
-import { formatDate } from '@/utils/date';
+import { formatDate } from '@/src/utils/date';
 
 interface DatePickerProps {
 	date: Date;

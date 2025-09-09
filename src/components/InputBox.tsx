@@ -1,4 +1,4 @@
-import { JSX } from 'react';
+import { CSSProperties, JSX } from 'react';
 import { IconButton } from './IconButton';
 import { Close } from './icons/Close';
 
@@ -7,15 +7,19 @@ interface InputBoxProps {
 	label?: string;
 	desc?: string;
 	icon?: JSX.Element;
+	style?: CSSProperties;
+	className?: string;
 	onDelete?: () => void;
 }
 
 export function InputBox(props: InputBoxProps) {
 	return (
-		<div className='flex flex-col gap-2'>
+		<div
+			style={props.style}
+			className={`flex flex-col gap-2 ${props.className}`}>
 			<p className='body-md-medium text-Gray-900'>{props.label}</p>
 			<div className='flex items-center justify-between px-4 py-2 border border-Gray-300 rounded-[8px] bg-Gray-50'>
-				<div className='flex items-center gap-2.5 md:w-[364px] w-full'>
+				<div className='flex items-center gap-2.5 w-full'>
 					{props.icon}
 					<input
 						{...props.inputAttr}
@@ -34,7 +38,9 @@ export function InputBox(props: InputBoxProps) {
 					/>
 				)}
 			</div>
-			{props.desc && <p className='body-md-regular text-Gray-500'>{props.desc}</p>}
+			{props.desc && (
+				<p className='body-md-regular text-Gray-500'>{props.desc}</p>
+			)}
 		</div>
 	);
 }

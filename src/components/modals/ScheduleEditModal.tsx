@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
-import { ISchedule, serviceNames } from './calendar/Shedule';
-import { Dropdown } from './Dropdown';
-import { Modal } from './modal/Modal';
-import { DatePicker } from './DatePicker';
-import { TimePicker } from './TimePicker';
-import { InputBox } from './InputBox';
-import { ServiceType } from './Notification';
+import { ISchedule, getServiceDropdownOptions } from '../calendar/Shedule';
+import { Dropdown } from '../Dropdown';
+import { Modal } from '../modal/Modal';
+import { DatePicker } from '../DatePicker';
+import { TimePicker } from '../TimePicker';
+import { InputBox } from '../InputBox';
+import { ServiceType } from '@/src/pages/admin/users/edit';
 
 export function ScheduleEditModal(props: {
 	schedule: ISchedule;
@@ -14,19 +14,7 @@ export function ScheduleEditModal(props: {
 }) {
 	const [date, setDate] = useState(props.schedule.date);
 	const [serviceType, setServiceType] = useState(props.schedule.serviceType);
-	const [scheduleType, setScheduleType] = useState(
-		props.schedule.scheduleType
-	);
 	const [memo, setMemo] = useState(props.schedule.memo || '');
-
-	const serviceDropdownOptions = useMemo(
-		() =>
-			Object.keys(serviceNames).map((serviceId) => ({
-				label: serviceNames[serviceId],
-				value: serviceId,
-			})),
-		[]
-	);
 
 	return (
 		<Modal
@@ -36,7 +24,7 @@ export function ScheduleEditModal(props: {
 				<div className='flex flex-col gap-4'>
 					<Dropdown
 						label={'서비스'}
-						options={serviceDropdownOptions}
+						options={getServiceDropdownOptions()}
 						value={serviceType}
 						id='service-dropdown'
 						onChange={(newServiceType) => {

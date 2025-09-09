@@ -4,6 +4,7 @@ import { Popover } from './Popover';
 import { Building } from './icons/Building';
 import { Clock } from './icons/Clock';
 import { serviceNames } from './calendar/Shedule';
+import { ServiceType } from '../pages/admin/users/edit';
 
 function NotiCount({ count, id }: { count: number; id: string }) {
 	return (
@@ -26,8 +27,6 @@ interface Notification {
 	subject: string;
 	dateTime: Date;
 }
-
-export type ServiceType = 'aqm' | 'hepa' | 'voc' | 'as';
 
 export const NotificationBell = () => {
 	//notis는 global state로 관리

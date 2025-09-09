@@ -1,4 +1,4 @@
-import { Button, ButtonProps } from '@/components/buttons/Button';
+import { Button, ButtonProps } from '@/src/components/buttons/Button';
 
 export interface ModalFooterProps {
 	firstBtnProps: ButtonProps;

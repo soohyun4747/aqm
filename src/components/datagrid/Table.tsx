@@ -15,7 +15,7 @@ export interface TableHeader {
 
 export function Table(props: TableProps) {
 	return (
-		<table className='w-full'>
+		<table className='w-full h-full'>
 			<thead>
 				<tr className='text-left text-gray-600 text-[14px] font-medium'>
 					{props.columns.map((col, i) => (

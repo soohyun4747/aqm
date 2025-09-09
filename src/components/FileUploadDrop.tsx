@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button } from './buttons/Button';
 import { Upload } from './icons/Upload';
-import { handleFiles } from '@/utils/file';
+import { handleFiles } from '@/src/utils/file';
 
 interface FileUploadDropProps {
-	file?: File;
+	file: File | null;
 	availableTypes?: string[];
 	onFileChange?: (file: File | null) => void;
 }
@@ -17,7 +17,7 @@ export function FileUploadDrop(props: FileUploadDropProps) {
 	// 허용 타입 배열 준비 (.csv, .xlsx 등)
 	const acceptedTypes = props.availableTypes?.length
 		? props.availableTypes
-		: ['.csv', '.xlsx', '.xls'];
+		: ['.csv', '.xlsx', '.xls'];	
 
 	const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
 		e.preventDefault();
@@ -91,7 +91,7 @@ export function FileUploadDrop(props: FileUploadDropProps) {
 				<input
 					ref={inputRef}
 					type='file'
-					accept='.csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel'
+					accept={acceptedTypes.join(',')}
 					style={{ display: 'none' }}
 					onChange={handleChange}
 				/>

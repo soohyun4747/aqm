@@ -1,28 +1,28 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, CSSProperties } from 'react';
 import { ChevronDown } from './icons/ChevronDown';
 
 interface DropdownProps {
 	label: string;
-	options: Options[];
+	options: Option[];
 	value: string;
 	id: string;
+	style?: CSSProperties;
+	className?: string;
 	onChange?: (value: string) => void;
 }
 
-interface Options {
+export interface Option {
 	value: string;
 	label?: string;
 }
 
 export function Dropdown(props: DropdownProps) {
 	const [open, setOpen] = useState(false);
+	const [direction, setDirection] = useState<'up' | 'down'>('down'); // ✅ 방향 상태
 	const dropdownRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		// Add click listener to the document
 		document.addEventListener('click', handleClickOutside);
-
-		// Cleanup the listener on component unmount
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
 		};
@@ -30,11 +30,24 @@ export function Dropdown(props: DropdownProps) {
 
 	const handleClickOutside = (e: MouseEvent) => {
 		const target = e.target as HTMLElement | undefined;
-
 		if (target && target.id === props.id) {
+			// 열 때 방향 계산
+			if (dropdownRef.current) {
+				const rect = dropdownRef.current.getBoundingClientRect();
+				const viewportHeight = window.innerHeight;
+				const spaceBelow = viewportHeight - rect.bottom;
+				const spaceAbove = rect.top;
+
+				// 메뉴 높이 예상 (240px)
+				if (spaceBelow < 240 && spaceAbove > spaceBelow) {
+					setDirection('up');
+				} else {
+					setDirection('down');
+				}
+			}
 			setOpen(true);
 		} else {
-			setOpen(false); // Change state when clicking outside
+			setOpen(false);
 		}
 	};
 
@@ -46,16 +59,17 @@ export function Dropdown(props: DropdownProps) {
 	return (
 		<div
 			ref={dropdownRef}
-			className='relative'>
+			style={props.style}
+			className={`relative ${props.className}`}>
 			<div className='flex flex-col gap-2'>
 				<p className='text-Gray-900 body-md-medium'>{props.label}</p>
 				<div
 					id={props.id}
-					className='flex items-center h-[37px] p-2 justify-between self-stretch rounded-[8px] border border-Gray-300 bg-Gray-50 cursor-pointer'
+					className='flex items-center h-[37px] p-2 justify-between rounded-[8px] border border-Gray-300 bg-Gray-50 cursor-pointer'
 					onClick={() => setOpen((prev) => !prev)}>
 					<p
 						id={props.id}
-						className='text-Gray-300 body-md-regular'>
+						className='text-Gray-500 body-md-regular'>
 						{props.options.find((o) => o.value === props.value)
 							?.label || '선택하세요'}
 					</p>
@@ -65,10 +79,15 @@ export function Dropdown(props: DropdownProps) {
 					/>
 				</div>
 			</div>
+
 			{open && (
 				<div
 					style={{ width: '-webkit-fill-available' }}
-					className='absolute left-0 mt-2 z-10'>
+					className={`absolute left-0 z-10 max-h-[240px] overflow-auto ${
+						direction === 'down'
+							? 'mt-2 top-15'
+							: 'mb-2 bottom-9'
+					}`}>
 					<DropdownMenu
 						options={props.options}
 						onChange={handleSelect}
@@ -83,7 +102,7 @@ function DropdownMenu({
 	options,
 	onChange,
 }: {
-	options: Options[];
+	options: Option[];
 	onChange?: (value: string) => void;
 }) {
 	return (

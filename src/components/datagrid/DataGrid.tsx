@@ -7,6 +7,8 @@ interface DataGridProps extends TableProps, PaginationProps {
 	pageSize: number;
 }
 
+export const PAGE_SIZE = 10;
+
 export function DataGrid(props: DataGridProps) {
 	const [currentPage, setCurrentPage] = useState(1);
 	const totalPages = Math.ceil(props.totalRows / props.pageSize);
@@ -15,7 +17,7 @@ export function DataGrid(props: DataGridProps) {
 	const endIdx = Math.min(startIdx + props.pageSize, props.totalRows);
 
 	return (
-		<div className='w-full'>
+		<div className='w-full flex flex-col'>
 			<Table
 				columns={props.columns}
 				rows={props.rows}

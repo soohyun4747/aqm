@@ -5,7 +5,9 @@ import { IconButton } from './IconButton';
 import { ChevronLeft } from './icons/ChevronLeft';
 import { ChevronRight } from './icons/ChevronRight';
 
-interface CalndarTopBarProps extends CalendarProps {
+interface CalndarTopBarProps {
+	year: number;
+	month: number;
 	onClickCalendarView: () => void;
 	onClickListView: () => void;
 	onClickToday: () => void;

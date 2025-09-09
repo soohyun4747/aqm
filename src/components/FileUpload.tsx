@@ -1,4 +1,4 @@
-import { handleFiles } from '@/utils/file';
+import { handleFiles } from '@/src/utils/file';
 import { useRef, useState } from 'react';
 
 interface FileUploadProps {
