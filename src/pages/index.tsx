@@ -8,9 +8,9 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
 import { ICompany, useUserStore } from '@/src/stores/userStore';
-import { fetchLogin } from '@/src/utils/supabse/login';
-import { fetchProfileWithId } from '@/src/utils/supabse/profile';
-import { fetchCompanyWithCompanyId } from '@/src/utils/supabse/company';
+import { fetchLogin } from '@/src/utils/supabase/login';
+import { fetchProfileWithId } from '@/src/utils/supabase/profile';
+import { fetchCompanyWithCompanyId } from '@/src/utils/supabase/company';
 
 export default function LoginPage() {
 	const router = useRouter();

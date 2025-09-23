@@ -1,9 +1,8 @@
 'use client';
 
-import { supabaseClient } from '@/lib/supabase/client';
 import { Button } from '@/src/components/buttons/Button';
 import { Card2 } from '@/src/components/Card2';
-import { Dropdown, Option } from '@/src/components/Dropdown';
+import { Dropdown } from '@/src/components/Dropdown';
 import { FileUploadDrop } from '@/src/components/FileUploadDrop';
 import { GNB } from '@/src/components/GNB';
 import { IconButton } from '@/src/components/IconButton';
@@ -12,9 +11,22 @@ import { Plus } from '@/src/components/icons/Plus';
 import { Trashcan } from '@/src/components/icons/Trashcan';
 import { InputBox } from '@/src/components/InputBox';
 import { ServiceAddModal } from '@/src/components/modals/ServiceAddModal';
-import { useMemo, useState } from 'react';
+import { SavingOverlay } from '@/src/components/SavingOverlay';
+import {
+	IToastMessage,
+	ToastMessage,
+} from '@/src/components/ToastMessage';
+import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
+import { ICompany } from '@/src/stores/userStore';
+import {
+	loadCompanyDetails,
+	saveNewCompany,
+	updateCompany,
+} from '@/src/utils/supabase/company';
+import { useRouter } from 'next/router';
+import { useEffect, useState } from 'react';
 
-interface HEPAFilter {
+export interface IHepaFilter {
 	filterType: HepaFilterType;
 	width: number;
 	height: number;
@@ -41,28 +53,6 @@ export const HepaFilters = {
 
 export type HepaFilterType = (typeof HepaFilters)[keyof typeof HepaFilters];
 
-// function formatMonthLabel(v: string) {
-// 	const [y, m] = v.split('-').map(Number);
-// 	return `${y}년 ${m}월`;
-// }
-// function firstDayOfMonthISO(v: string) {
-// 	return `${v}-01`; // YYYY-MM-01
-// }
-// function genNext12MonthOptions(): Option[] {
-// 	const now = new Date();
-// 	const arr: Option[] = [];
-// 	for (let i = 0; i < 12; i++) {
-// 		const d = new Date(
-// 			Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + i, 1)
-// 		);
-// 		const y = d.getUTCFullYear();
-// 		const m = String(d.getUTCMonth() + 1).padStart(2, '0');
-// 		const value = `${y}-${m}`;
-// 		arr.push({ value, label: formatMonthLabel(value) });
-// 	}
-// 	return arr;
-// }
-
 export default function AdminUsersEditPage() {
 	// 회사 기본 정보
 	const [name, setName] = useState('');
@@ -78,18 +68,62 @@ export default function AdminUsersEditPage() {
 	const [vocQuantity, setVocQuantity] = useState<number>(0);
 
 	// HEPA 필터 목록 (기본 1개)
-	const [hepaFilters, setHepaFilters] = useState<HEPAFilter[]>([
+	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
 		{ filterType: 'hepa', width: 0, height: 0, depth: 0, quantity: 1 },
 	]);
 
 	// 서비스 추가 모달 열기
 	const [serviceAddModalOpen, setServiceAddModalOpen] = useState(false);
 
-	// 드롭다운 옵션(향후 12개월)
-	// const monthOptions = useMemo(() => genNext12MonthOptions(), []);
-
 	// 저장 로딩
 	const [saving, setSaving] = useState(false);
+
+	const [toastMessage, setToastMessage] = useState<IToastMessage>();
+
+	const { company, setCompany } = useSelectedCompanyStore();
+
+	const router = useRouter();
+
+	useEffect(() => {
+		return () => {
+			setCompany(undefined);
+		};
+	}, []);
+
+	useEffect(() => {
+		if (!company) return;
+
+		let cancelled = false;
+		getSetCompanyInfo(company, cancelled);
+
+		return () => {
+			cancelled = true;
+		};
+	}, [company]);
+
+	const getSetCompanyInfo = async (company: ICompany, cancelled: boolean) => {
+		setName(company.name);
+		setPhone(company.phone);
+		setEmail(company.email);
+		setAddress(company.address);
+
+		try {
+			const details = await loadCompanyDetails(
+				company.id,
+				company.floorImagePath
+			);
+			if (cancelled) return;
+
+			setFloorPlanFile(details.floorPlanFile);
+			setAqm(details.aqm);
+			setHepa(details.hepa);
+			setVoc(details.voc);
+			setVocQuantity(details.vocQuantity);
+			setHepaFilters(details.hepaFilters);
+		} catch (e) {
+			console.error('load company details error', e);
+		}
+	};
 
 	// ─────────────────────────────────────────────
 	// 서비스 추가/삭제/필터 조작
@@ -135,7 +169,7 @@ export default function AdminUsersEditPage() {
 		]);
 	};
 
-	const updateHepaFilter = (idx: number, patch: Partial<HEPAFilter>) => {
+	const updateHepaFilter = (idx: number, patch: Partial<IHepaFilter>) => {
 		setHepaFilters((prev) =>
 			prev.map((f, i) => (i === idx ? { ...f, ...patch } : f))
 		);
@@ -145,133 +179,97 @@ export default function AdminUsersEditPage() {
 		setHepaFilters((prev) => prev.filter((_, i) => i !== idx));
 	};
 
+	const isMandatoryInfoFilled = () => {
+		if (name && phone && email && address) {
+			return true;
+		} else {
+			alert('필수 항목들을 모두 채워주세요.');
+			return false;
+		}
+	};
+
 	// ─────────────────────────────────────────────
 	// 저장하기: companies → company_services → hepa_filters
 	// ─────────────────────────────────────────────
-	const handleSave = async () => {
-		try {
-			setSaving(true);
-			const supabase = supabaseClient();
-
-			// (1) 평면도 Storage 업로드 (선택)
-			let floorImagePath: string | null = null;
-			if (floorPlanFile) {
-				const fileName = `${Date.now()}_${floorPlanFile.name}`;
-				const { data: up, error: upErr } = await supabase.storage
-					.from('floor-plans') // ← 버킷 이름(미리 만들기)
-					.upload(fileName, floorPlanFile, { upsert: false });
-				if (upErr) throw upErr;
-				floorImagePath = up?.path ?? null;
-			}
-
-			// (2) 회사 생성
-			const { data: companyRow, error: cErr } = await supabase
-				.from('companies')
-				.insert({
+	const handleNewSave = async () => {
+		if (isMandatoryInfoFilled()) {
+			try {
+				setSaving(true);
+				await saveNewCompany(
+					floorPlanFile,
 					name,
-					phone: phone || null,
-					email: email || null,
-					address: address || null,
-					floor_image_path: floorImagePath,
-				})
-				.select('id')
-				.single();
-			if (cErr) throw cErr;
+					phone,
+					email,
+					address,
+					aqm,
+					hepa,
+					hepaFilters,
+					voc,
+					vocQuantity
+				);
 
-			const companyId = companyRow.id as string;
+				setToastMessage({
+					status: 'confirm',
+					message: '저장되었습니다',
+				});
 
-			// (3) 서비스 생성 (존재하는 것만)
-			// AQM
-			if (aqm) {
-				const { data, error } = await supabase
-					.from('company_services')
-					.insert({
-						company_id: companyId,
-						service_type: 'aqm',
-						// starting_date: firstDayOfMonthISO(aqmStart),
-					})
-					.select('id')
-					.single();
-				if (error) throw error;
+				router.push('/admin/users');
+			} catch (e: any) {
+				console.error(e);
+
+				setToastMessage({
+					status: 'error',
+					message: '저장 중 오류가 발생했습니다',
+				});
+			} finally {
+				setSaving(false);
 			}
+		}
+	};
 
-			// HEPA
-			let hepaServiceId: string | null = null;
-			if (hepa) {
-				const { data, error } = await supabase
-					.from('company_services')
-					.insert({
-						company_id: companyId,
-						service_type: 'hepa',
-						// starting_date: firstDayOfMonthISO(hepaStart),
-					})
-					.select('id')
-					.single();
-				if (error) throw error;
-				hepaServiceId = data!.id;
-
-				// hepa_filters 다건 입력
-				if (hepaFilters.length) {
-					const payload = hepaFilters.map((f) => ({
-						company_id: companyId,
-						company_service_id: hepaServiceId!,
-						filter_type:
-							f.filterType === 'preFrame' ? 'pre' : f.filterType, // DB는 'hepa'|'pre'
-						width: Number(f.width) || 0,
-						height: Number(f.height) || 0,
-						depth: Number(f.depth) || 0,
-						quantity: Number(f.quantity) || 0,
-						// installed_at: firstDayOfMonthISO(hepaStart), // 최초 설치일 = 시작월 1일(편의)
-					}));
-					const { error: hErr } = await supabase
-						.from('hepa_filters')
-						.insert(payload);
-					if (hErr) throw hErr;
-				}
+	const handleUpdate = async () => {
+		if (company) {
+			try {
+				setSaving(true);
+				await updateCompany(
+					company,
+					floorPlanFile,
+					name,
+					phone,
+					email,
+					address,
+					aqm,
+					voc,
+					vocQuantity,
+					hepa,
+					hepaFilters
+				);
+				setToastMessage({
+					status: 'confirm',
+					message: '수정되었습니다',
+				});
+			} catch (e: any) {
+				console.error(e);
+				setToastMessage({
+					status: 'error',
+					message: '수정 중 오류가 발생했습니다',
+				});
+			} finally {
+				setSaving(false);
 			}
-
-			// VOC
-			if (voc) {
-				const { error } = await supabase
-					.from('company_services')
-					.insert({
-						company_id: companyId,
-						service_type: 'voc',
-						// starting_date: firstDayOfMonthISO(vocStart),
-						quantity: vocQuantity || null,
-					});
-				if (error) throw error;
-			}
-
-			// TODO: 'as' 서비스도 UI에 보이면 동일 패턴으로 추가
-
-			alert('저장되었습니다.');
-			// 필요 시 라우팅 이동
-			// router.push('/admin/users');
-		} catch (e: any) {
-			console.error(e);
-			alert(e?.message ?? '저장 중 오류가 발생했습니다.');
-		} finally {
-			setSaving(false);
 		}
 	};
 
 	// 업로드 가능한 파일 타입(이미지)
-	const ACCEPT_TYPES = [
-		'.png',
-		'.jpeg',
-		'.webp',
-		'.svg+xml',
-	];
+	const ACCEPT_TYPES = ['.png', '.jpeg', '.webp', '.svg+xml'];
 
 	return (
 		<div className='flex flex-col bg-Gray-100 min-h-screen'>
 			<GNB />
-
 			<div className='flex justify-between items-center px-6 py-4 bg-white'>
 				<p className='text-Gray-900 heading-md'>새 고객 추가</p>
 				<Button
-					onClick={handleSave}
+					onClick={company ? handleUpdate : handleNewSave}
 					disabled={saving}>
 					{saving ? '저장 중…' : '저장하기'}
 				</Button>
@@ -290,6 +288,7 @@ export default function AdminUsersEditPage() {
 									onChange: (e: any) =>
 										setName(e.target.value),
 								}}
+								isMandatory
 								style={{ flex: 1 }}
 							/>
 							<InputBox
@@ -300,6 +299,7 @@ export default function AdminUsersEditPage() {
 									onChange: (e: any) =>
 										setPhone(e.target.value),
 								}}
+								isMandatory
 								style={{ flex: 1 }}
 							/>
 						</div>
@@ -312,6 +312,7 @@ export default function AdminUsersEditPage() {
 									onChange: (e: any) =>
 										setEmail(e.target.value),
 								}}
+								isMandatory
 								style={{ flex: 1 }}
 							/>
 							<InputBox
@@ -322,6 +323,7 @@ export default function AdminUsersEditPage() {
 									onChange: (e: any) =>
 										setAddress(e.target.value),
 								}}
+								isMandatory
 								style={{ flex: 1 }}
 							/>
 						</div>
@@ -365,17 +367,6 @@ export default function AdminUsersEditPage() {
 											onClick={() => removeService('aqm')}
 										/>
 									</div>
-									{/* <Dropdown
-										label={'시작 월'}
-										options={monthOptions}
-										// 보여주는 라벨은 한글, 내부값은 m(YYYY-MM)
-										value={aqmStart}
-										id={'aqm-start-dropdown'}
-										onChange={(value: string) =>
-											setAqmStart(value)
-										}
-										className={'md:max-w-[360px]'}
-									/> */}
 								</div>
 							)}
 
@@ -422,18 +413,6 @@ export default function AdminUsersEditPage() {
 												}}
 												style={{ flex: 1 }}
 											/>
-
-											{/* <Dropdown
-												label={'시작 월'}
-												options={monthOptions}
-												value={hepaStart}
-												id={`hepa-start-dropdown-${idx}`}
-												onChange={(value: string) =>
-													setHepaStart(value)
-												}
-												style={{ flex: 1 }}
-											/> */}
-
 											<InputBox
 												style={{ flex: 1 }}
 												label='가로(mm)'
@@ -544,17 +523,6 @@ export default function AdminUsersEditPage() {
 										/>
 									</div>
 									<div className='flex items-center gap-3'>
-										{/* <Dropdown
-											label={'시작 월'}
-											options={monthOptions}
-											value={vocStart}
-											id={'voc-start-dropdown'}
-											onChange={(value: string) =>
-												setVocStart(value)
-											}
-											style={{ flex: 1 }}
-										/> */}
-
 										<InputBox
 											style={{ flex: 1 }}
 											label='가로(mm)'
@@ -621,6 +589,14 @@ export default function AdminUsersEditPage() {
 					onCancel={() => setServiceAddModalOpen(false)}
 				/>
 			)}
+			{toastMessage && (
+				<ToastMessage
+					status={toastMessage.status}
+					message={toastMessage.message}
+					setToastMessage={setToastMessage}
+				/>
+			)}
+			{saving && <SavingOverlay />}
 		</div>
 	);
 }

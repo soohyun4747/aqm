@@ -49,7 +49,7 @@ export function BarChart(props: BarChartProps) {
 				<div className='flex w-full'>
 					{props.safeStandard && (
 						<div
-							className='flex gap-[6px] p-2 items-center'
+							className='flex flex-1 gap-[6px] p-2 items-center'
 							style={{
 								width: `${getStandardWidth(
 									props.safeStandard,
@@ -70,7 +70,7 @@ export function BarChart(props: BarChartProps) {
 					)}
 					{props.warningStandard && (
 						<div
-							className='flex gap-[6px] p-2 items-center'
+							className='flex flex-1 gap-[6px] p-2 items-center'
 							style={{
 								width: `${getStandardWidth(
 									props.warningStandard,
@@ -91,7 +91,7 @@ export function BarChart(props: BarChartProps) {
 					)}
 					{props.dangerStandard && (
 						<div
-							className='flex gap-[6px] p-2 items-center'
+							className='flex flex-1 gap-[6px] p-2 items-center'
 							style={{
 								width: `${getStandardWidth(
 									props.dangerStandard,

@@ -6,6 +6,7 @@ interface DropdownProps {
 	options: Option[];
 	value: string;
 	id: string;
+	isMandatory?: boolean;
 	style?: CSSProperties;
 	className?: string;
 	onChange?: (value: string) => void;
@@ -62,7 +63,12 @@ export function Dropdown(props: DropdownProps) {
 			style={props.style}
 			className={`relative ${props.className}`}>
 			<div className='flex flex-col gap-2'>
-				<p className='text-Gray-900 body-md-medium'>{props.label}</p>
+				<p className='text-Gray-900 body-md-medium'>
+					{props.label}{' '}
+					{props.isMandatory && (
+						<span className='text-Red-600'>*</span>
+					)}
+				</p>
 				<div
 					id={props.id}
 					className='flex items-center h-[37px] p-2 justify-between rounded-[8px] border border-Gray-300 bg-Gray-50 cursor-pointer'
@@ -84,9 +90,7 @@ export function Dropdown(props: DropdownProps) {
 				<div
 					style={{ width: '-webkit-fill-available' }}
 					className={`absolute left-0 z-10 max-h-[240px] overflow-auto ${
-						direction === 'down'
-							? 'mt-2 top-15'
-							: 'mb-2 bottom-9'
+						direction === 'down' ? 'mt-2 top-15' : 'mb-2 bottom-9'
 					}`}>
 					<DropdownMenu
 						options={props.options}

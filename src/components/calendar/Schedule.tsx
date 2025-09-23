@@ -2,16 +2,18 @@ import { useState } from 'react';
 import { Badge } from '../Badge';
 import { Button } from '../buttons/Button';
 import { Clock } from '../icons/Clock';
-import { ScheduleType } from './DateSection';
+import { ScheduleStatusType } from './DateSection';
 import { ScheduleEditModal } from '../modals/ScheduleEditModal';
-import { ServiceType } from '@/src/pages/admin/users/edit';
+import { ServiceType } from '@/src/pages/admin/companies/edit';
 
 export interface ISchedule {
-	date: Date;
+	scheduledAt: Date;
 	serviceType: ServiceType;
-	scheduleType: ScheduleType;
+	status: ScheduleStatusType;
 	memo?: string;
 	companyId: string;
+	createdAt?: Date;
+	updatedAt?: Date;
 }
 
 export const serviceNames: { [key: string]: string } = {
@@ -40,7 +42,7 @@ export function Schedule(props: ISchedule) {
 			<div className='border border-Gray-200 bg-Gray-50 rounded-[8px] flex p-4 justify-between items-end self-stretch'>
 				<div className='flex flex-col gap-3'>
 					<div className='flex items-center gap-2 self-stretch'>
-						{props.scheduleType === 'requested' ? (
+						{props.status === 'requested' ? (
 							<RequestedBadge />
 						) : (
 							<ConfirmedBadge />
@@ -53,7 +55,7 @@ export function Schedule(props: ISchedule) {
 							size={12}
 						/>
 						<p className='body-md-regular text-Gray-500'>
-							{props.date.toLocaleString()}
+							{props.scheduledAt.toLocaleString()}
 						</p>
 					</div>
 				</div>

@@ -1,24 +1,24 @@
 // lib/schedules.client.ts
 import { supabaseClient } from '@/lib/supabase/client';
-import { monthRangeISO } from '../date';
-import { ScheduleType } from '@/src/components/calendar/DateSection';
-import { ISchedule } from '@/src/components/calendar/Shedule';
+import { monthRangeTimestamptz } from '../date';
+import { ISchedule } from '@/src/components/calendar/Schedule';
+import { ScheduleStatusType } from '@/src/components/calendar/DateSection';
 
-export async function fetchSchedulesByMonthClient(
+export async function fetchSchedulesByMonth(
 	year: number,
 	month1to12: number,
-	opts?: { status?: ScheduleType; companyId?: string }
+	opts?: { status?: ScheduleStatusType; companyId?: string }
 ) {
 	try {
-		const { from, toExclusive } = monthRangeISO(year, month1to12);
+		const { from, toExclusive } = monthRangeTimestamptz(year, month1to12);
 		const supabase = supabaseClient();
 
 		let query = supabase
 			.from('schedules')
 			.select('*', { count: 'exact' })
-			.gte('date', from)
-			.lt('date', toExclusive)
-			.order('date', { ascending: true })
+			.gte('scheduled_at', from)
+			.lt('scheduled_at', toExclusive)
+			.order('scheduled_at', { ascending: true })
 			.order('created_at', { ascending: true });
 
 		if (opts?.status) query = query.eq('status', opts.status);
@@ -27,8 +27,18 @@ export async function fetchSchedulesByMonthClient(
 		const { data, error, count } = await query;
 		if (error) throw error;
 
+		const dateFormatData: ISchedule[] = data.map((value) => ({
+			companyId: value.company_id,
+			status: value.status,
+			serviceType: value.service_type,
+			scheduledAt: new Date(value.scheduled_at),
+			memo: value.memo,
+			createdAt: new Date(value.created_at),
+			updatedAt: new Date(value.updated_at),
+		}));
+
 		return {
-			rows: data ?? [],
+			rows: dateFormatData ?? [],
 			total: count ?? 0,
 			range: { from, toExclusive },
 		};
@@ -41,19 +51,15 @@ export async function fetchSchedulesByMonthClient(
 	}
 }
 
-export async function addNewSchedule(schedule: ISchedule) {
+export async function createSchedule(schedule: ISchedule) {
 	try {
 		const supabase = supabaseClient();
-
-		// date -> 'YYYY-MM-DD'
-		const toISODate = (d: string | Date) =>
-			typeof d === 'string' ? d : new Date(d).toISOString().slice(0, 10);
 
 		const payload = {
 			company_id: schedule.companyId, // 회사 선택/연결된 값
 			service_type: schedule.serviceType, // 'aqm' | 'hepa' | 'voc' | 'as'
-			status: schedule.scheduleType, // 'requested' | 'confirmed'
-			date: toISODate(schedule.date), // DATE 컬럼
+			status: schedule.status, // 'requested' | 'confirmed'
+			scheduled_at: schedule.scheduledAt.toISOString(), // DATE 컬럼
 			memo: schedule.memo ?? null, // 선택사항
 		};
 

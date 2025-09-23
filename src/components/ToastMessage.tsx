@@ -5,15 +5,15 @@ import { CircleX } from './icons/CircleX';
 
 export type ToastMessageStatusType = 'error' | 'confirm' | 'warning';
 
-export interface ToastMessageProps {
+export interface IToastMessage {
 	status: ToastMessageStatusType;
 	message: string;
+}
+
+export interface ToastMessageProps extends IToastMessage {
 	setToastMessage: Dispatch<
 		SetStateAction<
-			| {
-					status: ToastMessageStatusType;
-					message: string;
-			  }
+			| IToastMessage
 			| undefined
 		>
 	>;
@@ -38,13 +38,22 @@ export function ToastMessage(props: ToastMessageProps) {
 			props.setToastMessage(undefined);
 		}, 3000);
 
-		return () => clearTimeout(timer); // cleanup
+		return () => clearTimeout(timer);
 	}, [props.message, props.setToastMessage]);
 
 	return (
-		<div className='flex items-center gap-3 min-w-[335px] px-4 py-2'>
+		<div
+			className='
+				fixed 
+				top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2
+				z-[9999]
+				bg-black/70 shadow-lg rounded-md
+				flex items-center gap-3 
+				min-w-[335px] max-w-[90%]
+				px-4 py-2
+			'>
 			<ToastMessageIcon status={props.status} />
-			<p>{props.message}</p>
+			<p className='body-md-regular text-white'>{props.message}</p>
 		</div>
 	);
 }

@@ -3,8 +3,8 @@ import { Bell } from './icons/Bell';
 import { Popover } from './Popover';
 import { Building } from './icons/Building';
 import { Clock } from './icons/Clock';
-import { serviceNames } from './calendar/Shedule';
-import { ServiceType } from '../pages/admin/users/edit';
+import { serviceNames } from './calendar/Schedule';
+import { ServiceType } from '../pages/admin/companies/edit';
 
 function NotiCount({ count, id }: { count: number; id: string }) {
 	return (

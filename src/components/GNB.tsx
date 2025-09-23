@@ -9,19 +9,22 @@ import { Menu } from './icons/Menu';
 import { ChevronRight } from './icons/ChevronRight';
 import { useEffect, useState } from 'react';
 import { userTypes, useUserStore } from '@/src/stores/userStore';
+import { supabaseClient } from '@/lib/supabase/client';
+import { logout } from '../utils/supabase/login';
 
 const adminPathTitles: { [key: string]: string } = {
 	'/admin/calendar': '캘린더',
 	'/admin/users': '고객목록',
-	'/admin/services': '관리기록',
+	'/admin/managementRecords': '관리기록',
 };
 
 const companyPathTitles: { [key: string]: string } = {
 	'/calendar': '캘린더',
-	'/services': '관리기록',
+	'/managementRecords': '관리기록',
 };
 
 const menuId = 'menu';
+const adminEmail = 'cnc@admin.com';
 
 export function GNB() {
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -53,7 +56,7 @@ export function GNB() {
 		} else {
 			setMenuOpen(false); // Change state when clicking outside
 		}
-	};
+	}
 
 	return (
 		<>
@@ -85,11 +88,17 @@ export function GNB() {
 					<div className='flex items-center gap-4'>
 						<NotificationBell />
 						<ProfileInitial
-							email={'soohyun4747@gmail.com'}
+							email={
+								user?.userType === 'admin'
+									? adminEmail
+									: user?.company?.email ?? ''
+							}
 							color={'gray'}
 						/>
 						<div className='w-[1px] h-[32px] bg-Gray-200' />
-						<p className='body-lg-medium text-Primary-600 hover:cursor-pointer'>
+						<p
+							onClick={logout}
+							className='body-lg-medium text-Primary-600 hover:cursor-pointer'>
 							Logout
 						</p>
 					</div>

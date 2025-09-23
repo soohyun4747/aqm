@@ -1,17 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
-import { ISchedule, getServiceDropdownOptions } from '../calendar/Shedule';
+import { useEffect, useState } from 'react';
+import { ISchedule, getServiceDropdownOptions } from '../calendar/Schedule';
 import { Dropdown, Option } from '../Dropdown';
 import { Modal } from '../modal/Modal';
 import { today } from '@/src/utils/date';
 import { DatePicker } from '../DatePicker';
 import { TimePicker } from '../TimePicker';
 import { InputBox } from '../InputBox';
-import { fetchCompanyOptions } from '@/src/utils/supabse/company';
-import { ServiceType } from '@/src/pages/admin/users/edit';
+import { fetchCompanyOptions } from '@/src/utils/supabase/company';
+import { ServiceType } from '@/src/pages/admin/companies/edit';
 
 interface ScheduleAddModalProps {
 	onClose: () => void;
-	onAdd: (schedule: ISchedule) => void;
+	onAdd: (schedule: ISchedule) => Promise<void>;
 }
 
 export function ScheduleAddModal(props: ScheduleAddModalProps) {
@@ -34,54 +34,6 @@ export function ScheduleAddModal(props: ScheduleAddModalProps) {
 		<Modal
 			title='새로운 일정'
 			onClose={props.onClose}
-			content={
-				<div className='flex flex-col gap-4'>
-					<div className='flex self-stretch gap-4'>
-						<Dropdown
-							label={'고객'}
-							options={companyOptions}
-							value={companyId}
-							id='company-dropdown'
-							onChange={(compId) => {
-								setCompanyId(compId);
-							}}
-							style={{ flex: 1 }}
-						/>
-						<Dropdown
-							label={'서비스'}
-							options={getServiceDropdownOptions()}
-							value={serviceType}
-							id='service-dropdown'
-							onChange={(newServiceType) => {
-								setServiceType(newServiceType as ServiceType);
-							}}
-							style={{ flex: 1 }}
-						/>
-					</div>
-					<div className='flex self-stretch gap-4'>
-						<DatePicker
-							date={date}
-							onChange={(newDate) => {
-								setDate(newDate);
-							}}
-						/>
-						<TimePicker
-							date={date}
-							onChange={(newDate) => {
-								setDate(newDate);
-							}}
-						/>
-					</div>
-					<InputBox
-						label='메모'
-						inputAttr={{
-							placeholder: '메모 입력',
-							value: memo,
-							onChange: (e) => setMemo(e.target.value),
-						}}
-					/>
-				</div>
-			}
 			secondBtnProps={{
 				children: '닫기',
 				onClick: props.onClose,
@@ -92,14 +44,60 @@ export function ScheduleAddModal(props: ScheduleAddModalProps) {
 				onClick: () => {
 					if (serviceType && companyId) {
 						props.onAdd({
-							date: date,
+							scheduledAt: date,
 							serviceType: serviceType as ServiceType,
-							scheduleType: 'confirmed',
+							status: 'confirmed',
 							companyId: companyId,
 						});
 					}
 				},
-			}}
-		/>
+			}}>
+			<div className='flex flex-col gap-4'>
+				<div className='flex self-stretch gap-4'>
+					<Dropdown
+						label={'고객'}
+						options={companyOptions}
+						value={companyId}
+						id='company-dropdown'
+						onChange={(compId) => {
+							setCompanyId(compId);
+						}}
+						style={{ flex: 1 }}
+					/>
+					<Dropdown
+						label={'서비스'}
+						options={getServiceDropdownOptions()}
+						value={serviceType}
+						id='service-dropdown'
+						onChange={(newServiceType) => {
+							setServiceType(newServiceType as ServiceType);
+						}}
+						style={{ flex: 1 }}
+					/>
+				</div>
+				<div className='flex self-stretch gap-4'>
+					<DatePicker
+						date={date}
+						onChange={(newDate) => {
+							setDate(newDate);
+						}}
+					/>
+					<TimePicker
+						date={date}
+						onChange={(newDate) => {
+							setDate(newDate);
+						}}
+					/>
+				</div>
+				<InputBox
+					label='메모'
+					inputAttr={{
+						placeholder: '메모 입력',
+						value: memo,
+						onChange: (e) => setMemo(e.target.value),
+					}}
+				/>
+			</div>
+		</Modal>
 	);
 }

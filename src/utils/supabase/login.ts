@@ -9,11 +9,17 @@ export async function fetchLogin(
 	try {
 		const supabase = supabaseClient();
 
+		console.log({email, password});
+		
+
 		const { data: signInData, error } =
 			await supabase.auth.signInWithPassword({
 				email,
 				password,
 			});
+
+		console.log(error);
+		
 		if (error) {
 			setErr(error.message);
 			return;
@@ -29,4 +35,16 @@ export async function fetchLogin(
 		setErr('로그인에 실패하였습니다.');
 		console.error(error);
 	}
+}
+
+export async function logout() {
+	const supabase = supabaseClient();
+	const { error } = await supabase.auth.signOut();
+	if (error) {
+		console.error('로그아웃 실패:', error.message);
+		return false;
+	}
+	// 필요 시 redirect
+	window.location.href = '/';
+	return true;
 }

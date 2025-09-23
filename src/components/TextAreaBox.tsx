@@ -1,19 +1,15 @@
 import { CSSProperties, JSX } from 'react';
-import { IconButton } from './IconButton';
-import { Close } from './icons/Close';
 
-interface InputBoxProps {
-	inputAttr?: React.InputHTMLAttributes<HTMLInputElement>;
+interface TextAreaProps {
+	textareaAttr?: React.TextareaHTMLAttributes<HTMLTextAreaElement>;
 	label?: string;
 	desc?: string;
-	icon?: JSX.Element;
 	style?: CSSProperties;
 	className?: string;
 	isMandatory?: boolean;
-	onDelete?: () => void;
 }
 
-export function InputBox(props: InputBoxProps) {
+export function TextAreaBox(props: TextAreaProps) {
 	return (
 		<div
 			style={props.style}
@@ -23,24 +19,10 @@ export function InputBox(props: InputBoxProps) {
 				{props.isMandatory && <span className='text-Red-600'>*</span>}
 			</p>
 			<div className='flex items-center justify-between px-4 py-2 border border-Gray-300 rounded-[8px] bg-Gray-50'>
-				<div className='flex items-center gap-2.5 w-full'>
-					{props.icon}
-					<input
-						{...props.inputAttr}
-						className='outline-0 body-md-regular w-full'
-					/>
-				</div>
-				{props.onDelete && (
-					<IconButton
-						icon={
-							<Close
-								size={10}
-								fill='#6B7280'
-							/>
-						}
-						onClick={props.onDelete}
-					/>
-				)}
+				<textarea
+					{...props.textareaAttr}
+					className='outline-0 body-md-regular w-full resize-none'
+				/>
 			</div>
 			{props.desc && (
 				<p className='body-md-regular text-Gray-500'>{props.desc}</p>

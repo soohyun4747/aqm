@@ -1,10 +1,14 @@
 import { formatToHHMM } from '@/src/utils/time';
-import { ISchedule, serviceNames } from './Shedule';
+import { ISchedule, serviceNames } from './Schedule';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { areSameDate, isToday } from '@/src/utils/date';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ScheduleDetailModal } from '../modals/ScheduleDetailModal';
 import { ScheduleEditModal } from '../modals/ScheduleEditModal';
+import { ICompany, userTypes, useUserStore } from '@/src/stores/userStore';
+import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
+import { ConfirmedSchedule } from './ConfirmedSchedule';
+import { RequestedSchedule } from './RequestedSchedule';
 
 interface DateSectionProps {
 	date: Date;
@@ -56,10 +60,10 @@ export function DateSection(props: DateSectionProps) {
 			<div className='flex md:flex-col md:gap-2'>
 				{props.schedules.map((schedule) => (
 					<>
-						{schedule.scheduleType === 'requested' ? (
-							<RequestedSchedule {...schedule} />
+						{schedule.status === 'requested' ? (
+							<RequestedSchedule schedule={schedule} />
 						) : (
-							<ConfirmedSchedule {...schedule} />
+							<ConfirmedSchedule schedule={schedule} />
 						)}
 					</>
 				))}
@@ -68,104 +72,5 @@ export function DateSection(props: DateSectionProps) {
 	);
 }
 
-export type ScheduleType = 'confirmed' | 'requested';
+export type ScheduleStatusType = 'confirmed' | 'requested';
 
-const RequestedSchedule = (schedule: ISchedule) => {
-	const [openDetailModal, setOpenDetailModal] = useState(false);
-	const [openEditModal, setOpenEditModal] = useState(false);
-	const screenType = useScreenTypeStore((state) => state.screenType);
-
-	return (
-		<>
-			<div
-				onClick={() => {
-					if (screenType === 'pc') {
-						setOpenDetailModal(true);
-					}
-				}}
-				className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Orange-100 hover:cursor-pointer'>
-				<OrangeDonut />
-				<p className='hidden md:block body-md-medium text-Orange-800'>
-					{formatToHHMM(schedule.date)}{' '}
-					{serviceNames[schedule.serviceType]}
-				</p>
-			</div>
-			{openDetailModal && (
-				<ScheduleDetailModal
-					schedule={schedule}
-					onClose={() => setOpenDetailModal(false)}
-					editModalOpen={() => setOpenEditModal(true)}
-				/>
-			)}
-			{openEditModal && (
-				<ScheduleEditModal
-					schedule={schedule}
-					onClose={() => setOpenEditModal(false)}
-					onEdit={() => {}}
-				/>
-			)}
-		</>
-	);
-};
-
-const ConfirmedSchedule = (schedule: ISchedule) => {
-	const [openDetailModal, setOpenDetailModal] = useState(false);
-	const [openEditModal, setOpenEditModal] = useState(false);
-	const screenType = useScreenTypeStore((state) => state.screenType);
-
-	return (
-		<>
-			<div
-				onClick={() => {
-					if (screenType === 'pc') {
-						setOpenDetailModal(true);
-					}
-				}}
-				className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Green-100 hover:cursor-pointer'>
-				<GreenCircle />
-				<p className='hidden md:block body-md-medium text-Green-800'>
-					{formatToHHMM(schedule.date)}{' '}
-					{serviceNames[schedule.serviceType]}
-				</p>
-			</div>
-			{openDetailModal && (
-				<ScheduleDetailModal
-					schedule={schedule}
-					onClose={() => setOpenDetailModal(false)}
-					editModalOpen={() => setOpenEditModal(true)}
-				/>
-			)}
-			{openEditModal && (
-				<ScheduleEditModal
-					schedule={schedule}
-					onClose={() => setOpenEditModal(false)}
-					onEdit={() => {}}
-				/>
-			)}
-		</>
-	);
-};
-
-const OrangeDonut = () => {
-	return (
-		<svg
-			xmlns='http://www.w3.org/2000/svg'
-			width='8'
-			height='8'
-			viewBox='0 0 8 8'
-			fill='none'>
-			<circle
-				cx='4'
-				cy='4'
-				r='3.5'
-				className='stroke-[#FF5A1F] md:stroke-[#8A2C0D]'
-			/>
-		</svg>
-	);
-};
-
-const GreenCircle = () => {
-	return (
-		<div className='rounded-full size-[8px] bg-[#0E9F6E] md:bg-[#03543F]' />
-	);
-};

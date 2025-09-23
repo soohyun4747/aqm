@@ -6,65 +6,64 @@ import { GNB } from '@/src/components/GNB';
 import { today } from '@/src/utils/date';
 import { useEffect, useMemo, useState } from 'react';
 import {
-	createSchedule,
+	createSchedule as createScheduleApi,
 	fetchSchedulesByMonth,
-} from '../../../utils/supabase/schedule';
-import { ScheduleAddModal } from '../../../components/modals/ScheduleAddModal';
-import {
-	IToastMessage,
-	ToastMessage,
-	ToastMessageStatusType,
-} from '../../../components/ToastMessage';
+} from '../../utils/supabase/schedule';
+import { ScheduleAddModal } from '../../components/modals/ScheduleAddModal';
+import { IToastMessage, ToastMessage } from '../../components/ToastMessage';
+import { supabaseClient } from '@/lib/supabase/client';
+import { IUser, useUserStore } from '@/src/stores/userStore';
+import { User } from '@supabase/supabase-js';
 
 export type ViewType = 'calendar' | 'list';
 
-function AdminCalendarPage() {
+function CompanyCalendarPage() {
+	// month는 0~11로 통일합니다 (JS Date 규약)
 	const [year, setYear] = useState(today.getFullYear());
-	const [month, setMonth] = useState(today.getMonth() + 1);
+	const [month, setMonth] = useState(today.getMonth());
 
 	const [monthSchedules, setMonthSchedules] = useState<ISchedule[]>([]);
-	const [needToSchedules, setNeedToSchedules] = useState<ISchedule[]>([]);
-
 	const [view, setView] = useState<ViewType>('calendar');
-
 	const [scheduleAddModalOpen, setScheduleAddModalOpen] = useState(false);
-
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
+	const user = useUserStore((state) => state.user);
 
 	useEffect(() => {
-		getSetMonthSchedules();
-	}, [year, month]);
-	
-	const getSetMonthSchedules = async () => {
-		const data = await fetchSchedulesByMonth(year, month);
-		setMonthSchedules(data.rows);
+		if (user) {
+			getSetMonthSchedules(user);
+		}
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [year, month, user]);
+
+	const getSetMonthSchedules = async (user: IUser) => {
+		// companyId가 있으면 해당 회사 스코프, 없으면(=관리자) 전체
+		const data = await fetchSchedulesByMonth(year, month, {
+			companyId: user.company?.id,
+		});
+		setMonthSchedules(data.rows ?? []);
 	};
 
-	const requestedSchedules = useMemo(() => {
-		return monthSchedules.filter(
-			(schedule) => schedule.status === 'requested'
-		);
-	}, [monthSchedules]);
-
+	const now = today;
 	const upcomingRequestedSchedules = useMemo(() => {
-		const now = today;
 		const fourWeeksLater = new Date(now);
 		fourWeeksLater.setDate(now.getDate() + 28);
-
-		return requestedSchedules.filter((schedule) => {
-			const scheduleDate = new Date(schedule.scheduledAt);
-			return scheduleDate >= now && scheduleDate <= fourWeeksLater;
+		return monthSchedules.filter((s) => {
+			const d = new Date(s.scheduledAt);
+			return s.status === 'requested' && d >= now && d <= fourWeeksLater;
 		});
-	}, [requestedSchedules]);
+	}, [monthSchedules, now]);
 
 	const confirmedSchedules = useMemo(() => {
-		return monthSchedules.filter(
-			(schedule) => schedule.status === 'confirmed'
-		);
+		return monthSchedules.filter((s) => s.status === 'confirmed');
 	}, [monthSchedules]);
 
-	const addNewSchedule = async (schedule: ISchedule) => {
-		const data: any = await createSchedule(schedule);
+	const addNewSchedule = async (schedule: ISchedule, user: IUser) => {
+		// 회사 사용자라면 company_id를 강제 세팅
+		const payload = user.company
+			? { ...schedule, company_id: user.company.id }
+			: schedule;
+
+		const data: any = await createScheduleApi(payload);
 		if (data?.error) {
 			setToastMessage({
 				message: '스케줄 추가를 실패하였습니다',
@@ -72,15 +71,12 @@ function AdminCalendarPage() {
 			});
 			console.log(data.error);
 		} else {
-			// 같은 달 데이터 리프레시
-			await getSetMonthSchedules();
+			await getSetMonthSchedules(user);
 			setToastMessage({
 				status: 'confirm',
 				message: '스케줄을 생성하였습니다',
 			});
 		}
-
-		// 모달 닫기
 		setScheduleAddModalOpen(false);
 	};
 
@@ -89,12 +85,12 @@ function AdminCalendarPage() {
 			<GNB />
 			<CalendarTopbar
 				year={year}
-				month={month}
+				month={month} // 0~11 전달
 				onClickCalendarView={() => setView('calendar')}
 				onClickListView={() => setView('list')}
 				onClickToday={() => {
 					setYear(today.getFullYear());
-					setMonth(today.getMonth());
+					setMonth(today.getMonth()); // 0~11
 				}}
 				onClickAddNewSchedule={() => setScheduleAddModalOpen(true)}
 				onClickPrevMonth={() => {
@@ -131,14 +127,26 @@ function AdminCalendarPage() {
 							))}
 						</div>
 					</Card>
+
+					<Card>
+						<div className='flex flex-col gap-6'>
+							<p className='text-Gray-900 heading-md'>
+								확정된 일정
+							</p>
+							{confirmedSchedules.map((schedule) => (
+								<Schedule {...schedule} />
+							))}
+						</div>
+					</Card>
 				</div>
 			</div>
-			{scheduleAddModalOpen && (
+
+			{/* {scheduleAddModalOpen && (
 				<ScheduleAddModal
 					onClose={() => setScheduleAddModalOpen(false)}
-					onAdd={addNewSchedule}
+					onAdd={(schedule) => addNewSchedule(schedule, user)}
 				/>
-			)}
+			)} */}
 			{toastMessage && (
 				<ToastMessage
 					status={toastMessage.status}
@@ -150,4 +158,4 @@ function AdminCalendarPage() {
 	);
 }
 
-export default AdminCalendarPage;
+export default CompanyCalendarPage;

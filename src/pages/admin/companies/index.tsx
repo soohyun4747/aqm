@@ -1,10 +1,12 @@
 import { Button } from '@/src/components/buttons/Button';
 import { DataGrid, PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
 import { GNB } from '@/src/components/GNB';
+import { Modal } from '@/src/components/modal/Modal';
 import { SearchField } from '@/src/components/SearchField';
+import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
 import { ICompany } from '@/src/stores/userStore';
-import { fetchCompanies } from '@/src/utils/supabse/company';
+import { deleteCompany, fetchCompanies } from '@/src/utils/supabase/company';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -15,10 +17,9 @@ function AdminUsersPage() {
 
 	const [currentPage, setCurrentPage] = useState(0); // 0-based
 	const [totalRows, setTotalRows] = useState(0);
+	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
-	const [loading, setLoading] = useState(false);
-
-	const setCompany = useSelectedCompanyStore((state) => state.setCompany);
+	const { company, setCompany } = useSelectedCompanyStore();
 	const router = useRouter();
 
 	const totalPages = useMemo(
@@ -31,7 +32,6 @@ function AdminUsersPage() {
 	}, [search]);
 
 	const getSetCompanies = async (page: number) => {
-		setLoading(true);
 		const data = await fetchCompanies(page, search);
 		if (data) {
 			setCompanies(
@@ -46,7 +46,11 @@ function AdminUsersPage() {
 			);
 			setTotalRows(data.count ?? 0);
 		}
-		setLoading(false);
+	};
+
+	const onCloseDeleteModal = () => {
+		setDeleteModalOpen(false);
+		setCompany(undefined);
 	};
 
 	return (
@@ -67,7 +71,9 @@ function AdminUsersPage() {
 								onChange={(e) => setSearch(e.target.value)}
 							/>
 							<Button
-								onClick={() => router.push('/admin/users/edit')}>
+								onClick={() =>
+									router.push('/admin/companies/edit')
+								}>
 								고객 추가
 							</Button>
 						</div>
@@ -84,14 +90,15 @@ function AdminUsersPage() {
 							{
 								field: 'action',
 								headerName: '',
-								render: (row: ICompany) => {
+								style: { width: 60 },
+								render: (value, row: ICompany) => {
 									return (
 										<Button
 											variant='alternative'
 											onClick={() => {
 												setCompany(row);
 												router.push(
-													'/admin/users/edit'
+													'/admin/companies/edit'
 												);
 											}}>
 											Edit
@@ -102,7 +109,8 @@ function AdminUsersPage() {
 							{
 								field: 'action2',
 								headerName: '',
-								render: (row: ICompany) => {
+								style: { width: 120 },
+								render: (value, row: ICompany) => {
 									return (
 										<Button
 											variant='danger'
@@ -119,10 +127,62 @@ function AdminUsersPage() {
 						rows={companies}
 						currentPage={currentPage}
 						totalPages={totalPages}
-						onPageChange={(page: number) => getSetCompanies(page)}
+						onPageChange={(page: number) => {
+							getSetCompanies(page);
+							setCurrentPage(page);
+						}}
 					/>
 				</div>
 			</div>
+			{deleteModalOpen && (
+				<Modal
+					title='고객 삭제'
+					onClose={onCloseDeleteModal}
+					secondBtnProps={{
+						variant: 'alternative',
+						children: '취소',
+						onClick: onCloseDeleteModal,
+					}}
+					firstBtnProps={{
+						variant: 'danger',
+						children: '삭제',
+						onClick: async () => {
+							if (company) {
+								try {
+									await deleteCompany(company.id);
+									onCloseDeleteModal();
+									setToastMessage({
+										status: 'confirm',
+										message: '삭제가 완료되었습니다',
+									});
+									getSetCompanies(currentPage);
+								} catch (e: any) {
+									onCloseDeleteModal();
+									console.error(e?.message);
+									setToastMessage({
+										status: 'error',
+										message: '삭제 중 오류가 발생했습니다',
+									});
+								}
+							}
+						},
+					}}>
+					<p className='body-md-regular text-Gray-900'>
+						고객 "
+						<span className='text-Red-600'>{company?.name}</span>
+						"를 삭제하시겠습니까?
+						<br />
+						관리 기록을 제외한 고객 데이터와 계정이 모두 삭제됩니다.
+					</p>
+				</Modal>
+			)}
+			{toastMessage && (
+				<ToastMessage
+					status={toastMessage.status}
+					message={toastMessage.message}
+					setToastMessage={setToastMessage}
+				/>
+			)}
 		</div>
 	);
 }

@@ -3,10 +3,10 @@ import { AppProps } from 'next/app';
 import { useEffect } from 'react';
 import { screenTypes, useScreenTypeStore } from '../stores/screenTypeStore';
 import { ICompany, useUserStore } from '../stores/userStore';
-import { fetchProfileWithId } from '../utils/supabse/profile';
-import { fetchCompanyWithCompanyId } from '../utils/supabse/company';
+import { fetchProfileWithId } from '../utils/supabase/profile';
+import { fetchCompanyWithCompanyId } from '../utils/supabase/company';
 import { useRouter, usePathname } from 'next/navigation';
-import { fetchSession } from '../utils/supabse/session';
+import { fetchSession } from '../utils/supabase/session';
 
 function App({ Component, pageProps }: AppProps) {
 	const setScreenType = useScreenTypeStore((state) => state.setScreenType);
@@ -34,10 +34,17 @@ function App({ Component, pageProps }: AppProps) {
 			try {
 				const session = await fetchSession();
 				const authUser = session?.user;
-				if (!authUser) return;
+        
+				if (!authUser) {
+					router.replace('/');
+					return;
+				}
 
 				const profile = await fetchProfileWithId(authUser.id);
-				if (!profile) return;
+				if (!profile) {
+					router.replace('/');
+					return;
+				}
 
 				let company: ICompany | undefined;
 				if (profile.role === 'company' && profile.company_id) {

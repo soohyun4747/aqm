@@ -1,7 +1,7 @@
 import { getMonthGrid, isToday } from '@/src/utils/date';
 import { DateSection } from './DateSection';
 import { useEffect, useState } from 'react';
-import { ISchedule, Schedule } from './Shedule';
+import { ISchedule, Schedule } from './Schedule';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 
 const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -9,10 +9,8 @@ const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 export interface CalendarProps {
 	year: number;
 	month: number;
-	schedules: ISchedule[]
+	schedules: ISchedule[];
 }
-
-const today = new Date();
 
 export function Calendar(props: CalendarProps) {
 	const [selectedDate, setSelectedDate] = useState<Date>();
@@ -27,10 +25,11 @@ export function Calendar(props: CalendarProps) {
 		if (selectedDate) {
 			const filtered = props.schedules.filter((schedule) => {
 				return (
-					schedule.date.getFullYear() ===
+					schedule.scheduledAt.getFullYear() ===
 						selectedDate.getFullYear() &&
-					schedule.date.getMonth() === selectedDate.getMonth() &&
-					schedule.date.getDate() === selectedDate.getDate()
+					schedule.scheduledAt.getMonth() ===
+						selectedDate.getMonth() &&
+					schedule.scheduledAt.getDate() === selectedDate.getDate()
 				);
 			});
 			setSelectedDateSchedules(filtered);
@@ -56,29 +55,37 @@ export function Calendar(props: CalendarProps) {
 						/>
 					))}
 				</div>
-				{getMonthGrid(props.year, props.month).map((row) => (
-					<div className='flex items-center'>
-						{row.map((cell) => (
-							<DateSection
-								date={cell.date}
-								value={cell.day}
-								schedules={props.schedules.filter((schedule) => {
-									return (
-										schedule.date.getFullYear() ===
-											cell.date.getFullYear() &&
-										schedule.date.getMonth() ===
-											cell.date.getMonth() &&
-										schedule.date.getDate() ===
-											cell.date.getDate()
-									);
-								})}
-								disabled={cell.inCurrentMonth ? false : true}
-								selectedDate={selectedDate}
-								onSelectDate={(date) => setSelectedDate(date)}
-							/>
-						))}
-					</div>
-				))}
+				{getMonthGrid(props.year, props.month).map((row) => {
+					return (
+						<div className='flex items-center'>
+							{row.map((cell) => (
+								<DateSection
+									date={cell.date}
+									value={cell.day}
+									schedules={props.schedules.filter(
+										(schedule) => {
+											return (
+												schedule.scheduledAt.getFullYear() ===
+													cell.date.getFullYear() &&
+												schedule.scheduledAt.getMonth() ===
+													cell.date.getMonth() &&
+												schedule.scheduledAt.getDate() ===
+													cell.date.getDate()
+											);
+										}
+									)}
+									disabled={
+										cell.inCurrentMonth ? false : true
+									}
+									selectedDate={selectedDate}
+									onSelectDate={(date) =>
+										setSelectedDate(date)
+									}
+								/>
+							))}
+						</div>
+					);
+				})}
 			</div>
 			{screenType === 'mobile' && (
 				<div className='p-4 flex flex-col gap-3'>

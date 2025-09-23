@@ -18,3 +18,7 @@ export async function middleware(req: any) {
 
 	return res;
 }
+
+export const config = {
+  matcher: ['/((?!api/|_next/|.*\\..*).*)'],
+};
