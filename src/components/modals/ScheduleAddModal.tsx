@@ -6,8 +6,9 @@ import { today } from '@/src/utils/date';
 import { DatePicker } from '../DatePicker';
 import { TimePicker } from '../TimePicker';
 import { InputBox } from '../InputBox';
-import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { ServiceType } from '@/src/pages/admin/companies/edit';
+import { useUserStore } from '@/src/stores/userStore';
+import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 
 interface ScheduleAddModalProps {
 	onClose: () => void;
@@ -15,6 +16,85 @@ interface ScheduleAddModalProps {
 }
 
 export function ScheduleAddModal(props: ScheduleAddModalProps) {
+	const user = useUserStore((state) => state.user);
+
+	return user?.userType === 'company' ? (
+		<ScheduleAddCompanyModal {...props} />
+	) : (
+		<ScheduleAddAdminModal {...props} />
+	);
+}
+
+function ScheduleAddCompanyModal(props: ScheduleAddModalProps) {
+	const [date, setDate] = useState(today);
+	const [serviceType, setServiceType] = useState('');
+	const [memo, setMemo] = useState('');
+	const user = useUserStore((state) => state.user);
+
+	return (
+		<Modal
+			title='일정 요청'
+			onClose={props.onClose}
+			secondBtnProps={{
+				children: '닫기',
+				onClick: props.onClose,
+			}}
+			firstBtnProps={{
+				variant: 'primary',
+				children: '요청',
+				onClick: () => {
+					if (serviceType && user?.company) {
+						props.onAdd({
+							scheduledAt: date,
+							serviceType: serviceType as ServiceType,
+							status: 'requested',
+							companyId: user.company.id,
+							memo: memo,
+						});
+					}
+				},
+			}}>
+			<div className='flex flex-col gap-4'>
+				<div className='flex self-stretch gap-4'>
+					<Dropdown
+						label={'서비스'}
+						options={getServiceDropdownOptions()}
+						value={serviceType}
+						id='service-dropdown'
+						onChange={(newServiceType) => {
+							setServiceType(newServiceType as ServiceType);
+						}}
+						style={{ flex: 1 }}
+					/>
+				</div>
+				<div className='flex self-stretch gap-4'>
+					<DatePicker
+						date={date}
+						onChange={(newDate) => {
+							setDate(newDate);
+						}}
+					/>
+					<TimePicker
+						date={date}
+						onChange={(newDate) => {
+							setDate(newDate);
+						}}
+					/>
+				</div>
+				<InputBox
+					label='메모'
+					inputAttr={{
+						placeholder: '메모 입력',
+						value: memo,
+						onChange: (e) => setMemo(e.target.value),
+					}}
+				/>
+			</div>
+		</Modal>
+	);
+}
+
+function ScheduleAddAdminModal(props: ScheduleAddModalProps) {
 	const [date, setDate] = useState(today);
 	const [serviceType, setServiceType] = useState('');
 	const [companyId, setCompanyId] = useState('');
@@ -48,6 +128,7 @@ export function ScheduleAddModal(props: ScheduleAddModalProps) {
 							serviceType: serviceType as ServiceType,
 							status: 'confirmed',
 							companyId: companyId,
+							memo: memo,
 						});
 					}
 				},

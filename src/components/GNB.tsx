@@ -14,7 +14,7 @@ import { logout } from '../utils/supabase/login';
 
 const adminPathTitles: { [key: string]: string } = {
 	'/admin/calendar': '캘린더',
-	'/admin/users': '고객목록',
+	'/admin/companies': '고객목록',
 	'/admin/managementRecords': '관리기록',
 };
 
@@ -61,7 +61,7 @@ export function GNB() {
 	return (
 		<>
 			{screenType === screenTypes.pc ? (
-				<div className='px-6 py-3 bg-white border-b border-Gray-200 flex items-center justify-between'>
+				<div className='px-6 py-3 bg-white border-b border-Gray-200 flex items-center justify-between no-print'>
 					<div className='flex items-center gap-8'>
 						<Image
 							src={'/Logo.svg'}
@@ -86,7 +86,7 @@ export function GNB() {
 						))}
 					</div>
 					<div className='flex items-center gap-4'>
-						<NotificationBell />
+						{/* <NotificationBell /> */}
 						<ProfileInitial
 							email={
 								user?.userType === 'admin'

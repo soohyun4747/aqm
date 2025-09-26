@@ -1,7 +1,7 @@
 import { CSSProperties } from 'react';
 
 interface ButtonGroupProps {
-	buttons: { id: string; label: string, onClick?: () => void}[];
+	buttons: { id: string; label: string; onClick?: () => void }[];
 	selectedId?: string;
 	className?: string;
 	style?: CSSProperties;
@@ -14,6 +14,7 @@ export function ButtonGroup(props: ButtonGroupProps) {
 			className={`hover:cursor-pointer flex items-center -space-x-[1px] ${props.className}`}>
 			{props.buttons.map((btn, i) => (
 				<div
+					onClick={btn.onClick}
 					className={`flex-1 md:flex-[unset] flex justify-center border border-Gray-200 ${
 						i === 0
 							? 'rounded-tl-[6px] rounded-bl-[6px]'

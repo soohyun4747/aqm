@@ -7,6 +7,10 @@ import { ScheduleEditModal } from '../modals/ScheduleEditModal';
 import { formatToHHMM } from '@/src/utils/time';
 import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
 import { GreenCircle } from '../icons/GreenCircle';
+import { updateSchedule } from '@/src/utils/supabase/schedule';
+import { IToastMessage, ToastMessage } from '../ToastMessage';
+import { useScheduleDetailModalOpenStore } from '@/src/stores/modalOpenStore';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
 
 export const ConfirmedSchedule = ({ schedule }: { schedule: ISchedule }) => {
 	const user = useUserStore((state) => state.user);
@@ -23,8 +27,10 @@ export const ConfirmedSchedule = ({ schedule }: { schedule: ISchedule }) => {
 };
 
 const ConfirmedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
-	const [openDetailModal, setOpenDetailModal] = useState(false);
-	const [openEditModal, setOpenEditModal] = useState(false);
+	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
+		(state) => state.setOpen
+	);
+	const setSchedule = useSelectedScheduleStore((state) => state.setSchedule);
 	const screenType = useScreenTypeStore((state) => state.screenType);
 
 	return (
@@ -32,7 +38,8 @@ const ConfirmedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
 			<div
 				onClick={() => {
 					if (screenType === 'pc') {
-						setOpenDetailModal(true);
+						setSchedule(schedule);
+						setScheduleDetailModalOpen(true);
 					}
 				}}
 				className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Green-100 hover:cursor-pointer'>
@@ -42,28 +49,16 @@ const ConfirmedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
 					{serviceNames[schedule.serviceType]}
 				</p>
 			</div>
-			{openDetailModal && (
-				<ScheduleDetailModal
-					schedule={schedule}
-					onClose={() => setOpenDetailModal(false)}
-					editModalOpen={() => setOpenEditModal(true)}
-				/>
-			)}
-			{openEditModal && (
-				<ScheduleEditModal
-					schedule={schedule}
-					onClose={() => setOpenEditModal(false)}
-					onEdit={() => {}}
-				/>
-			)}
 		</>
 	);
 };
 
 const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
-	const [openDetailModal, setOpenDetailModal] = useState(false);
-	const [openEditModal, setOpenEditModal] = useState(false);
 	const [company, setCompany] = useState<ICompany>();
+	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
+		(state) => state.setOpen
+	);
+	const setSchedule = useSelectedScheduleStore((state) => state.setSchedule);
 
 	const screenType = useScreenTypeStore((state) => state.screenType);
 
@@ -81,7 +76,8 @@ const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 			<div
 				onClick={() => {
 					if (screenType === 'pc') {
-						setOpenDetailModal(true);
+						setSchedule(schedule);
+						setScheduleDetailModalOpen(true);
 					}
 				}}
 				className='md:px-2 md:py-1 flex flex-col rounded-[8px] md:bg-Green-100 hover:cursor-pointer'>
@@ -97,20 +93,6 @@ const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 					</p>
 				</div>
 			</div>
-			{openDetailModal && (
-				<ScheduleDetailModal
-					schedule={schedule}
-					onClose={() => setOpenDetailModal(false)}
-					editModalOpen={() => setOpenEditModal(true)}
-				/>
-			)}
-			{openEditModal && (
-				<ScheduleEditModal
-					schedule={schedule}
-					onClose={() => setOpenEditModal(false)}
-					onEdit={() => {}}
-				/>
-			)}
 		</>
 	);
 };

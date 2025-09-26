@@ -12,6 +12,7 @@ import { Modal } from '@/src/components/modal/Modal';
 import { Radio } from '@/src/components/Radio';
 import { fetchManagementRecordsByCompany } from '@/src/utils/supabase/managementRecord';
 import { useUserStore } from '@/src/stores/userStore';
+import { toLocaleStringWithoutSec } from '@/src/utils/date';
 
 export interface IManagementRecord {
 	id: string;
@@ -67,6 +68,7 @@ function CompanyManagementRecordsPage() {
 						date: row.date,
 						managerName: row.manager_name,
 						serviceType: row.service_type as ServiceType,
+						comment: row.comment,
 						createdAt: row.created_at,
 						updatedAt: row.updated_at,
 					}))
@@ -93,9 +95,7 @@ function CompanyManagementRecordsPage() {
 					}}
 					className='flex flex-col self-stretch rounded-[8px] bg-white w-full'>
 					<div className='flex justify-between items-center p-4'>
-						<p className='text-Gray-900 heading-sm'>
-							우리 회사 관리기록
-						</p>
+						<p className='text-Gray-900 heading-sm'>관리기록</p>
 						<div className='flex items-center gap-3'>
 							<SearchField
 								searchValue={search}
@@ -110,7 +110,12 @@ function CompanyManagementRecordsPage() {
 						columns={[
 							// 회사 전용이라 고객명 컬럼은 생략 가능. 필요하면 주석 해제
 							// { field: 'companyName', headerName: '고객' },
-							{ field: 'date', headerName: '날짜' },
+							{
+								field: 'date',
+								headerName: '날짜',
+								render: (value) =>
+									toLocaleStringWithoutSec(new Date(value)),
+							},
 							{
 								field: 'serviceType',
 								headerName: '서비스',

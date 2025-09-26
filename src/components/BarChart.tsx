@@ -1,3 +1,4 @@
+import { getStandardPercents } from '../utils/chart';
 import { CircleCheck } from './icons/CircleCheck';
 import { CircleExclamation } from './icons/CircleExclamation';
 import { CircleX } from './icons/CircleX';
@@ -15,32 +16,16 @@ interface BarChartProps {
 }
 
 export function BarChart(props: BarChartProps) {
-	function getStandardWidth(standard: string, maxValue: number) {
-		// standard can be "0-50", "51-100", "> 100"
-		if (standard.startsWith('>')) {
-			const min = parseFloat(standard.replace('>', '').trim());
-			return ((maxValue - min) / maxValue) * 100;
-		}
-		const match = standard.match(/(\d+)\s*-\s*(\d+)/);
-		if (match) {
-			const min = parseFloat(match[1]);
-			const max = parseFloat(match[2]);
-			return ((max - min + 1) / maxValue) * 100;
-		}
-		return 0;
-	}
+	const { pSafe, pWarn, pDang } = getStandardPercents(
+		props.safeStandard,
+		props.warningStandard,
+		props.dangerStandard,
+		props.maxValue
+	);
 
-	const safeStandardBgWidth = `calc((100% - 100px) * ${
-		getStandardWidth(props.safeStandard, props.maxValue) / 100
-	})`;
-
-	const warningStandardBgWidth = `calc((100% - 100px) * ${
-		getStandardWidth(props.warningStandard, props.maxValue) / 100
-	})`;
-
-	const dangerStandardBgWidth = `calc((100% - 100px) * ${
-		getStandardWidth(props.dangerStandard, props.maxValue) / 100
-	})`;
+	const safeStandardBgWidth = `calc((100% - 100px) * ${pSafe / 100})`;
+	const warningStandardBgWidth = `calc((100% - 100px) * ${pWarn / 100})`;
+	const dangerStandardBgWidth = `calc((100% - 100px) * ${pDang / 100})`;
 
 	return (
 		<div className='flex flex-col gap-1'>
@@ -49,12 +34,9 @@ export function BarChart(props: BarChartProps) {
 				<div className='flex w-full'>
 					{props.safeStandard && (
 						<div
-							className='flex flex-1 gap-[6px] p-2 items-center'
+							className='flex gap-[6px] p-2 items-center'
 							style={{
-								width: `${getStandardWidth(
-									props.safeStandard,
-									props.maxValue
-								)}%`,
+								width: `calc(100% * ${pSafe / 100})`,
 							}}>
 							<CircleCheck
 								fill='#0E9F6E'
@@ -70,12 +52,9 @@ export function BarChart(props: BarChartProps) {
 					)}
 					{props.warningStandard && (
 						<div
-							className='flex flex-1 gap-[6px] p-2 items-center'
+							className='flex gap-[6px] p-2 items-center'
 							style={{
-								width: `${getStandardWidth(
-									props.warningStandard,
-									props.maxValue
-								)}%`,
+								width: `calc(100% * ${pWarn / 100})`,
 							}}>
 							<CircleExclamation
 								fill='#E3A008'
@@ -91,12 +70,9 @@ export function BarChart(props: BarChartProps) {
 					)}
 					{props.dangerStandard && (
 						<div
-							className='flex flex-1 gap-[6px] p-2 items-center'
+							className='flex gap-[6px] p-2 items-center'
 							style={{
-								width: `${getStandardWidth(
-									props.dangerStandard,
-									props.maxValue
-								)}%`,
+								width: `calc(100% * ${pDang / 100})`,
 							}}>
 							<CircleX
 								fill='#F05252'
@@ -117,43 +93,42 @@ export function BarChart(props: BarChartProps) {
 					style={{
 						width: safeStandardBgWidth,
 					}}
-					className='absolute bg-[#F9FAFB] h-full z-[-1] left-[100px] top-0'
+					className='absolute bg-Gray-50 h-full left-[100px] top-0'
 				/>
 				<div
 					style={{
 						width: warningStandardBgWidth,
 						left: `calc(${safeStandardBgWidth} + 100px)`,
 					}}
-					className='absolute bg-[#F3F4F6] h-full z-[-1] top-0'
+					className='absolute bg-Gray-100 h-full top-0'
 				/>
 				<div
 					style={{
 						width: dangerStandardBgWidth,
 						left: `calc(${safeStandardBgWidth} + ${warningStandardBgWidth} + 100px)`,
 					}}
-					className='absolute bg-[#E5E7EB] h-full z-[-1] top-0'
+					className='absolute bg-Gray-200 h-full top-0'
 				/>
 				{props.data.map((item, i) => (
 					<div
 						key={i}
-						className='flex h-[30px]'>
+						className='flex h-[30px] z-10'>
 						<div className='flex justify-end items-center w-[100px] pr-4'>
 							<p className='text-Gray-900 text-right body-md-regular'>
 								{item.label}
 							</p>
 						</div>
-						<div className='flex flex-1 self-stretch border border-b-0 border-dashed border-Gray-200 items-center'>
+						<div className='flex flex-1 self-stretch border border-dashed border-Gray-300 items-center gap-1'>
 							<div
 								style={{
 									width:
 										(item.value / props.maxValue) * 100 +
 										'%',
 								}}
-								className='h-[18px] flex items-center justify-center bg-Gray-500 rounded-r-[4px]'>
-								<p className='text-Gray-50 text-[11px] font-400'>
-									{item.value} {props.unit}
-								</p>
-							</div>
+								className='h-[18px] flex items-center justify-center rounded-r-[4px] chart-bar'></div>
+							<p className='text-Gray-600 text-[11px] font-400'>
+								{item.value} {props.unit}
+							</p>
 						</div>
 					</div>
 				))}

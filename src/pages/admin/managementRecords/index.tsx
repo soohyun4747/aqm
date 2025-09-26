@@ -8,14 +8,13 @@ import { GNB } from '@/src/components/GNB';
 import { SearchField } from '@/src/components/SearchField';
 import { Button } from '@/src/components/buttons/Button';
 import { serviceNames } from '@/src/components/calendar/Schedule';
-import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
 import { Modal } from '@/src/components/modal/Modal';
 import {
 	deleteManagementRecord,
 	fetchManagementRecords,
 } from '@/src/utils/supabase/managementRecord';
 import { Radio } from '@/src/components/Radio';
-import { ICompany } from '@/src/stores/userStore';
+import { toLocaleStringWithoutSec } from '@/src/utils/date';
 
 export interface IManagementRecord {
 	id: string;
@@ -24,6 +23,7 @@ export interface IManagementRecord {
 	date: string;
 	managerName: string;
 	serviceType: ServiceType;
+	comment?: string;
 	createdAt?: string;
 	updatedAt?: string;
 }
@@ -69,6 +69,7 @@ function AdminManagementRecordsPage() {
 						date: row.date,
 						managerName: row.manager_name,
 						serviceType: row.service_type as ServiceType,
+						comment: row.comment,
 						createdAt: row.created_at,
 						updatedAt: row.updated_at,
 					}))
@@ -100,7 +101,7 @@ function AdminManagementRecordsPage() {
 					}}
 					className='flex flex-col self-stretch rounded-[8px] bg-white w-full'>
 					<div className='flex justify-between items-center p-4'>
-						<p className='text-Gray-900 heading-sm'>고객 목록</p>
+						<p className='text-Gray-900 heading-sm'>관리 목록</p>
 						<div className='flex items-center gap-3'>
 							<SearchField
 								searchValue={search}
@@ -120,7 +121,12 @@ function AdminManagementRecordsPage() {
 								field: 'companyName',
 								headerName: '고객',
 							},
-							{ field: 'date', headerName: '날짜' },
+							{
+								field: 'date',
+								headerName: '날짜',
+								render: (value) =>
+									toLocaleStringWithoutSec(new Date(value)),
+							},
 							{
 								field: 'serviceType',
 								headerName: '서비스',
@@ -217,7 +223,7 @@ function AdminManagementRecordsPage() {
 			{serviceChooseModalOpen && (
 				<Modal
 					title='관리 유형'
-                    onClose={() => setServiceChooseModalOpen(false)}
+					onClose={() => setServiceChooseModalOpen(false)}
 					firstBtnProps={{
 						children: '확인',
 						onClick: () =>

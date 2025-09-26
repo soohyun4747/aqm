@@ -11,41 +11,43 @@ type Options = {
 
 export function getMonthGrid(
 	year: number,
-	month: number,
+	month: number, // 0~11 (Jan=0)
 	options: Options = {}
 ): Cell[][] {
-	const weekStartsOn = options.weekStartsOn ?? 0; // 0 or 1
-	const daysInMonth = new Date(year, month, 0).getDate(); // 이번 달 일수 (month는 1~12)
-	const firstDay = new Date(year, month - 1, 1); // 이번 달 1일
+	const weekStartsOn = options.weekStartsOn ?? 0; // 0: Sun, 1: Mon
+
+	// ✔ 이번 달 일수
+	const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+	const firstDay = new Date(year, month, 1); // 이번 달 1일
 	const firstWeekdayRaw = firstDay.getDay(); // 0~6 (일~토)
 	const firstWeekday = (firstWeekdayRaw - weekStartsOn + 7) % 7;
 
-	// 이전 달 일수
-	const prevMonthDays = new Date(year, month - 1, 0).getDate();
+	// ✔ 이전 달 일수
+	const prevMonthDays = new Date(year, month, 0).getDate();
 
-	// 총 42칸(6주 × 7일)
-	const totalCells = 42;
+	const totalCells = 42; // 6주 × 7일
 	const cells: Cell[] = [];
 
 	for (let i = 0; i < totalCells; i++) {
-		const cellIndex = i - firstWeekday; // 이번 달 1일을 기준으로 한 오프셋
+		const cellIndex = i - firstWeekday; // 이번 달 1일 기준 오프셋
 		let cellDate: Date;
 		let inCurrentMonth = true;
 
 		if (cellIndex < 0) {
 			// 이전 달
 			const day = prevMonthDays + cellIndex + 1;
-			cellDate = new Date(year, month - 2, day);
+			cellDate = new Date(year, month - 1, day);
 			inCurrentMonth = false;
 		} else if (cellIndex >= daysInMonth) {
 			// 다음 달
 			const day = cellIndex - daysInMonth + 1;
-			cellDate = new Date(year, month, day);
+			cellDate = new Date(year, month + 1, day);
 			inCurrentMonth = false;
 		} else {
 			// 이번 달
 			const day = cellIndex + 1;
-			cellDate = new Date(year, month - 1, day);
+			cellDate = new Date(year, month, day);
 		}
 
 		const weekdayRaw = cellDate.getDay(); // 0~6 (일~토)
@@ -59,7 +61,7 @@ export function getMonthGrid(
 		});
 	}
 
-	// 7칸씩 끊어 6주 배열로 변환
+	// 7칸씩 6주 배열로 변환
 	const weeks: Cell[][] = [];
 	for (let w = 0; w < 6; w++) {
 		weeks.push(cells.slice(w * 7, w * 7 + 7));
@@ -116,17 +118,37 @@ export function areSameDate(date1: Date, date2: Date): boolean {
 
 export const today = new Date();
 
-export function monthRangeTimestamptz(year: number, month1to12: number) {
-  const from = new Date(Date.UTC(year, month1to12 - 1, 1));
-  const toExcl = new Date(Date.UTC(year, month1to12, 1)); // 다음달 1일
-  const toISO = (d: Date) => d.toISOString(); // full ISO string (UTC)
-  return { from: toISO(from), toExclusive: toISO(toExcl) };
+export function monthRangeTimestamptz(year: number, month0to11: number) {
+	const from = new Date(Date.UTC(year, month0to11, 1));
+	const toExcl = new Date(Date.UTC(year, month0to11 + 1, 1)); // 다음달 1일
+	const toISO = (d: Date) => d.toISOString(); // full ISO string (UTC)
+	return { from: toISO(from), toExclusive: toISO(toExcl) };
 }
-
 
 /** JS Date -> YYYY-MM-DD (UTC 기준 잘라쓰기) */
 export function toISODate(d: Date) {
-  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
-    .toISOString()
-    .slice(0, 10);
+	return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()))
+		.toISOString()
+		.slice(0, 10);
+}
+
+/** 날짜 → 'D일' 레이블 */
+export function toDayLabel(d: Date) {
+	return `${d.getDate()}일`;
+}
+
+/** string | Date → Date */
+export function toDate(v: string | Date) {
+	return v instanceof Date ? v : new Date(v);
+}
+
+export function toLocaleStringWithoutSec(date: Date) {
+	return date.toLocaleString('ko-KR', {
+		year: 'numeric',
+		month: 'numeric',
+		day: 'numeric',
+		hour: '2-digit',
+		minute: '2-digit',
+		// second: '2-digit' ← 이걸 안 넣으면 초는 표시 안 됩니다
+	});
 }

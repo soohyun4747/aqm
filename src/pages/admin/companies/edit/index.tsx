@@ -27,6 +27,7 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
 export interface IHepaFilter {
+	id?: string;
 	filterType: HepaFilterType;
 	width: number;
 	height: number;
@@ -34,7 +35,7 @@ export interface IHepaFilter {
 	quantity: number;
 }
 
-const vocFilterSpec = { width: 200, height: 100, depth: 50 };
+export const vocFilterSpec = { width: 200, height: 100, depth: 50 };
 
 export const Services = {
 	aqm: 'aqm',
@@ -50,6 +51,12 @@ export const HepaFilters = {
 	pre: 'pre',
 	preFrame: 'preFrame',
 } as const;
+
+export const HepaFilterNames = {
+	hepa: 'HEPA 필터',
+	pre: 'Pre 필터',
+	preFrame: 'Pre 필터 (프레임)'
+}
 
 export type HepaFilterType = (typeof HepaFilters)[keyof typeof HepaFilters];
 
@@ -213,7 +220,7 @@ export default function AdminUsersEditPage() {
 					message: '저장되었습니다',
 				});
 
-				router.push('/admin/users');
+				router.push('/admin/companies');
 			} catch (e: any) {
 				console.error(e);
 
@@ -392,15 +399,15 @@ export default function AdminUsersEditPage() {
 												options={[
 													{
 														value: HepaFilters.hepa,
-														label: 'HEPA 필터',
+														label: HepaFilterNames[HepaFilters.hepa],
 													},
 													{
 														value: HepaFilters.pre,
-														label: 'PRE 필터',
+														label: HepaFilterNames[HepaFilters.pre],
 													},
 													{
 														value: HepaFilters.preFrame,
-														label: 'PRE 필터 (프레임)',
+														label: HepaFilterNames[HepaFilters.preFrame],
 													},
 												]}
 												value={filter.filterType}

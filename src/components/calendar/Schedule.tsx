@@ -5,8 +5,14 @@ import { Clock } from '../icons/Clock';
 import { ScheduleStatusType } from './DateSection';
 import { ScheduleEditModal } from '../modals/ScheduleEditModal';
 import { ServiceType } from '@/src/pages/admin/companies/edit';
+import { updateSchedule } from '@/src/utils/supabase/schedule';
+import { IToastMessage, ToastMessage } from '../ToastMessage';
+import { useScheduleEditModalOpenStore } from '@/src/stores/modalOpenStore';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
+import { toLocaleStringWithoutSec } from '@/src/utils/date';
 
 export interface ISchedule {
+	id?: string;
 	scheduledAt: Date;
 	serviceType: ServiceType;
 	status: ScheduleStatusType;
@@ -34,8 +40,10 @@ export const getServiceDropdownOptions = () => {
 };
 
 export function Schedule(props: ISchedule) {
-	const [openEditModal, setOpenEditModal] = useState(false);
-	const [openDetailModal, setOpenDetailModal] = useState(false);
+	const setScheduleEditModalOpen = useScheduleEditModalOpenStore(
+		(state) => state.setOpen
+	);
+	const setSchedule = useSelectedScheduleStore((state) => state.setSchedule);
 
 	return (
 		<>
@@ -55,43 +63,37 @@ export function Schedule(props: ISchedule) {
 							size={12}
 						/>
 						<p className='body-md-regular text-Gray-500'>
-							{props.scheduledAt.toLocaleString()}
+							{toLocaleStringWithoutSec(props.scheduledAt)}
 						</p>
 					</div>
 				</div>
-				<Button
-					onClick={() => setOpenEditModal(true)}
+				{/* <Button
+					onClick={() => {
+						setScheduleEditModalOpen(true);
+						setSchedule(props);
+					}}
 					variant='primaryOutline'>
 					수정
-				</Button>
+				</Button> */}
 			</div>
-			{openEditModal && (
-				<ScheduleEditModal
-					schedule={props}
-					onClose={() => setOpenEditModal(false)}
-					onEdit={function (updatedSchedule: ISchedule): void {
-						throw new Error('Function not implemented.');
-					}}
-				/>
-			)}
 		</>
 	);
 }
 
-function ConfirmedBadge() {
+export function ConfirmedBadge() {
 	return (
 		<Badge
 			variant='green'
-			label='확정됨'
+			label='확정'
 		/>
 	);
 }
 
-function RequestedBadge() {
+export function RequestedBadge() {
 	return (
 		<Badge
 			variant='orange'
-			label='요청됨'
+			label='요청'
 		/>
 	);
 }

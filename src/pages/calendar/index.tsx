@@ -8,14 +8,19 @@ import { useEffect, useMemo, useState } from 'react';
 import {
 	createSchedule as createScheduleApi,
 	fetchSchedulesByMonth,
+	updateSchedule,
 } from '../../utils/supabase/schedule';
-import { ScheduleAddModal } from '../../components/modals/ScheduleAddModal';
 import { IToastMessage, ToastMessage } from '../../components/ToastMessage';
-import { supabaseClient } from '@/lib/supabase/client';
 import { IUser, useUserStore } from '@/src/stores/userStore';
-import { User } from '@supabase/supabase-js';
+import { ScheduleAddModal } from '@/src/components/modals/ScheduleAddModal';
+import {
+	useScheduleDetailModalOpenStore,
+	useScheduleEditModalOpenStore,
+} from '@/src/stores/modalOpenStore';
+import { ScheduleDetailModal } from '@/src/components/modals/ScheduleDetailModal';
+import { ScheduleEditModal } from '@/src/components/modals/ScheduleEditModal';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
 
-export type ViewType = 'calendar' | 'list';
 
 function CompanyCalendarPage() {
 	// month는 0~11로 통일합니다 (JS Date 규약)
@@ -23,8 +28,18 @@ function CompanyCalendarPage() {
 	const [month, setMonth] = useState(today.getMonth());
 
 	const [monthSchedules, setMonthSchedules] = useState<ISchedule[]>([]);
-	const [view, setView] = useState<ViewType>('calendar');
 	const [scheduleAddModalOpen, setScheduleAddModalOpen] = useState(false);
+
+	const { open: scheduleEditModalOpen, setOpen: setScheduleEditModalOpen } =
+		useScheduleEditModalOpenStore();
+	const {
+		open: scheduleDetailModalOpen,
+		setOpen: setScheduleDetailModalOpen,
+	} = useScheduleDetailModalOpenStore();
+	const { schedule, setSchedule } = useSelectedScheduleStore();
+
+	//modal 다 이쪽으로 빼기
+
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 	const user = useUserStore((state) => state.user);
 
@@ -40,44 +55,72 @@ function CompanyCalendarPage() {
 		const data = await fetchSchedulesByMonth(year, month, {
 			companyId: user.company?.id,
 		});
+
 		setMonthSchedules(data.rows ?? []);
 	};
 
 	const now = today;
-	const upcomingRequestedSchedules = useMemo(() => {
+	const upcomingSchedules = useMemo(() => {
 		const fourWeeksLater = new Date(now);
 		fourWeeksLater.setDate(now.getDate() + 28);
 		return monthSchedules.filter((s) => {
 			const d = new Date(s.scheduledAt);
-			return s.status === 'requested' && d >= now && d <= fourWeeksLater;
+			return s.status === 'confirmed' && d >= now && d <= fourWeeksLater;
 		});
 	}, [monthSchedules, now]);
 
-	const confirmedSchedules = useMemo(() => {
-		return monthSchedules.filter((s) => s.status === 'confirmed');
+	const requestedSchedules = useMemo(() => {
+		return monthSchedules.filter((s) => s.status === 'requested');
 	}, [monthSchedules]);
 
-	const addNewSchedule = async (schedule: ISchedule, user: IUser) => {
-		// 회사 사용자라면 company_id를 강제 세팅
-		const payload = user.company
-			? { ...schedule, company_id: user.company.id }
-			: schedule;
+	const addNewSchedule = async (schedule: ISchedule, user?: IUser) => {
+		if (user?.company) {
+			// 회사 사용자라면 company_id를 강제 세팅
+			const payload = { ...schedule, company_id: user.company.id };
 
-		const data: any = await createScheduleApi(payload);
-		if (data?.error) {
-			setToastMessage({
-				message: '스케줄 추가를 실패하였습니다',
-				status: 'error',
-			});
-			console.log(data.error);
+			const data: any = await createScheduleApi(payload);
+			if (data?.error) {
+				setToastMessage({
+					message: '스케줄 추가를 실패하였습니다',
+					status: 'error',
+				});
+				console.log(data.error);
+			} else {
+				await getSetMonthSchedules(user);
+				setToastMessage({
+					status: 'confirm',
+					message: '스케줄을 요청하였습니다',
+				});
+			}
 		} else {
-			await getSetMonthSchedules(user);
 			setToastMessage({
-				status: 'confirm',
-				message: '스케줄을 생성하였습니다',
+				message: '사용자 정보에 문제가 있습니다',
+				status: 'error',
 			});
 		}
 		setScheduleAddModalOpen(false);
+	};
+
+	const onEditSchedule = async (schedule: ISchedule) => {
+		try {
+			await updateSchedule({...schedule, status: 'requested'});
+			if (user) {
+				getSetMonthSchedules(user);
+			}
+			setScheduleEditModalOpen(false);
+			setScheduleDetailModalOpen(false);
+			setToastMessage({
+				status: 'confirm',
+				message: '일정을 수정 요청하였습니다',
+			});
+		} catch (error) {
+			setScheduleEditModalOpen(false);
+			setToastMessage({
+				status: 'error',
+				message: '일정 수정을 실패하였습니다',
+			});
+			console.error(error);
+		}
 	};
 
 	return (
@@ -86,8 +129,6 @@ function CompanyCalendarPage() {
 			<CalendarTopbar
 				year={year}
 				month={month} // 0~11 전달
-				onClickCalendarView={() => setView('calendar')}
-				onClickListView={() => setView('list')}
 				onClickToday={() => {
 					setYear(today.getFullYear());
 					setMonth(today.getMonth()); // 0~11
@@ -122,7 +163,7 @@ function CompanyCalendarPage() {
 							<p className='text-Gray-900 heading-md'>
 								다가오는 일정
 							</p>
-							{upcomingRequestedSchedules.map((schedule) => (
+							{upcomingSchedules.map((schedule) => (
 								<Schedule {...schedule} />
 							))}
 						</div>
@@ -131,9 +172,9 @@ function CompanyCalendarPage() {
 					<Card>
 						<div className='flex flex-col gap-6'>
 							<p className='text-Gray-900 heading-md'>
-								확정된 일정
+								요청된 일정
 							</p>
-							{confirmedSchedules.map((schedule) => (
+							{requestedSchedules.map((schedule) => (
 								<Schedule {...schedule} />
 							))}
 						</div>
@@ -141,12 +182,25 @@ function CompanyCalendarPage() {
 				</div>
 			</div>
 
-			{/* {scheduleAddModalOpen && (
+			{scheduleAddModalOpen && (
 				<ScheduleAddModal
 					onClose={() => setScheduleAddModalOpen(false)}
 					onAdd={(schedule) => addNewSchedule(schedule, user)}
 				/>
-			)} */}
+			)}
+			{scheduleDetailModalOpen && schedule && (
+				<ScheduleDetailModal
+					schedule={schedule}
+					onClose={() => setScheduleDetailModalOpen(false)}
+				/>
+			)}
+			{scheduleEditModalOpen && schedule && (
+				<ScheduleEditModal
+					schedule={schedule}
+					onClose={() => setScheduleEditModalOpen(false)}
+					onEdit={onEditSchedule}
+				/>
+			)}
 			{toastMessage && (
 				<ToastMessage
 					status={toastMessage.status}

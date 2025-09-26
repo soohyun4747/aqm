@@ -9,7 +9,7 @@ export function Badge(props: BadgeProps) {
 			style={{
 				background: props.variant === 'green' ? '#DEF7EC' : '#FEECDC',
 			}}
-			className='max-w-[370px] py-[2px] px-[10px] gap-1 flex rounded-[6px]'>
+			className='max-w-[370px] py-[2px] px-[10px] gap-1 flex rounded-[6px] h-fit'>
 			<p
 				style={{
 					color:

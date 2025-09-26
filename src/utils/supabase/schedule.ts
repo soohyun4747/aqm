@@ -6,11 +6,11 @@ import { ScheduleStatusType } from '@/src/components/calendar/DateSection';
 
 export async function fetchSchedulesByMonth(
 	year: number,
-	month1to12: number,
+	month0to11: number,
 	opts?: { status?: ScheduleStatusType; companyId?: string }
 ) {
 	try {
-		const { from, toExclusive } = monthRangeTimestamptz(year, month1to12);
+		const { from, toExclusive } = monthRangeTimestamptz(year, month0to11);
 		const supabase = supabaseClient();
 
 		let query = supabase
@@ -28,6 +28,7 @@ export async function fetchSchedulesByMonth(
 		if (error) throw error;
 
 		const dateFormatData: ISchedule[] = data.map((value) => ({
+			id: value.id,
 			companyId: value.company_id,
 			status: value.status,
 			serviceType: value.service_type,
@@ -71,4 +72,60 @@ export async function createSchedule(schedule: ISchedule) {
 	} catch (error) {
 		return { error };
 	}
+}
+
+export async function updateSchedule(
+	schedule: ISchedule
+): Promise<ISchedule | null> {
+	if (!schedule.id) {
+		throw new Error('Schedule ID is required for update.');
+	}
+
+	const supabase = supabaseClient();
+
+	// camelCase → snake_case 매핑
+	const updates = {
+		scheduled_at: schedule.scheduledAt.toISOString(),
+		service_type: schedule.serviceType,
+		status: schedule.status,
+		memo: schedule.memo ?? null,
+		company_id: schedule.companyId,
+		updated_at: new Date().toISOString(),
+	};
+
+	const { data, error } = await supabase
+		.from('schedules')
+		.update(updates)
+		.eq('id', schedule.id)
+		.select()
+		.single();
+
+	if (error) {
+		throw error;
+	}
+
+	// 반환 시 다시 camelCase로 매핑
+	return {
+		id: data.id,
+		scheduledAt: new Date(data.scheduled_at),
+		serviceType: data.service_type,
+		status: data.status,
+		memo: data.memo ?? undefined,
+		companyId: data.company_id,
+		createdAt: data.created_at ? new Date(data.created_at) : undefined,
+		updatedAt: data.updated_at ? new Date(data.updated_at) : undefined,
+	};
+}
+
+export async function deleteSchedule(id: string): Promise<boolean> {
+	const supabase = supabaseClient();
+
+	const { error } = await supabase.from('schedules').delete().eq('id', id);
+
+	if (error) {
+		console.error('Error deleting schedule:', error);
+		throw error;
+	}
+
+	return true;
 }

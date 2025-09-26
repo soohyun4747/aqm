@@ -51,6 +51,7 @@ export async function fetchManagementRecords(page: number, search?: string) {
 		created_at: row.created_at,
 		updated_at: row.updated_at,
 		company_name: row.company_name,
+		comment: row.comment
 	}));
 
 	return { rows, count: count ?? 0 };
@@ -90,7 +91,7 @@ export async function createManagementRecord(props: {
 		.from('management_records')
 		.insert({
 			company_id: props.companyId,
-			date: toISODate(props.date),
+			date: props.date.toISOString(),
 			manager_name: props.managerName,
 			service_type: props.serviceType,
 			comment: props.comment,
@@ -102,7 +103,7 @@ export async function createManagementRecord(props: {
 	return data as ManagementRecordRow;
 }
 
-export async function fetchManagementRecord(recordId: string) {
+export async function fetchManagementRecordById(recordId: string) {
 	const supabase = supabaseClient();
 	const { data, error } = await supabase
 		.from('management_records')
@@ -114,36 +115,59 @@ export async function fetchManagementRecord(recordId: string) {
 }
 
 export async function fetchManagementRecordsByCompany(
-  companyId: string,
-  page: number,
-  search?: string
+	companyId: string,
+	page: number,
+	search?: string
 ) {
-  const supabase = supabaseClient();
+	const supabase = supabaseClient();
 
-  // 뷰/조인 구조에 맞게 테이블/뷰 이름 조정하세요.
-  // 예시: management_records_view (company_name, manager_name, service_type 포함)
-  let query = supabase
-    .from('management_records_view')
-    .select('*', { count: 'exact' })
-    .eq('company_id', companyId);
+	// 뷰/조인 구조에 맞게 테이블/뷰 이름 조정하세요.
+	// 예시: management_records_view (company_name, manager_name, service_type 포함)
+	let query = supabase
+		.from('management_records_view')
+		.select('*', { count: 'exact' })
+		.eq('company_id', companyId);
 
-  if (search && search.trim() !== '') {
-    // manager_name, service_type, company_name 등 필요한 필드에 ilike
-    // PostgREST or() 문법: .or('manager_name.ilike.%foo%,service_type.ilike.%foo%')
-    const like = `%${search}%`;
-    query = query.or(
-      `manager_name.ilike.${like},service_type.ilike.${like},company_name.ilike.${like}`
-    );
-  }
+	if (search && search.trim() !== '') {
+		// manager_name, service_type, company_name 등 필요한 필드에 ilike
+		// PostgREST or() 문법: .or('manager_name.ilike.%foo%,service_type.ilike.%foo%')
+		const like = `%${search}%`;
+		query = query.or(
+			`manager_name.ilike.${like},service_type.ilike.${like},company_name.ilike.${like}`
+		);
+	}
 
-  query = query
-    .order('date', { ascending: false })
-    .range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
+	query = query
+		.order('date', { ascending: false })
+		.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
-  const { data, error, count } = await query;
-  if (error) {
-    console.error('fetchManagementRecordsByCompany error', error);
-    throw error;
-  }
-  return { rows: data ?? [], count: count ?? 0 };
+	const { data, error, count } = await query;
+	if (error) {
+		console.error('fetchManagementRecordsByCompany error', error);
+		throw error;
+	}
+	return { rows: data ?? [], count: count ?? 0 };
+}
+
+export async function updateManagementRecord(
+	id: string,
+	companyId: string,
+	date: Date,
+	managerName: string,
+	comment: string,
+	serviceType: ServiceType
+) {
+	const supabase = supabaseClient();
+
+	const { error: updErr } = await supabase
+		.from('management_records')
+		.update({
+			company_id: companyId,
+			date: date.toISOString(),
+			manager_name: managerName,
+			service_type: serviceType,
+			comment,
+		})
+		.eq('id', id);
+	if (updErr) throw updErr;
 }

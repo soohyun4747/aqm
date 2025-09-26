@@ -1,5 +1,5 @@
 import { supabaseClient } from '@/lib/supabase/client';
-import { fetchManagementRecord, ManagementRecords_BUCKET } from './managementRecord';
+import { fetchManagementRecordById, ManagementRecords_BUCKET } from './managementRecord';
 import { downloadAsFile, removeFile, uploadFileToPath } from './storage';
 import { MicrobioAnalysisType } from '@/src/pages/admin/managementRecords/edit/aqm';
 import { sanitizeFileName } from '../string';
@@ -162,7 +162,7 @@ export async function fetchAqmResultByRecordId(recordId: string) {
 /** 관리 레코드 + 결과를 함께 로드, 파일은 File 객체로 복구 */
 export async function loadAqmBundleAsFiles(recordId: string) {
   const [record, result] = await Promise.all([
-    fetchManagementRecord(recordId),
+    fetchManagementRecordById(recordId),
     (async () => {
       const { data, error } = await supabaseClient()
         .from('aqm_results')

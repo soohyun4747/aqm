@@ -88,7 +88,11 @@ export function Dropdown(props: DropdownProps) {
 
 			{open && (
 				<div
-					style={{ width: '-webkit-fill-available' }}
+					style={{
+						width: '-webkit-fill-available',
+						boxShadow:
+							'0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
+					}}
 					className={`absolute left-0 z-10 max-h-[240px] overflow-auto ${
 						direction === 'down' ? 'mt-2 top-15' : 'mb-2 bottom-9'
 					}`}>
@@ -111,10 +115,6 @@ function DropdownMenu({
 }) {
 	return (
 		<div
-			style={{
-				boxShadow:
-					'0 4px 6px -1px rgba(0, 0, 0, 0.10), 0 2px 4px -2px rgba(0, 0, 0, 0.05)',
-			}}
 			className='rounded-[8px] bg-white flex flex-col w-full'>
 			{options.map((option) => (
 				<div

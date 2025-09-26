@@ -3,10 +3,10 @@ import { ISchedule, serviceNames } from './Schedule';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { OrangeDonut } from '../icons/OrangeDonut';
 import { formatToHHMM } from '@/src/utils/time';
-import { ScheduleDetailModal } from '../modals/ScheduleDetailModal';
-import { ScheduleEditModal } from '../modals/ScheduleEditModal';
 import { ICompany, userTypes, useUserStore } from '@/src/stores/userStore';
 import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
+import { useScheduleDetailModalOpenStore } from '@/src/stores/modalOpenStore';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
 
 export const RequestedSchedule = ({ schedule }: { schedule: ISchedule }) => {
 	const user = useUserStore((state) => state.user);
@@ -23,16 +23,19 @@ export const RequestedSchedule = ({ schedule }: { schedule: ISchedule }) => {
 };
 
 const RequestedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
-	const [openDetailModal, setOpenDetailModal] = useState(false);
-	const [openEditModal, setOpenEditModal] = useState(false);
 	const screenType = useScreenTypeStore((state) => state.screenType);
+	const setSchedule = useSelectedScheduleStore((state) => state.setSchedule);
+	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
+		(state) => state.setOpen
+	);
 
 	return (
 		<>
 			<div
 				onClick={() => {
 					if (screenType === 'pc') {
-						setOpenDetailModal(true);
+						setSchedule(schedule);
+						setScheduleDetailModalOpen(true);
 					}
 				}}
 				className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Orange-100 hover:cursor-pointer'>
@@ -42,28 +45,16 @@ const RequestedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
 					{serviceNames[schedule.serviceType]}
 				</p>
 			</div>
-			{openDetailModal && (
-				<ScheduleDetailModal
-					schedule={schedule}
-					onClose={() => setOpenDetailModal(false)}
-					editModalOpen={() => setOpenEditModal(true)}
-				/>
-			)}
-			{openEditModal && (
-				<ScheduleEditModal
-					schedule={schedule}
-					onClose={() => setOpenEditModal(false)}
-					onEdit={() => {}}
-				/>
-			)}
 		</>
 	);
 };
 
 const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
-	const [openDetailModal, setOpenDetailModal] = useState(false);
-	const [openEditModal, setOpenEditModal] = useState(false);
 	const [company, setCompany] = useState<ICompany>();
+	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
+		(state) => state.setOpen
+	);
+	const setSchedule = useSelectedScheduleStore((state) => state.setSchedule);
 
 	const screenType = useScreenTypeStore((state) => state.screenType);
 
@@ -81,7 +72,8 @@ const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 			<div
 				onClick={() => {
 					if (screenType === 'pc') {
-						setOpenDetailModal(true);
+						setSchedule(schedule);
+						setScheduleDetailModalOpen(true);
 					}
 				}}
 				className='md:px-2 md:py-1 flex flex-col rounded-[8px] md:bg-Orange-100 hover:cursor-pointer'>
@@ -91,7 +83,7 @@ const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 						{formatToHHMM(schedule.scheduledAt)}{' '}
 						{serviceNames[schedule.serviceType]}
 					</p>
-					<button className='flex justify-center items-center px-[1px] py-2 rounded-[6px] bg-Orange-600'>
+					<button className='flex justify-center items-center px-[1px] py-2 rounded-[6px] bg-Orange-600 min-w-[30px]'>
 						<p className='text-white text-[10px] font-[normal] font-[400] leading-[16px]'>
 							확정
 						</p>
@@ -103,20 +95,6 @@ const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 					</p>
 				</div>
 			</div>
-			{openDetailModal && (
-				<ScheduleDetailModal
-					schedule={schedule}
-					onClose={() => setOpenDetailModal(false)}
-					editModalOpen={() => setOpenEditModal(true)}
-				/>
-			)}
-			{openEditModal && (
-				<ScheduleEditModal
-					schedule={schedule}
-					onClose={() => setOpenEditModal(false)}
-					onEdit={() => {}}
-				/>
-			)}
 		</>
 	);
 };

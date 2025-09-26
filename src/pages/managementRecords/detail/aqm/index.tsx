@@ -10,12 +10,12 @@ import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { IManagementRecord } from '@/src/pages/admin/managementRecords';
 import { MicrobioAnalysisType } from '@/src/pages/admin/managementRecords/edit/aqm';
 import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
-import { today } from '@/src/utils/date';
+import { today, toLocaleStringWithoutSec } from '@/src/utils/date';
 import {
 	buildAqmData,
 	buildPmDataByChannel,
 	buildVocData,
-    detectUnit,
+	detectUnit,
 } from '@/src/utils/file';
 import { loadAqmBundleAsFiles } from '@/src/utils/supabase/aqmResults';
 import Image from 'next/image';
@@ -24,6 +24,15 @@ import { useEffect, useState } from 'react';
 const channelSizes = ['0.3um', '0.5um', '5.0um'];
 
 export type Series = { label: string; value: number };
+
+const aqmDangerStandards: { [key: string]: string } = {
+	'CO (PPM)': '>10',
+	'CO2 (PPM)': '>1000',
+	'NO (PPM)': '>0.05',
+	'SO2 (PPM)': '>0.15',
+	'O3 (PPB)': '>0.1',
+	'FMH (PPB)': '>80',
+};
 
 function ManagementRecordDetailAqmPage() {
 	const [date, setDate] = useState<Date>(today);
@@ -90,15 +99,22 @@ function ManagementRecordDetailAqmPage() {
 			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
 		}
 	};
+	// ... 기존 상태/스토어 로직들 유지
+	const handlePrint = () => {
+		// 인쇄 전에 화면을 프린트 레이아웃으로 바꾼 뒤 브라우저 프린트 다이얼로그 호출
+		window.print();
+	};
 
 	return (
 		<div className='flex flex-col bg-Gray-100 min-h-screen'>
 			<GNB />
-			<div className='flex justify-between items-center px-6 py-4 bg-white'>
+			<div className='flex justify-between items-center px-6 py-4 bg-white no-print'>
 				<p className='text-Gray-900 heading-md'>AQM 검사 기록</p>
-				<Button>프린트</Button>
+				<Button onClick={handlePrint}>프린트</Button>
 			</div>
-			<div className='p-6 flex flex-col gap-5'>
+			<div
+				id='print-area'
+				className='p-6 flex flex-col gap-5'>
 				<div className='flex gap-4'>
 					<div className='flex flex-col gap-4 w-[330px]'>
 						<Card>
@@ -124,12 +140,17 @@ function ManagementRecordDetailAqmPage() {
 										날짜 및 시간
 									</p>
 									<div className='flex items-center gap-2'>
-										<Calendar fill='#9CA3AF' />
+										<Calendar
+											fill='#9CA3AF'
+											size={12}
+										/>
 										<p className='text-Gray-500 body-lg-regular'>
 											{managementRecord &&
-												new Date(
-													managementRecord?.date
-												).toLocaleString()}
+												toLocaleStringWithoutSec(
+													new Date(
+														managementRecord?.date
+													)
+												)}
 										</p>
 									</div>
 								</div>
@@ -197,15 +218,7 @@ function ManagementRecordDetailAqmPage() {
 												safeStandard={'0-50'}
 												warningStandard={'51-100'}
 												dangerStandard={'>100'}
-												maxValue={Math.ceil(
-													Math.max(
-														...(pmDataByChannel[
-															size
-														]?.map(
-															(d) => d.value
-														) ?? [0])
-													) * 1.1
-												)}
+												maxValue={150}
 												unit={'CNT'}
 												data={
 													pmDataByChannel[size] ?? []
@@ -228,7 +241,7 @@ function ManagementRecordDetailAqmPage() {
 								</div>
 								<div className='flex flex-col gap-1'>
 									<p className='text-Primary-700 body-lg-medium'>
-										VOCs
+										VOCs{' '}
 										<span className='text-Gray-400 body-lg-regular'>
 											(Volatile Organic Compounds)
 										</span>
@@ -237,9 +250,7 @@ function ManagementRecordDetailAqmPage() {
 										safeStandard={'0-400'}
 										warningStandard={'401-500'}
 										dangerStandard={'>501'}
-										maxValue={Math.ceil(
-											(vocData[0]?.value ?? 0) * 1.1
-										)}
+										maxValue={600}
 										unit={'µg/m3'}
 										data={vocData}
 									/>
@@ -248,7 +259,7 @@ function ManagementRecordDetailAqmPage() {
 						</Card>
 					</div>
 				</div>
-				<Card>
+				<Card className='print-page-break'>
 					<div className='flex flex-col gap-6'>
 						<div className='flex flex-col gap-2 border-b border-Gray-200 pb-4'>
 							<p className='heading-md text-Gray-900'>
@@ -264,18 +275,21 @@ function ManagementRecordDetailAqmPage() {
 								className='flex flex-col gap-1'>
 								<p className='text-Primary-700 body-lg-medium'>
 									{d.label}
-									<span className='text-Gray-400 body-lg-regular'>
-										{' '}
-										(average)
-									</span>
 								</p>
 								<BarChart
-									safeStandard={'0-'} // 항목별 기준 다르면 여기서 분기 처리
+									safeStandard={''} // 항목별 기준 다르면 여기서 분기 처리
 									warningStandard={''}
-									dangerStandard={''}
+									dangerStandard={
+										aqmDangerStandards[d.label] ?? ''
+									}
 									maxValue={Math.ceil(d.value * 1.2)} // 평균값 기반으로 여유 잡기
 									unit={detectUnit(d.label)} // 단위 표시
-									data={[{ label: d.label, value: d.value }]} // 🔑 한 항목 = 막대 1개
+									data={[
+										{
+											label: d.label.split('(')[0],
+											value: d.value,
+										},
+									]} // 🔑 한 항목 = 막대 1개
 								/>
 							</div>
 						))}

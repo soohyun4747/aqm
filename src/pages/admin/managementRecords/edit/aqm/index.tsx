@@ -27,11 +27,11 @@ export type MicrobioAnalysisType = 'pass' | 'fail';
 export interface IAQMResult {
 	id: string;
 	managementRecordId: string;
-	pmFilePath: string;
-	vocFilePath: string;
-	aqmFilePath: string;
-	microbioFilePath: string;
-	microbioAnalysis: MicrobioAnalysisType;
+	pmFilePath?: string | null;
+	vocFilePath?: string | null;
+	aqmFilePath?: string | null;
+	microbioFilePath?: string | null;
+	microbioAnalysis?: MicrobioAnalysisType | null;
 }
 
 function AdminManagementRecordsEditAQMPage() {
@@ -84,16 +84,25 @@ function AdminManagementRecordsEditAQMPage() {
 			setCompanyId(record.company_id);
 			setManager(record.manager_name ?? '');
 			setMicrobioAnal(result?.microbio_analysis ?? undefined);
-            setComment(record.comment)
-
-            console.log({files, result});
-            
+			setComment(record.comment);
 
 			// 파일 필드
 			setMicrobioFile(files.microbioFile);
 			setPmFile(files.pmFile);
 			setVocFile(files.vocFile);
 			setAqmFile(files.aqmFile);
+
+			if (result) {
+				setAqmResult({
+					id: result.id,
+					managementRecordId: result.management_record_id,
+					pmFilePath: result.pm_file_path,
+					vocFilePath: result.voc_file_path,
+					aqmFilePath: result.aqm_file_path,
+					microbioFilePath: result.microbio_file_path,
+					microbioAnalysis: result.microbio_analysis,
+				});
+			}
 		} catch (e) {
 			console.error(e);
 			setToastMessage({ status: 'error', message: '데이터 로드 실패' });

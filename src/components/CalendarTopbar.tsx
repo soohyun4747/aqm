@@ -1,3 +1,4 @@
+import { ViewType } from '../pages/admin/calendar';
 import { ButtonGroup } from './ButtonGroup';
 import { Button } from './buttons/Button';
 import { CalendarProps } from './calendar/Calendar';
@@ -8,8 +9,9 @@ import { ChevronRight } from './icons/ChevronRight';
 interface CalndarTopBarProps {
 	year: number;
 	month: number;
-	onClickCalendarView: () => void;
-	onClickListView: () => void;
+	view?: ViewType;
+	onClickCalendarView?: () => void;
+	onClickListView?: () => void;
 	onClickToday: () => void;
 	onClickAddNewSchedule: () => void;
 	onClickPrevMonth: () => void;
@@ -30,7 +32,7 @@ export function CalendarTopbar(props: CalndarTopBarProps) {
 					onClick={props.onClickPrevMonth}
 				/>
 				<p className='heading-md text-Gray-900 text-center'>
-					{props.year}년 {props.month}월
+					{props.year}년 {props.month + 1}월
 				</p>
 				<IconButton
 					icon={
@@ -43,21 +45,26 @@ export function CalendarTopbar(props: CalndarTopBarProps) {
 				/>
 			</div>
 			<div className='flex flex-col md:flex-row items-center gap-4 w-full md:w-[unset]'>
-				<ButtonGroup
-					buttons={[
-						{
-							label: 'Calendar View',
-							id: 'calendar',
-							onClick: props.onClickCalendarView,
-						},
-						{
-							label: 'List View',
-							id: 'list',
-							onClick: props.onClickListView,
-						},
-					]}
-					className='w-full md:w-[unset]'
-				/>
+				{props.view &&
+					props.onClickCalendarView &&
+					props.onClickListView && (
+						<ButtonGroup
+							selectedId={props.view}
+							buttons={[
+								{
+									label: '캘린더뷰',
+									id: 'calendar',
+									onClick: props.onClickCalendarView,
+								},
+								{
+									label: '리스트뷰',
+									id: 'list',
+									onClick: props.onClickListView,
+								},
+							]}
+							className='w-full md:w-[unset]'
+						/>
+					)}
 				<div className='flex items-center gap-4 w-full md:w-[unset]'>
 					<Button
 						variant='alternative'
