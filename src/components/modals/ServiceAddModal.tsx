@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Modal } from '../modal/Modal';
 import { Radio } from '../Radio';
 import { Services, ServiceType } from '@/src/pages/admin/companies/edit';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
 
 interface ServiceAddModalProps {
 	onConfirm: (serviceType: ServiceType) => void;

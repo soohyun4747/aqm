@@ -1,7 +1,7 @@
 import { getMonthGrid, isToday } from '@/src/utils/date';
 import { DateSection } from './DateSection';
 import { useEffect, useState } from 'react';
-import { ISchedule, Schedule } from './Schedule';
+import { ISchedule, ScheduleCard } from './ScheduleCard';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 
 const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
@@ -90,7 +90,7 @@ export function Calendar(props: CalendarProps) {
 			{screenType === 'mobile' && (
 				<div className='p-4 flex flex-col gap-3'>
 					{selectedDateSchedules.map((schedule) => (
-						<Schedule {...schedule} />
+						<ScheduleCard {...schedule} />
 					))}
 				</div>
 			)}

@@ -4,7 +4,7 @@ import {
 	ISchedule,
 	RequestedBadge,
 	serviceNames,
-} from '../calendar/Schedule';
+} from '../calendar/ScheduleCard';
 import { Modal } from '../modal/Modal';
 import { useEffect, useState } from 'react';
 import { ICompany, userTypes, useUserStore } from '@/src/stores/userStore';

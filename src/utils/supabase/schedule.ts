@@ -1,8 +1,9 @@
 // lib/schedules.client.ts
 import { supabaseClient } from '@/lib/supabase/client';
 import { monthRangeTimestamptz } from '../date';
-import { ISchedule } from '@/src/components/calendar/Schedule';
+import { ISchedule } from '@/src/components/calendar/ScheduleCard';
 import { ScheduleStatusType } from '@/src/components/calendar/DateSection';
+import { ServiceType } from '@/src/pages/admin/companies/edit';
 
 export async function fetchSchedulesByMonth(
 	year: number,
@@ -128,4 +129,166 @@ export async function deleteSchedule(id: string): Promise<boolean> {
 	}
 
 	return true;
+}
+
+export interface ILatestServiceSchedule {
+	companyId: string;
+	companyName: string;
+	serviceType: ServiceType;
+	lastConfirmedAt: string | null; // ISO
+}
+
+// 최근 확정 스케줄 전부 불러와서 (회사×서비스)별 최신 1건만 남김
+export async function fetchLatestConfirmedSchedules(
+	companyId?: string
+): Promise<ILatestServiceSchedule[]> {
+	const supabase = supabaseClient();
+
+	// schedules 테이블: company_id, service_type, scheduled_at, status, companies(name)
+	let q = supabase
+		.from('schedules')
+		.select(
+			`
+      company_id,
+      service_type,
+      scheduled_at,
+      status,
+      companies!inner(name)
+    `
+		)
+		.eq('status', 'confirmed') // 확정된 일정만
+		.order('scheduled_at', { ascending: false }) // 최신 우선
+		.limit(5000); // 필요시 조정
+
+	if (companyId) {
+		q = q.eq('company_id', companyId);
+	}
+
+	const { data, error } = await q;
+	if (error) throw error;
+
+	// 회사×서비스별 최신 1건만 취득
+	const map = new Map<string, ILatestServiceSchedule>();
+
+	const rows = data as any[];
+
+	for (const row of rows ?? []) {
+		const key = `${row.company_id}__${row.service_type}`;
+		if (!map.has(key)) {
+			map.set(key, {
+				companyId: row.company_id,
+				companyName: row.companies?.name ?? '',
+				serviceType: row.service_type,
+				lastConfirmedAt: row.scheduled_at ?? null,
+			});
+		}
+	}
+
+	return [...map.values()];
+}
+
+export async function fetchConfirmedSchedulesWithin3WeeksByCompany(
+	companyId?: string
+): Promise<{ rows: ISchedule[] }> {
+	const supabase = supabaseClient();
+
+	// 로컬 기준 오늘 00:00 ~ +21일 23:59:59
+	const from = new Date();
+	from.setHours(0, 0, 0, 0);
+
+	const to = new Date(from);
+	to.setDate(to.getDate() + 21);
+	to.setHours(23, 59, 59, 999);
+
+	const select = `
+    id,
+    company_id,
+    service_type,
+    memo,
+    scheduled_at,
+    status,
+    created_at,
+    updated_at,
+    company:companies(name)
+  `;
+
+	let q = supabase
+		.from('schedules')
+		.select(select)
+		.eq('status', 'confirmed')
+		.gte('scheduled_at', from.toISOString())
+		.lt('scheduled_at', to.toISOString())
+		.order('scheduled_at', { ascending: true });
+
+	if (companyId) {
+		q = q.eq('company_id', companyId);
+	}
+
+	const { data, error } = await q;
+	if (error) throw error;
+
+	const rows: ISchedule[] = (data ?? []).map((row: any) => ({
+		id: row.id,
+		companyId: row.company_id,
+		companyName: Array.isArray(row.company)
+			? row.company[0]?.name
+			: row.company?.name,
+		serviceType: row.service_type,
+		title: row.title ?? null,
+		description: row.description ?? null,
+		scheduledAt: new Date(row.scheduled_at),
+		status: 'confirmed',
+		createdAt: new Date(row.created_at),
+		updatedAt: new Date(row.updated_at),
+	}));
+
+	return { rows };
+}
+
+export async function fetchRequestedSchedules(
+	companyId?: string | null
+): Promise<{ rows: ISchedule[] }> {
+	const supabase = supabaseClient();
+
+	const select = `
+    id,
+    company_id,
+    service_type,
+    memo,
+    scheduled_at,
+    status,
+    created_at,
+    updated_at,
+    company:companies(name)
+  `;
+
+	let q = supabase
+		.from('schedules')
+		.select(select)
+		.eq('status', 'requested')
+		.order('scheduled_at', { ascending: true });
+
+	if (companyId) {
+		q = q.eq('company_id', companyId);
+	}
+
+	const { data, error } = await q;
+	if (error) throw error;
+
+	const rows: ISchedule[] = (data ?? []).map((row: any) => ({
+		id: row.id,
+		companyId: row.company_id,
+		companyName: Array.isArray(row.company)
+			? row.company[0]?.name
+			: row.company?.name,
+		serviceType: row.service_type,
+		title: row.title ?? null,
+		description: row.description ?? null,
+		scheduledAt: new Date(row.scheduled_at),
+		status: 'requested',
+		createdAt: new Date(row.created_at),
+		updatedAt: new Date(row.updated_at),
+	}));
+
+	return { rows };
 }

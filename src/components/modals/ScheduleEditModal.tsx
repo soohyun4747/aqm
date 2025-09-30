@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ISchedule, getServiceDropdownOptions } from '../calendar/Schedule';
+import { ISchedule, getServiceDropdownOptions } from '../calendar/ScheduleCard';
 import { Dropdown, Option } from '../Dropdown';
 import { Modal } from '../modal/Modal';
 import { DatePicker } from '../DatePicker';

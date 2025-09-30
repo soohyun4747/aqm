@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ISchedule, getServiceDropdownOptions } from '../calendar/Schedule';
+import { ISchedule, getServiceDropdownOptions } from '../calendar/ScheduleCard';
 import { Dropdown, Option } from '../Dropdown';
 import { Modal } from '../modal/Modal';
 import { today } from '@/src/utils/date';
@@ -9,6 +9,7 @@ import { InputBox } from '../InputBox';
 import { ServiceType } from '@/src/pages/admin/companies/edit';
 import { useUserStore } from '@/src/stores/userStore';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
 
 interface ScheduleAddModalProps {
 	onClose: () => void;
@@ -30,6 +31,18 @@ function ScheduleAddCompanyModal(props: ScheduleAddModalProps) {
 	const [serviceType, setServiceType] = useState('');
 	const [memo, setMemo] = useState('');
 	const user = useUserStore((state) => state.user);
+	const { schedule: selectedSchedule, setSchedule: setSelectedSchedule } =
+		useSelectedScheduleStore();
+
+	useEffect(() => {
+		if (selectedSchedule) {
+			setServiceType(selectedSchedule.serviceType);
+		}
+
+		return () => {
+			setSelectedSchedule(undefined);
+		};
+	}, [selectedSchedule]);
 
 	return (
 		<Modal
@@ -100,10 +113,23 @@ function ScheduleAddAdminModal(props: ScheduleAddModalProps) {
 	const [companyId, setCompanyId] = useState('');
 	const [memo, setMemo] = useState('');
 	const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
+	const { schedule: selectedSchedule, setSchedule: setSelectedSchedule } =
+		useSelectedScheduleStore();
 
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
+
+	useEffect(() => {
+		if (selectedSchedule) {
+			setCompanyId(selectedSchedule.companyId);
+			setServiceType(selectedSchedule.serviceType);
+		}
+
+		return () => {
+			setSelectedSchedule(undefined);
+		};
+	}, [selectedSchedule]);
 
 	const getSetCompanyOptions = async () => {
 		const options = await fetchCompanyOptions();

@@ -7,7 +7,7 @@ import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
 import { GNB } from '@/src/components/GNB';
 import { SearchField } from '@/src/components/SearchField';
 import { Button } from '@/src/components/buttons/Button';
-import { serviceNames } from '@/src/components/calendar/Schedule';
+import { serviceNames } from '@/src/components/calendar/ScheduleCard';
 import { Modal } from '@/src/components/modal/Modal';
 import { Radio } from '@/src/components/Radio';
 import { fetchManagementRecordsByCompany } from '@/src/utils/supabase/managementRecord';

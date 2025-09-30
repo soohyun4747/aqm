@@ -27,3 +27,11 @@ export const useScheduleDeleteModalOpenStore = create<ModalOpenStore>((set) => {
         setOpen: (value) => set(() => ({ open: value })),
     };
 });
+
+
+export const useScheduleAddModalOpenStore = create<ModalOpenStore>((set) => {
+    return {
+        open: false,
+        setOpen: (value) => set(() => ({ open: value })),
+    };
+});

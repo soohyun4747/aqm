@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ISchedule, serviceNames } from './Schedule';
+import { ISchedule, serviceNames } from './ScheduleCard';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { OrangeDonut } from '../icons/OrangeDonut';
 import { formatToHHMM } from '@/src/utils/time';
@@ -50,7 +50,7 @@ const RequestedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
 };
 
 const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
-	const [company, setCompany] = useState<ICompany>();
+	// const [company, setCompany] = useState<ICompany>();
 	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
 		(state) => state.setOpen
 	);
@@ -58,14 +58,14 @@ const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 
 	const screenType = useScreenTypeStore((state) => state.screenType);
 
-	useEffect(() => {
-		getSetCompanyInfo(schedule);
-	}, [schedule]);
+	// useEffect(() => {
+	// 	getSetCompanyInfo(schedule);
+	// }, [schedule]);
 
-	const getSetCompanyInfo = async (schedule: ISchedule) => {
-		const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-		setCompany(companyInfo);
-	};
+	// const getSetCompanyInfo = async (schedule: ISchedule) => {
+	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
+	// 	setCompany(companyInfo);
+	// };
 
 	return (
 		<>
@@ -91,7 +91,7 @@ const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 				</div>
 				<div className='pl-4'>
 					<p className='text-Orange-500 truncate body-sm-medium'>
-						{company?.name}
+						{schedule.companyName}
 					</p>
 				</div>
 			</div>

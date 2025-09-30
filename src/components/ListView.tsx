@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Button } from './buttons/Button';
-import { ISchedule, serviceNames } from './calendar/Schedule';
+import { ISchedule, serviceNames } from './calendar/ScheduleCard';
 import { Building } from './icons/Building';
 import { ICompany } from '../stores/userStore';
 import { fetchCompanyInfobyId } from '../utils/supabase/company';
@@ -72,33 +72,6 @@ export function ListView({
 			<Card className='flex-1'>
 				<div className='flex flex-col gap-6 h-full'>
 					<p className='heading-md text-Gray-900'>요청온 일정</p>
-					{dayConfirmedSchedules.length > 0 ? (
-						dayConfirmedSchedules.map((dayGroup) => (
-							<div className='flex flex-col gap-3'>
-								<p className='text-Gray-900 body-lg-md'>
-									{dayGroup.day}
-								</p>
-								{dayGroup.schedules.map((schedule) => (
-									<ListViewConfirmedItem
-										schedule={schedule}
-									/>
-								))}
-							</div>
-						))
-					) : (
-						<div className='flex items-center justify-center w-full h-[70%]'>
-							<p className='text-Gray-400 body-md-regular'>
-								요청온 일정이 없습니다.
-								<br />
-								요청이 들어오면 이곳에 표시됩니다.
-							</p>
-						</div>
-					)}
-				</div>
-			</Card>
-			<Card className='flex-1'>
-				<div className='flex flex-col gap-6 h-full'>
-					<p className='heading-md text-Gray-900'>확정된 일정</p>
 					{dayRequestedSchedules.length > 0 ? (
 						dayRequestedSchedules.map((dayGroup) => (
 							<div className='flex flex-col gap-3'>
@@ -115,7 +88,34 @@ export function ListView({
 						))
 					) : (
 						<div className='flex items-center justify-center w-full h-[70%]'>
-							<p className='text-Gray-400 body-md-regular'>
+							<p className='text-Gray-400 body-md-regular text-center'>
+								요청온 일정이 없습니다.
+								<br />
+								요청이 들어오면 이곳에 표시됩니다.
+							</p>
+						</div>
+					)}
+				</div>
+			</Card>
+			<Card className='flex-1'>
+				<div className='flex flex-col gap-6 h-full'>
+					<p className='heading-md text-Gray-900'>확정된 일정</p>
+					{dayConfirmedSchedules.length > 0 ? (
+						dayConfirmedSchedules.map((dayGroup) => (
+							<div className='flex flex-col gap-3'>
+								<p className='text-Gray-900 body-lg-md'>
+									{dayGroup.day}
+								</p>
+								{dayGroup.schedules.map((schedule) => (
+									<ListViewConfirmedItem
+										schedule={schedule}
+									/>
+								))}
+							</div>
+						))
+					) : (
+						<div className='flex items-center justify-center w-full h-[70%]'>
+							<p className='text-Gray-400 body-md-regular text-center'>
 								확정된 일정이 없습니다.
 								<br />
 								일정이 확정되면 이곳에 표시됩니다.
@@ -129,7 +129,7 @@ export function ListView({
 }
 
 function ListViewConfirmedItem({ schedule }: { schedule: ISchedule }) {
-	const [company, setCompany] = useState<ICompany>();
+	// const [company, setCompany] = useState<ICompany>();
 	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
 		(state) => state.setOpen
 	);
@@ -137,16 +137,16 @@ function ListViewConfirmedItem({ schedule }: { schedule: ISchedule }) {
 		(state) => state.setSchedule
 	);
 
-	useEffect(() => {
-		if (schedule) {
-			getSetCompanyInfo(schedule);
-		}
-	}, [schedule]);
+	// useEffect(() => {
+	// 	if (schedule) {
+	// 		getSetCompanyInfo(schedule);
+	// 	}
+	// }, [schedule]);
 
-	const getSetCompanyInfo = async (schedule: ISchedule) => {
-		const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-		setCompany(companyInfo);
-	};
+	// const getSetCompanyInfo = async (schedule: ISchedule) => {
+	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
+	// 	setCompany(companyInfo);
+	// };
 
 	return (
 		<div className={`px-4 py-2 flex bg-Green-50 items-center`}>
@@ -161,7 +161,7 @@ function ListViewConfirmedItem({ schedule }: { schedule: ISchedule }) {
 							fill='#6B7280'
 						/>
 						<p className='text-Gray-500 body-md-regular'>
-							{company?.name}
+							{schedule.companyName}
 						</p>
 					</div>
 					<div className='flex items-center gap-1'>
@@ -194,7 +194,7 @@ function ListViewRequestedItem({
 	schedule: ISchedule;
 	onConfirmSchedule: (schedule: ISchedule) => Promise<void>;
 }) {
-	const [company, setCompany] = useState<ICompany>();
+	// const [company, setCompany] = useState<ICompany>();
 	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
 		(state) => state.setOpen
 	);
@@ -202,16 +202,16 @@ function ListViewRequestedItem({
 		(state) => state.setSchedule
 	);
 
-	useEffect(() => {
-		if (schedule) {
-			getSetCompanyInfo(schedule);
-		}
-	}, [schedule]);
+	// useEffect(() => {
+	// 	if (schedule) {
+	// 		getSetCompanyInfo(schedule);
+	// 	}
+	// }, [schedule]);
 
-	const getSetCompanyInfo = async (schedule: ISchedule) => {
-		const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-		setCompany(companyInfo);
-	};
+	// const getSetCompanyInfo = async (schedule: ISchedule) => {
+	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
+	// 	setCompany(companyInfo);
+	// };
 
 	return (
 		<div className={`px-4 py-2 flex bg-Orange-50`}>
@@ -226,7 +226,7 @@ function ListViewRequestedItem({
 							fill='#6B7280'
 						/>
 						<p className='text-Gray-500 body-md-regular'>
-							{company?.name}
+							{schedule.companyName}
 						</p>
 					</div>
 					<div className='flex items-center gap-1'>

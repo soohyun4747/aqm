@@ -1,5 +1,5 @@
 import { ICompany, userTypes, useUserStore } from '@/src/stores/userStore';
-import { ISchedule, serviceNames } from './Schedule';
+import { ISchedule, serviceNames } from './ScheduleCard';
 import { useEffect, useState } from 'react';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { ScheduleDetailModal } from '../modals/ScheduleDetailModal';
@@ -54,7 +54,7 @@ const ConfirmedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
 };
 
 const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
-	const [company, setCompany] = useState<ICompany>();
+	// const [company, setCompany] = useState<ICompany>();
 	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
 		(state) => state.setOpen
 	);
@@ -62,14 +62,14 @@ const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 
 	const screenType = useScreenTypeStore((state) => state.screenType);
 
-	useEffect(() => {
-		getSetCompanyInfo(schedule);
-	}, [schedule]);
+	// useEffect(() => {
+	// 	getSetCompanyInfo(schedule);
+	// }, [schedule]);
 
-	const getSetCompanyInfo = async (schedule: ISchedule) => {
-		const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-		setCompany(companyInfo);
-	};
+	// const getSetCompanyInfo = async (schedule: ISchedule) => {
+	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
+	// 	setCompany(companyInfo);
+	// };
 
 	return (
 		<>
@@ -89,7 +89,7 @@ const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 				</div>
 				<div className='pl-4'>
 					<p className='text-Green-500 truncate body-sm-medium'>
-						{company?.name}
+						{schedule.companyName}
 					</p>
 				</div>
 			</div>

@@ -1,5 +1,9 @@
 import { Calendar } from '@/src/components/calendar/Calendar';
-import { ISchedule, Schedule } from '@/src/components/calendar/Schedule';
+import {
+	ISchedule,
+	ScheduleCard,
+	serviceNames,
+} from '@/src/components/calendar/ScheduleCard';
 import { CalendarTopbar } from '@/src/components/CalendarTopbar';
 import { Card } from '@/src/components/Card';
 import { GNB } from '@/src/components/GNB';
@@ -8,6 +12,9 @@ import { useEffect, useMemo, useState } from 'react';
 import {
 	createSchedule,
 	deleteSchedule,
+	fetchConfirmedSchedulesWithin3WeeksByCompany,
+	fetchLatestConfirmedSchedules,
+	fetchRequestedSchedules,
 	fetchSchedulesByMonth,
 	updateSchedule,
 } from '../../../utils/supabase/schedule';
@@ -17,6 +24,7 @@ import {
 	ToastMessageStatusType,
 } from '../../../components/ToastMessage';
 import {
+	useScheduleAddModalOpenStore,
 	useScheduleDeleteModalOpenStore,
 	useScheduleDetailModalOpenStore,
 	useScheduleEditModalOpenStore,
@@ -27,6 +35,12 @@ import { ScheduleDetailModal } from '@/src/components/modals/ScheduleDetailModal
 import { ScheduleEditModal } from '@/src/components/modals/ScheduleEditModal';
 import { Modal } from '@/src/components/modal/Modal';
 import { ListView } from '@/src/components/ListView';
+import {
+	buildRequiredItems,
+	filterRequired,
+	formatOverdueLabel,
+} from '@/src/utils/schedule';
+import { RequiredScheduleCard } from '@/src/components/calendar/RequiredScheduleCard';
 
 export type ViewType = 'calendar' | 'list';
 
@@ -35,12 +49,18 @@ function AdminCalendarPage() {
 	const [month, setMonth] = useState(today.getMonth());
 
 	const [monthSchedules, setMonthSchedules] = useState<ISchedule[]>([]);
-	const [needToSchedules, setNeedToSchedules] = useState<ISchedule[]>([]);
+	const [requiredSchedules, setRequiredSchedules] = useState<ISchedule[]>([]);
+
+	const [upcomingSchedules, setUpcomingSchedules] = useState<ISchedule[]>([]);
+	const [requestedSchedules, setRequestedSchedules] = useState<ISchedule[]>(
+		[]
+	);
 
 	const [view, setView] = useState<ViewType>('calendar');
-	const [scheduleAddModalOpen, setScheduleAddModalOpen] = useState(false);
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
+	const { open: scheduleAddModalOpen, setOpen: setScheduleAddModalOpen } =
+		useScheduleAddModalOpenStore();
 	const { open: scheduleEditModalOpen, setOpen: setScheduleEditModalOpen } =
 		useScheduleEditModalOpenStore();
 	const {
@@ -54,36 +74,90 @@ function AdminCalendarPage() {
 	} = useScheduleDeleteModalOpenStore();
 
 	useEffect(() => {
+		getSetRequiredSchedules();
+		getSetUpcomingSchedules();
+		getSetRequestedSchedules();
+	}, []);
+
+	useEffect(() => {
 		getSetMonthSchedules();
 	}, [year, month]);
+
+	const reUpdateSchedules = () => {
+		getSetMonthSchedules();
+		getSetRequiredSchedules();
+		getSetUpcomingSchedules();
+		getSetRequestedSchedules();
+	};
+
+	const getSetUpcomingSchedules = async () => {
+		try {
+			const data = await fetchConfirmedSchedulesWithin3WeeksByCompany();
+			setUpcomingSchedules(data.rows);
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	const getSetRequestedSchedules = async () => {
+		try {
+			const data = await fetchRequestedSchedules();
+			setRequestedSchedules(data.rows);
+		} catch (error) {
+			console.error(error);
+		}
+	};
+
+	const getSetRequiredSchedules = async () => {
+		try {
+			const latest = await fetchLatestConfirmedSchedules();
+			const now = new Date();
+			const items = buildRequiredItems(latest, now);
+			const targets = filterRequired(items, now);
+
+			const mapped = targets
+				.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()) // 기한 임박순
+				.map((it) => ({
+					id: `${it.companyId}-${
+						it.serviceType
+					}-due-${it.dueDate.toISOString()}`,
+					companyId: it.companyId,
+					companyName: it.companyName,
+					serviceType: it.serviceType,
+					status: 'required',
+					title: serviceNames[it.serviceType],
+					delayedLabel:
+						it.isOverdue &&
+						formatOverdueLabel(Math.abs(it.daysLeft)),
+					//delayed: 연체된 경우 연체된 일수, 개월수 등 표시,
+					scheduledAt: it.dueDate, // 기한을 날짜로 노출
+					createdAt: now,
+					updatedAt: now,
+				}));
+
+			setRequiredSchedules(mapped as ISchedule[]);
+		} catch (e) {
+			console.error('Error building required schedules:', e);
+			setRequiredSchedules([]);
+		}
+	};
 
 	const getSetMonthSchedules = async () => {
 		const data = await fetchSchedulesByMonth(year, month);
 		setMonthSchedules(data.rows);
 	};
 
-	const requestedSchedules = useMemo(() => {
+	const monthRequestedSchedules = useMemo(() => {
 		return monthSchedules.filter(
 			(schedule) => schedule.status === 'requested'
 		);
 	}, [monthSchedules]);
 
-	const confirmedSchedules = useMemo(() => {
+	const monthConfirmedSchedules = useMemo(() => {
 		return monthSchedules.filter(
 			(schedule) => schedule.status === 'confirmed'
 		);
 	}, [monthSchedules]);
-
-	const upcomingConfirmedSchedules = useMemo(() => {
-		const now = today;
-		const fourWeeksLater = new Date(now);
-		fourWeeksLater.setDate(now.getDate() + 28);
-
-		return confirmedSchedules.filter((schedule) => {
-			const scheduleDate = new Date(schedule.scheduledAt);
-			return scheduleDate >= now && scheduleDate <= fourWeeksLater;
-		});
-	}, [confirmedSchedules]);
 
 	const addNewSchedule = async (schedule: ISchedule) => {
 		const data: any = await createSchedule(schedule);
@@ -95,7 +169,7 @@ function AdminCalendarPage() {
 			console.log(data.error);
 		} else {
 			// 같은 달 데이터 리프레시
-			await getSetMonthSchedules();
+			reUpdateSchedules();
 			setToastMessage({
 				status: 'confirm',
 				message: '스케줄을 생성하였습니다',
@@ -109,7 +183,7 @@ function AdminCalendarPage() {
 	const onEditSchedule = async (schedule: ISchedule) => {
 		try {
 			await updateSchedule({ ...schedule, status: 'confirmed' });
-			getSetMonthSchedules();
+			reUpdateSchedules();
 			setScheduleEditModalOpen(false);
 			setScheduleDetailModalOpen(false);
 			setToastMessage({
@@ -129,7 +203,7 @@ function AdminCalendarPage() {
 	const onConfirmSchedule = async (schedule: ISchedule) => {
 		try {
 			await updateSchedule({ ...schedule, status: 'confirmed' });
-			getSetMonthSchedules();
+			reUpdateSchedules();
 			setScheduleDetailModalOpen(false);
 			setToastMessage({
 				status: 'confirm',
@@ -150,7 +224,7 @@ function AdminCalendarPage() {
 			try {
 				await deleteSchedule(schedule.id);
 				//이메일 전송 코드 추가
-				getSetMonthSchedules();
+				reUpdateSchedules();
 				setScheduleDeleteModalOpen(false);
 				setScheduleDetailModalOpen(false);
 				setToastMessage({
@@ -209,29 +283,63 @@ function AdminCalendarPage() {
 				) : (
 					<ListView
 						onConfirmSchedule={onConfirmSchedule}
-						requestedSchedules={requestedSchedules}
-						confirmedSchedules={confirmedSchedules}
+						requestedSchedules={monthRequestedSchedules}
+						confirmedSchedules={monthConfirmedSchedules}
 					/>
 				)}
 				<div className='flex flex-col gap-4'>
 					<Card>
-						<div className='flex flex-col gap-6'>
+						<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
 							<p className='text-Gray-900 heading-md'>
 								다가오는 일정
 							</p>
-							{upcomingConfirmedSchedules.map((schedule) => (
-								<Schedule {...schedule} />
-							))}
+							{upcomingSchedules.length > 0 ? (
+								upcomingSchedules.map((schedule) => (
+									<ScheduleCard {...schedule} />
+								))
+							) : (
+								<p className='text-Gray-400 body-md-regular text-center'>
+									다가오는 일정이 없습니다.
+									<br />
+									3주 이내의 일정은 이곳에 표시됩니다.
+								</p>
+							)}
 						</div>
 					</Card>
 					<Card>
-						<div className='flex flex-col gap-6'>
+						<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
 							<p className='text-Gray-900 heading-md'>
 								요청온 일정
 							</p>
-							{requestedSchedules.map((schedule) => (
-								<Schedule {...schedule} />
-							))}
+							{requestedSchedules.length > 0 ? (
+								requestedSchedules.map((schedule) => (
+									<ScheduleCard {...schedule} />
+								))
+							) : (
+								<p className='text-Gray-400 body-md-regular text-center'>
+									요청온 일정이 없습니다.
+									<br />
+									일정 요청이 오면 이곳에 표시됩니다.
+								</p>
+							)}
+						</div>
+					</Card>
+					<Card>
+						<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
+							<p className='text-Gray-900 heading-md'>
+								잡아야하는 일정
+							</p>
+							{requiredSchedules.length > 0 ? (
+								requiredSchedules.map((schedule) => (
+									<RequiredScheduleCard {...schedule} />
+								))
+							) : (
+								<p className='text-Gray-400 body-md-regular text-center'>
+									잡아야하는 일정이 없습니다.
+									<br />한 달 이내로 잡아야하는 일정은 이곳에
+									표시됩니다.
+								</p>
+							)}
 						</div>
 					</Card>
 				</div>

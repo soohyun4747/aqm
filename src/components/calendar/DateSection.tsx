@@ -1,12 +1,6 @@
-import { formatToHHMM } from '@/src/utils/time';
-import { ISchedule, serviceNames } from './Schedule';
+import { ISchedule } from './ScheduleCard';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { areSameDate, isToday } from '@/src/utils/date';
-import { useEffect, useState } from 'react';
-import { ScheduleDetailModal } from '../modals/ScheduleDetailModal';
-import { ScheduleEditModal } from '../modals/ScheduleEditModal';
-import { ICompany, userTypes, useUserStore } from '@/src/stores/userStore';
-import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
 import { ConfirmedSchedule } from './ConfirmedSchedule';
 import { RequestedSchedule } from './RequestedSchedule';
 
@@ -72,5 +66,5 @@ export function DateSection(props: DateSectionProps) {
 	);
 }
 
-export type ScheduleStatusType = 'confirmed' | 'requested';
+export type ScheduleStatusType = 'confirmed' | 'requested' | 'required';
 
