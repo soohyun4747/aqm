@@ -7,10 +7,12 @@ import { fetchProfileWithId } from '../utils/supabase/profile';
 import { fetchCompanyWithCompanyId } from '../utils/supabase/company';
 import { useRouter, usePathname } from 'next/navigation';
 import { fetchSession } from '../utils/supabase/session';
+import { useSelectedCompanyStore } from '../stores/selectedCompanyStore';
 
 function App({ Component, pageProps }: AppProps) {
 	const setScreenType = useScreenTypeStore((state) => state.setScreenType);
 	const setUser = useUserStore((state) => state.setUser);
+	const setCompany = useSelectedCompanyStore((state) => state.setCompany);
 
 	const router = useRouter();
 	const pathname = usePathname();
@@ -34,7 +36,7 @@ function App({ Component, pageProps }: AppProps) {
 			try {
 				const session = await fetchSession();
 				const authUser = session?.user;
-        
+
 				if (!authUser) {
 					router.replace('/');
 					return;
@@ -60,15 +62,19 @@ function App({ Component, pageProps }: AppProps) {
 						company,
 					});
 
+					if (company) {
+						setCompany(company);
+					}
+
 					// ✅ role과 pathname 기준으로 라우팅 분기
 					if (
 						profile.role === 'admin' &&
-						!pathname.startsWith('/admin')
+						!pathname?.startsWith('/admin')
 					) {
 						router.replace('/admin/calendar');
 					} else if (
 						profile.role === 'company' &&
-						pathname.startsWith('/admin')
+						pathname?.startsWith('/admin')
 					) {
 						router.replace('/calendar');
 					}

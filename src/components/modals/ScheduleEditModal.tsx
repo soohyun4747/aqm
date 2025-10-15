@@ -1,21 +1,22 @@
 import { useEffect, useState } from 'react';
-import { ISchedule, getServiceDropdownOptions } from '../calendar/ScheduleCard';
 import { Dropdown, Option } from '../Dropdown';
 import { Modal } from '../modal/Modal';
 import { DatePicker } from '../DatePicker';
 import { TimePicker } from '../TimePicker';
 import { InputBox } from '../InputBox';
-import { ServiceType } from '@/src/pages/admin/companies/edit';
 import { ICompany, useUserStore } from '@/src/stores/userStore';
-import {
-	fetchCompanyInfobyId,
-	fetchCompanyOptions,
-} from '@/src/utils/supabase/company';
+import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
+import { useCompanyServiceOptions } from '@/src/hooks/useCompanyServiceOptions';
+import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { ServiceType } from '@/src/utils/supabase/companyServices';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
 
 interface ScheduleEditModalProps {
 	schedule: ISchedule;
 	onClose: () => void;
 	onEdit: (schedule: ISchedule) => Promise<void>;
+	onCancelSchedule?: () => void;
 }
 
 export function ScheduleEditModal(props: ScheduleEditModalProps) {
@@ -29,10 +30,17 @@ export function ScheduleEditModal(props: ScheduleEditModalProps) {
 }
 
 function ScheduleEditCompanyModal(props: ScheduleEditModalProps) {
-	const [date, setDate] = useState(props.schedule.scheduledAt);
-	const [serviceType, setServiceType] = useState(props.schedule.serviceType);
-	const [memo, setMemo] = useState(props.schedule.memo || '');
+	const [date, setDate] = useState<Date>(props.schedule.scheduledAt);
+	const [serviceType, setServiceType] = useState<ServiceType>(
+		props.schedule.serviceType
+	);
+	const [memo, setMemo] = useState<string>(props.schedule.memo ?? '');
 	const user = useUserStore((state) => state.user);
+	const company = useSelectedCompanyStore((state) => state.company);
+
+	const { options: companyServicesOptions } = useCompanyServiceOptions(
+		company?.id
+	);
 
 	return (
 		<Modal
@@ -42,8 +50,6 @@ function ScheduleEditCompanyModal(props: ScheduleEditModalProps) {
 				variant: 'primary',
 				children: '수정 요청',
 				onClick: async () => {
-					console.log(serviceType, user);
-
 					if (serviceType && user?.company) {
 						await props.onEdit({
 							id: props.schedule.id,
@@ -55,11 +61,18 @@ function ScheduleEditCompanyModal(props: ScheduleEditModalProps) {
 						});
 					}
 				},
+			}}
+			thirdBtnProps={{
+				variant: 'danger',
+				children: '일정 취소',
+				onClick: () =>
+					props.onCancelSchedule &&
+					props.onCancelSchedule(),
 			}}>
 			<div className='flex flex-col gap-4'>
 				<Dropdown
 					label={'서비스'}
-					options={getServiceDropdownOptions()}
+					options={companyServicesOptions}
 					value={serviceType}
 					id='service-dropdown'
 					onChange={(newServiceType) => {
@@ -98,6 +111,10 @@ function ScheduleEditAdminModal(props: ScheduleEditModalProps) {
 	const [serviceType, setServiceType] = useState(props.schedule.serviceType);
 	const [memo, setMemo] = useState(props.schedule.memo || '');
 	const [company, setCompany] = useState<ICompany>();
+
+	const { options: companyServicesOptions } = useCompanyServiceOptions(
+		company?.id
+	);
 
 	useEffect(() => {
 		if (props.schedule) {
@@ -139,7 +156,7 @@ function ScheduleEditAdminModal(props: ScheduleEditModalProps) {
 				</div>
 				<Dropdown
 					label={'서비스'}
-					options={getServiceDropdownOptions()}
+					options={companyServicesOptions}
 					value={serviceType}
 					id='service-dropdown'
 					onChange={(newServiceType) => {

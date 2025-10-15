@@ -1,8 +1,9 @@
 import { getMonthGrid, isToday } from '@/src/utils/date';
 import { DateSection } from './DateSection';
 import { useEffect, useState } from 'react';
-import { ISchedule, ScheduleCard } from './ScheduleCard';
+import { ScheduleCard } from './ScheduleCard';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
+import { ISchedule } from '@/src/utils/supabase/schedule';
 
 const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 

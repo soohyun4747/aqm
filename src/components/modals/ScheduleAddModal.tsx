@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { ISchedule, getServiceDropdownOptions } from '../calendar/ScheduleCard';
 import { Dropdown, Option } from '../Dropdown';
 import { Modal } from '../modal/Modal';
 import { today } from '@/src/utils/date';
 import { DatePicker } from '../DatePicker';
 import { TimePicker } from '../TimePicker';
 import { InputBox } from '../InputBox';
-import { ServiceType } from '@/src/pages/admin/companies/edit';
 import { useUserStore } from '@/src/stores/userStore';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
+import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
+import { useCompanyServiceOptions } from '@/src/hooks/useCompanyServiceOptions';
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { ServiceType } from '@/src/utils/supabase/companyServices';
 
 interface ScheduleAddModalProps {
 	onClose: () => void;
@@ -33,25 +35,22 @@ function ScheduleAddCompanyModal(props: ScheduleAddModalProps) {
 	const user = useUserStore((state) => state.user);
 	const { schedule: selectedSchedule, setSchedule: setSelectedSchedule } =
 		useSelectedScheduleStore();
+	const company = useSelectedCompanyStore((state) => state.company);
 
 	useEffect(() => {
-		if (selectedSchedule) {
-			setServiceType(selectedSchedule.serviceType);
-		}
+		if (selectedSchedule) setServiceType(selectedSchedule.serviceType);
+		return () => setSelectedSchedule(undefined);
+	}, [selectedSchedule, setSelectedSchedule]);
 
-		return () => {
-			setSelectedSchedule(undefined);
-		};
-	}, [selectedSchedule]);
+	const companyId = company?.id ?? user?.company?.id;
+	const { options: companyServicesOptions } =
+		useCompanyServiceOptions(companyId);
 
 	return (
 		<Modal
 			title='일정 요청'
 			onClose={props.onClose}
-			secondBtnProps={{
-				children: '닫기',
-				onClick: props.onClose,
-			}}
+			secondBtnProps={{ children: '닫기', onClick: props.onClose }}
 			firstBtnProps={{
 				variant: 'primary',
 				children: '요청',
@@ -62,7 +61,7 @@ function ScheduleAddCompanyModal(props: ScheduleAddModalProps) {
 							serviceType: serviceType as ServiceType,
 							status: 'requested',
 							companyId: user.company.id,
-							memo: memo,
+							memo,
 						});
 					}
 				},
@@ -71,27 +70,23 @@ function ScheduleAddCompanyModal(props: ScheduleAddModalProps) {
 				<div className='flex self-stretch gap-4'>
 					<Dropdown
 						label={'서비스'}
-						options={getServiceDropdownOptions()}
+						options={companyServicesOptions}
 						value={serviceType}
 						id='service-dropdown'
-						onChange={(newServiceType) => {
-							setServiceType(newServiceType as ServiceType);
-						}}
+						onChange={(newServiceType) =>
+							setServiceType(newServiceType as ServiceType)
+						}
 						style={{ flex: 1 }}
 					/>
 				</div>
 				<div className='flex self-stretch gap-4'>
 					<DatePicker
 						date={date}
-						onChange={(newDate) => {
-							setDate(newDate);
-						}}
+						onChange={setDate}
 					/>
 					<TimePicker
 						date={date}
-						onChange={(newDate) => {
-							setDate(newDate);
-						}}
+						onChange={setDate}
 					/>
 				</div>
 				<InputBox
@@ -115,6 +110,10 @@ function ScheduleAddAdminModal(props: ScheduleAddModalProps) {
 	const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
 	const { schedule: selectedSchedule, setSchedule: setSelectedSchedule } =
 		useSelectedScheduleStore();
+
+    
+    const { options: companyServicesOptions } =
+		useCompanyServiceOptions(companyId);
 
 	useEffect(() => {
 		getSetCompanyOptions();
@@ -173,7 +172,7 @@ function ScheduleAddAdminModal(props: ScheduleAddModalProps) {
 					/>
 					<Dropdown
 						label={'서비스'}
-						options={getServiceDropdownOptions()}
+						options={companyServicesOptions}
 						value={serviceType}
 						id='service-dropdown'
 						onChange={(newServiceType) => {

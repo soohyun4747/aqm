@@ -3,8 +3,7 @@ import { Bell } from './icons/Bell';
 import { Popover } from './Popover';
 import { Building } from './icons/Building';
 import { Clock } from './icons/Clock';
-import { serviceNames } from './calendar/ScheduleCard';
-import { ServiceType } from '../pages/admin/companies/edit';
+import { serviceNames, ServiceType } from '../utils/supabase/companyServices';
 
 function NotiCount({ count, id }: { count: number; id: string }) {
 	return (

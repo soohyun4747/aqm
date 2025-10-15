@@ -1,16 +1,11 @@
-import { ICompany, userTypes, useUserStore } from '@/src/stores/userStore';
-import { ISchedule, serviceNames } from './ScheduleCard';
-import { useEffect, useState } from 'react';
+import { userTypes, useUserStore } from '@/src/stores/userStore';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
-import { ScheduleDetailModal } from '../modals/ScheduleDetailModal';
-import { ScheduleEditModal } from '../modals/ScheduleEditModal';
 import { formatToHHMM } from '@/src/utils/time';
-import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
 import { GreenCircle } from '../icons/GreenCircle';
-import { updateSchedule } from '@/src/utils/supabase/schedule';
-import { IToastMessage, ToastMessage } from '../ToastMessage';
 import { useScheduleDetailModalOpenStore } from '@/src/stores/modalOpenStore';
 import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { serviceNames } from '@/src/utils/supabase/companyServices';
 
 export const ConfirmedSchedule = ({ schedule }: { schedule: ISchedule }) => {
 	const user = useUserStore((state) => state.user);
@@ -54,7 +49,6 @@ const ConfirmedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
 };
 
 const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
-	// const [company, setCompany] = useState<ICompany>();
 	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
 		(state) => state.setOpen
 	);
@@ -62,14 +56,6 @@ const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 
 	const screenType = useScreenTypeStore((state) => state.screenType);
 
-	// useEffect(() => {
-	// 	getSetCompanyInfo(schedule);
-	// }, [schedule]);
-
-	// const getSetCompanyInfo = async (schedule: ISchedule) => {
-	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-	// 	setCompany(companyInfo);
-	// };
 
 	return (
 		<>
@@ -87,7 +73,7 @@ const ConfirmedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 						{serviceNames[schedule.serviceType]}
 					</p>
 				</div>
-				<div className='pl-4'>
+				<div className='pl-4 hidden md:block'>
 					<p className='text-Green-500 truncate body-sm-medium'>
 						{schedule.companyName}
 					</p>

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { ISchedule } from '../components/calendar/ScheduleCard';
+import { ISchedule } from '../utils/supabase/schedule';
 
 interface SelectedScheduleStore {
 	schedule: ISchedule | undefined;

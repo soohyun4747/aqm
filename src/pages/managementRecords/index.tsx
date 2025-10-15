@@ -2,17 +2,14 @@ import { DataGrid, PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
 import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import { Services, ServiceType } from '@/src/pages/admin/companies/edit';
 import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
 import { GNB } from '@/src/components/GNB';
 import { SearchField } from '@/src/components/SearchField';
 import { Button } from '@/src/components/buttons/Button';
-import { serviceNames } from '@/src/components/calendar/ScheduleCard';
-import { Modal } from '@/src/components/modal/Modal';
-import { Radio } from '@/src/components/Radio';
 import { fetchManagementRecordsByCompany } from '@/src/utils/supabase/managementRecord';
 import { useUserStore } from '@/src/stores/userStore';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
+import { serviceNames, ServiceType } from '@/src/utils/supabase/companyServices';
 
 export interface IManagementRecord {
 	id: string;
@@ -108,13 +105,11 @@ function CompanyManagementRecordsPage() {
 						totalRows={totalRows}
 						pageSize={PAGE_SIZE}
 						columns={[
-							// 회사 전용이라 고객명 컬럼은 생략 가능. 필요하면 주석 해제
-							// { field: 'companyName', headerName: '고객' },
 							{
 								field: 'date',
-								headerName: '날짜',
+								headerName: '관리 날짜',
 								render: (value) =>
-									toLocaleStringWithoutSec(new Date(value)),
+									new Date(value).toLocaleDateString(),
 							},
 							{
 								field: 'serviceType',
@@ -122,6 +117,12 @@ function CompanyManagementRecordsPage() {
 								render: (value) => serviceNames[value],
 							},
 							{ field: 'managerName', headerName: '담당자' },
+							{
+								field: 'createdAt',
+								headerName: '등록일',
+								render: (value) =>
+									toLocaleStringWithoutSec(new Date(value)),
+							},
 							{
 								field: 'action',
 								headerName: '',

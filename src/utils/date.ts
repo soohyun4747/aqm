@@ -152,3 +152,35 @@ export function toLocaleStringWithoutSec(date: Date) {
 		// second: '2-digit' ← 이걸 안 넣으면 초는 표시 안 됩니다
 	});
 }
+
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function normalizeToMidnight(d: Date, useUTC = false) {
+	const x = new Date(d);
+	return useUTC
+		? (x.setUTCHours(0, 0, 0, 0), x)
+		: (x.setHours(0, 0, 0, 0), x);
+}
+
+/** 두 Date 사이의 '일수' 차이 (end - start) */
+export function daysBetween(
+	start: Date,
+	end: Date,
+	opts: { inclusive?: boolean; useUTC?: boolean } = {}
+): number {
+	const { inclusive = false, useUTC = false } = opts;
+	const s = normalizeToMidnight(start, useUTC);
+	const e = normalizeToMidnight(end, useUTC);
+
+	let diff = Math.floor((e.getTime() - s.getTime()) / MS_PER_DAY);
+	if (inclusive && diff >= 0) diff += 1; // 오늘 포함해서 세고 싶을 때
+	return diff;
+}
+
+/** 특정 날짜로부터 '오늘'까지의 일수 */
+export function daysSince(
+	date: Date,
+	opts: { inclusive?: boolean; useUTC?: boolean } = {}
+): number {
+	return daysBetween(date, new Date(), opts);
+}

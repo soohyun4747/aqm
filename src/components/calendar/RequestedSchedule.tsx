@@ -1,12 +1,11 @@
-import { useEffect, useState } from 'react';
-import { ISchedule, serviceNames } from './ScheduleCard';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { OrangeDonut } from '../icons/OrangeDonut';
 import { formatToHHMM } from '@/src/utils/time';
-import { ICompany, userTypes, useUserStore } from '@/src/stores/userStore';
-import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
+import { userTypes, useUserStore } from '@/src/stores/userStore';
 import { useScheduleDetailModalOpenStore } from '@/src/stores/modalOpenStore';
 import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { serviceNames } from '@/src/utils/supabase/companyServices';
 
 export const RequestedSchedule = ({ schedule }: { schedule: ISchedule }) => {
 	const user = useUserStore((state) => state.user);
@@ -50,22 +49,12 @@ const RequestedScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
 };
 
 const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
-	// const [company, setCompany] = useState<ICompany>();
 	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
 		(state) => state.setOpen
 	);
 	const setSchedule = useSelectedScheduleStore((state) => state.setSchedule);
 
-	const screenType = useScreenTypeStore((state) => state.screenType);
-
-	// useEffect(() => {
-	// 	getSetCompanyInfo(schedule);
-	// }, [schedule]);
-
-	// const getSetCompanyInfo = async (schedule: ISchedule) => {
-	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-	// 	setCompany(companyInfo);
-	// };
+	const screenType = useScreenTypeStore((state) => state.screenType);    
 
 	return (
 		<>
@@ -83,13 +72,13 @@ const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 						{formatToHHMM(schedule.scheduledAt)}{' '}
 						{serviceNames[schedule.serviceType]}
 					</p>
-					<button className='flex justify-center items-center px-[1px] py-2 rounded-[6px] bg-Orange-600 min-w-[30px]'>
+					<button className='hidden md:flex justify-center items-center px-[1px] py-2 rounded-[6px] bg-Orange-600 min-w-[30px]'>
 						<p className='text-white text-[10px] font-[normal] font-[400] leading-[16px]'>
 							확정
 						</p>
 					</button>
 				</div>
-				<div className='pl-4'>
+				<div className='pl-4 hidden md:block'>
 					<p className='text-Orange-500 truncate body-sm-medium'>
 						{schedule.companyName}
 					</p>

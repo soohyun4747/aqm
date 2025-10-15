@@ -1,7 +1,6 @@
 import { supabaseClient } from '@/lib/supabase/client';
-import { toISODate } from '../date';
-import { ServiceType } from '@/src/pages/admin/companies/edit';
 import { PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
+import { ServiceType } from './companyServices';
 
 interface ManagementRecordRow {
 	id: string;

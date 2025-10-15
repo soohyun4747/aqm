@@ -2,12 +2,10 @@ import { DataGrid, PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
 import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { useRouter } from 'next/router';
 import { useEffect, useMemo, useState } from 'react';
-import { Services, ServiceType } from '../companies/edit';
 import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
 import { GNB } from '@/src/components/GNB';
 import { SearchField } from '@/src/components/SearchField';
 import { Button } from '@/src/components/buttons/Button';
-import { serviceNames } from '@/src/components/calendar/ScheduleCard';
 import { Modal } from '@/src/components/modal/Modal';
 import {
 	deleteManagementRecord,
@@ -15,6 +13,7 @@ import {
 } from '@/src/utils/supabase/managementRecord';
 import { Radio } from '@/src/components/Radio';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
+import { serviceNames, Services, ServiceType } from '@/src/utils/supabase/companyServices';
 
 export interface IManagementRecord {
 	id: string;
@@ -121,18 +120,24 @@ function AdminManagementRecordsPage() {
 								field: 'companyName',
 								headerName: '고객',
 							},
+							{ field: 'managerName', headerName: '관리자' },
 							{
 								field: 'date',
-								headerName: '날짜',
+								headerName: '관리 날짜',
 								render: (value) =>
-									toLocaleStringWithoutSec(new Date(value)),
+									new Date(value).toLocaleDateString(),
 							},
 							{
 								field: 'serviceType',
 								headerName: '서비스',
 								render: (value) => serviceNames[value],
 							},
-							{ field: 'managerName', headerName: '관리자' },
+							{
+								field: 'createdAt',
+								headerName: '등록일',
+								render: (value) =>
+									toLocaleStringWithoutSec(new Date(value)),
+							},
 							{
 								field: 'action',
 								headerName: '',

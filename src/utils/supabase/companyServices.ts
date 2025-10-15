@@ -1,5 +1,21 @@
 import { supabaseClient } from '@/lib/supabase/client';
-import { ServiceType } from '@/src/pages/admin/companies/edit';
+
+export const Services = {
+	aqm: 'aqm',
+	hepa: 'hepa',
+	voc: 'voc',
+	as: 'as',
+} as const;
+
+
+export const serviceNames: { [key: string]: string } = {
+	aqm: 'AQM 검사',
+	hepa: 'HEPA 필터 교체',
+	voc: 'VOC 필터 교체',
+	as: '장비 설치/AS',
+};
+
+export type ServiceType = (typeof Services)[keyof typeof Services];
 
 export async function fetchCompanyServicesByCompanyId(
 	companyId: string,

@@ -1,33 +1,22 @@
-import { ICompany } from '@/src/stores/userStore';
-import { ISchedule, serviceNames } from './ScheduleCard';
-import { useEffect, useState } from 'react';
 import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
-import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
 import { Badge } from '../Badge';
 import { Building } from '../icons/Building';
 import { Clock } from '../icons/Clock';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import { useScheduleAddModalOpenStore } from '@/src/stores/modalOpenStore';
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { serviceNames } from '@/src/utils/supabase/companyServices';
+import { useUserStore } from '@/src/stores/userStore';
 
-export function RequiredScheduleCard(props: ISchedule) {
-	// const [company, setCompany] = useState<ICompany>();
+export function ScheduleCardRequired(props: ISchedule) {
+	const user = useUserStore((state) => state.user);
+
 	const setSelectedSchedule = useSelectedScheduleStore(
 		(state) => state.setSchedule
 	);
 	const setScheduleAddModalOpen = useScheduleAddModalOpenStore(
 		(state) => state.setOpen
 	);
-
-	// useEffect(() => {
-	// 	if (props) {
-	// 		getSetCompanyInfo(props);
-	// 	}
-	// }, [props]);
-
-	// const getSetCompanyInfo = async (schedule: ISchedule) => {
-	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-	// 	setCompany(companyInfo);
-	// };
 
 	return (
 		<div
@@ -45,15 +34,17 @@ export function RequiredScheduleCard(props: ISchedule) {
 				</div>
 
 				<div className='flex items-center gap-[12px]'>
-					<div className='flex items-center gap-1'>
-						<Building
-							fill='#6B7280'
-							size={12}
-						/>
-						<p className='body-md-regular text-Gray-500'>
-							{props.companyName}
-						</p>
-					</div>
+					{user?.userType === 'admin' && (
+						<div className='flex items-center gap-1'>
+							<Building
+								fill='#6B7280'
+								size={12}
+							/>
+							<p className='body-md-regular text-Gray-500'>
+								{props.companyName}
+							</p>
+						</div>
+					)}
 					<div className='flex items-center gap-1'>
 						<Clock
 							fill='#6B7280'

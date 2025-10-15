@@ -23,6 +23,7 @@ import {
 	saveNewCompany,
 	updateCompany,
 } from '@/src/utils/supabase/company';
+import { ServiceType } from '@/src/utils/supabase/companyServices';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 
@@ -36,15 +37,6 @@ export interface IHepaFilter {
 }
 
 export const vocFilterSpec = { width: 200, height: 100, depth: 50 };
-
-export const Services = {
-	aqm: 'aqm',
-	hepa: 'hepa',
-	voc: 'voc',
-	as: 'as',
-} as const;
-
-export type ServiceType = (typeof Services)[keyof typeof Services];
 
 export const HepaFilters = {
 	hepa: 'hepa',
@@ -274,7 +266,7 @@ export default function AdminUsersEditPage() {
 		<div className='flex flex-col bg-Gray-100 min-h-screen'>
 			<GNB />
 			<div className='flex justify-between items-center px-6 py-4 bg-white'>
-				<p className='text-Gray-900 heading-md'>새 고객 추가</p>
+				<p className='text-Gray-900 heading-md'>{company ? '고객 정보 수정' : '새 고객 추가'}</p>
 				<Button
 					onClick={company ? handleUpdate : handleNewSave}
 					disabled={saving}>
@@ -335,7 +327,7 @@ export default function AdminUsersEditPage() {
 							/>
 						</div>
 
-						<div className='flex flex-col'>
+						<div className='flex flex-col gap-2'>
 							<p className='text-Gray-900 body-md-medium'>
 								평면도
 							</p>

@@ -1,8 +1,9 @@
-import { ISchedule } from './ScheduleCard';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { areSameDate, isToday } from '@/src/utils/date';
 import { ConfirmedSchedule } from './ConfirmedSchedule';
 import { RequestedSchedule } from './RequestedSchedule';
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { CancelledSchedule } from './CancelledSchedule';
 
 interface DateSectionProps {
 	date: Date;
@@ -31,9 +32,9 @@ export function DateSection(props: DateSectionProps) {
 					background: isToday(props.date)
 						? '#FF5A1F'
 						: props.selectedDate &&
-						  areSameDate(props.date, props.selectedDate)
-						? 'black'
-						: 'transparent',
+							  areSameDate(props.date, props.selectedDate)
+							? 'black'
+							: 'transparent',
 				}}
 				className='px-1.5 rounded-full w-fit'>
 				<p
@@ -44,20 +45,22 @@ export function DateSection(props: DateSectionProps) {
 								areSameDate(props.date, props.selectedDate))
 								? 'white'
 								: props.disabled
-								? '#6B7280'
-								: '#111928',
+									? '#6B7280'
+									: '#111928',
 					}}
 					className='body-md-medium md:body-lg-medium w-fit'>
 					{props.value}
 				</p>
 			</div>
-			<div className='flex md:flex-col md:gap-2'>
+			<div className='flex md:flex-col md:gap-2 overflow-y-auto'>
 				{props.schedules.map((schedule) => (
 					<>
 						{schedule.status === 'requested' ? (
 							<RequestedSchedule schedule={schedule} />
-						) : (
+						) : schedule.status === 'confirmed' ? (
 							<ConfirmedSchedule schedule={schedule} />
+						) : (
+							<CancelledSchedule schedule={schedule}/>
 						)}
 					</>
 				))}
@@ -65,6 +68,3 @@ export function DateSection(props: DateSectionProps) {
 		</div>
 	);
 }
-
-export type ScheduleStatusType = 'confirmed' | 'requested' | 'required';
-

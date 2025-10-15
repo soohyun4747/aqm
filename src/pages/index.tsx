@@ -11,6 +11,7 @@ import { ICompany, useUserStore } from '@/src/stores/userStore';
 import { fetchLogin } from '@/src/utils/supabase/login';
 import { fetchProfileWithId } from '@/src/utils/supabase/profile';
 import { fetchCompanyWithCompanyId } from '@/src/utils/supabase/company';
+import { useSelectedCompanyStore } from '../stores/selectedCompanyStore';
 
 export default function LoginPage() {
 	const router = useRouter();
@@ -22,6 +23,7 @@ export default function LoginPage() {
 	const [err, setErr] = useState<string | null>(null);
 
 	const setUser = useUserStore((state) => state.setUser);
+	const setCompany = useSelectedCompanyStore((state) => state.setCompany);
 
 	const handleLogin = async () => {
 		setLoading(true);
@@ -52,11 +54,9 @@ export default function LoginPage() {
 
 					// 5) 이동
 					if (profile.role === 'admin') {
-						// if(router.pathname.split('/'))
-						console.log(router.basePath);
-
 						router.push('/admin/calendar');
 					} else {
+						setCompany(company);
 						router.push('/calendar');
 					}
 				}
@@ -139,7 +139,7 @@ export default function LoginPage() {
 				alt={'login-bg'}
 				height={900}
 				width={900}
-				className='md:relative md:h-full md:w-[50%] md:opacity-100 absolute top-[-10%] left-0 z-[-1] opacity-50 h-[120%]'
+				className='md:relative md:h-[calc(100vh-48px)] md:w-[50%] md:opacity-100 absolute top-[-10%] left-0 z-[-1] opacity-50 h-[120%]'
 			/>
 		</div>
 	);

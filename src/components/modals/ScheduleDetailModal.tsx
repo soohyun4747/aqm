@@ -1,9 +1,7 @@
 import { formatDateTime } from '@/src/utils/date';
 import {
 	ConfirmedBadge,
-	ISchedule,
 	RequestedBadge,
-	serviceNames,
 } from '../calendar/ScheduleCard';
 import { Modal } from '../modal/Modal';
 import { useEffect, useState } from 'react';
@@ -13,9 +11,11 @@ import {
 	useScheduleDeleteModalOpenStore,
 	useScheduleEditModalOpenStore,
 } from '@/src/stores/modalOpenStore';
+import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { serviceNames } from '@/src/utils/supabase/companyServices';
 
 interface ScheduleDetailModalProps {
-	schedule: ISchedule;
 	onClose: () => void;
 	onConfirm?: (schedule: ISchedule) => Promise<void>;
 }
@@ -38,6 +38,7 @@ const ScheduleDetailModalCompany = (props: ScheduleDetailModalProps) => {
 	const setScheduleEditModalOpen = useScheduleEditModalOpenStore(
 		(state) => state.setOpen
 	);
+	const { schedule } = useSelectedScheduleStore();
 
 	return (
 		<Modal
@@ -54,10 +55,10 @@ const ScheduleDetailModalCompany = (props: ScheduleDetailModalProps) => {
 					<div className='flex flex-col gap-1'>
 						<p className='text-Gray-900 body-lg-medium'>서비스</p>
 						<p className='text-Gray-500 body-lg-regular'>
-							{serviceNames[props.schedule.serviceType]}
+							{schedule && serviceNames[schedule.serviceType]}
 						</p>
 					</div>
-					{props.schedule.status === 'confirmed' ? (
+					{schedule?.status === 'confirmed' ? (
 						<ConfirmedBadge />
 					) : (
 						<RequestedBadge />
@@ -67,14 +68,14 @@ const ScheduleDetailModalCompany = (props: ScheduleDetailModalProps) => {
 					<p className='text-Gray-900 body-lg-medium'>날짜 및 시간</p>
 					<div className='flex items-center gap-2'>
 						<p className='text-Gray-500 body-lg-regular'>
-							{formatDateTime(props.schedule.scheduledAt)}
+							{schedule && formatDateTime(schedule.scheduledAt)}
 						</p>
 					</div>
 				</div>
 				<div className='flex flex-col gap-1'>
 					<p className='text-Gray-900 body-lg-medium'>메모</p>
 					<p className='text-Gray-500 body-lg-regular'>
-						{props.schedule.memo}
+						{schedule?.memo}
 					</p>
 				</div>
 			</div>
@@ -90,10 +91,17 @@ const ScheduleDetailModalAdmin = (props: ScheduleDetailModalProps) => {
 	const setScheduleDeleteModalOpen = useScheduleDeleteModalOpenStore(
 		(state) => state.setOpen
 	);
+	const { schedule, setSchedule } = useSelectedScheduleStore();
 
 	useEffect(() => {
-		getSetCompanyInfo(props.schedule);
-	}, [props.schedule]);
+		if (schedule) {
+			getSetCompanyInfo(schedule);
+		}
+	}, [schedule]);
+
+	useEffect(() => {
+		return () => setSchedule(undefined);
+	}, []);
 
 	const getSetCompanyInfo = async (schedule: ISchedule) => {
 		const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
@@ -105,13 +113,14 @@ const ScheduleDetailModalAdmin = (props: ScheduleDetailModalProps) => {
 			title='상세 일정'
 			onClose={props.onClose}
 			firstBtnProps={{
-				children:
-					props.schedule.status === 'confirmed' ? '확인' : '확정',
+				children: schedule?.status === 'confirmed' ? '확인' : '확정',
 				onClick: () => {
-					if (props.schedule.status === 'confirmed') {
+					if (schedule?.status === 'confirmed') {
 						props.onClose();
 					} else {
-						props.onConfirm && props.onConfirm(props.schedule);
+						props.onConfirm &&
+							schedule &&
+							props.onConfirm(schedule);
 					}
 				},
 			}}
@@ -120,7 +129,7 @@ const ScheduleDetailModalAdmin = (props: ScheduleDetailModalProps) => {
 				onClick: () => setScheduleEditModalOpen(true),
 			}}
 			thirdBtnProps={{
-				children: '삭제',
+				children: '일정 취소',
 				variant: 'danger',
 				onClick: () => setScheduleDeleteModalOpen(true),
 			}}>
@@ -140,21 +149,21 @@ const ScheduleDetailModalAdmin = (props: ScheduleDetailModalProps) => {
 				<div className='flex flex-col gap-1 flex-1'>
 					<p className='text-Gray-900 body-lg-medium'>서비스</p>
 					<p className='text-Gray-500 body-lg-regular'>
-						{serviceNames[props.schedule.serviceType]}
+						{schedule && serviceNames[schedule.serviceType]}
 					</p>
 				</div>
 				<div className='flex flex-col gap-1 flex-1'>
 					<p className='text-Gray-900 body-lg-medium'>날짜 및 시간</p>
 					<div className='flex items-center gap-2'>
 						<p className='text-Gray-500 body-lg-regular'>
-							{formatDateTime(props.schedule.scheduledAt)}
+							{schedule && formatDateTime(schedule.scheduledAt)}
 						</p>
 					</div>
 				</div>
 				<div className='flex flex-col gap-1'>
 					<p className='text-Gray-900 body-lg-medium'>메모</p>
 					<p className='text-Gray-500 body-lg-regular'>
-						{props.schedule.memo}
+						{schedule?.memo}
 					</p>
 				</div>
 			</div>

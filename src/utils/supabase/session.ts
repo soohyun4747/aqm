@@ -9,6 +9,6 @@ export async function fetchSession() {
 
 		return session;
 	} catch (error) {
-		console.error(error);
+		throw error
 	}
 }

@@ -1,9 +1,22 @@
 // lib/schedules.client.ts
 import { supabaseClient } from '@/lib/supabase/client';
 import { monthRangeTimestamptz } from '../date';
-import { ISchedule } from '@/src/components/calendar/ScheduleCard';
-import { ScheduleStatusType } from '@/src/components/calendar/DateSection';
-import { ServiceType } from '@/src/pages/admin/companies/edit';
+import { ServiceType } from './companyServices';
+
+export interface ISchedule {
+	id?: string;
+	scheduledAt: Date;
+	serviceType: ServiceType;
+	status: ScheduleStatusType;
+	memo?: string;
+	companyId: string;
+	companyName?: string;
+	delayedLabel?: string;
+	createdAt?: Date;
+	updatedAt?: Date;
+}
+
+export type ScheduleStatusType = 'confirmed' | 'requested' | 'required' | 'cancelled';
 
 export async function fetchSchedulesByMonth(
 	year: number,
@@ -14,9 +27,22 @@ export async function fetchSchedulesByMonth(
 		const { from, toExclusive } = monthRangeTimestamptz(year, month0to11);
 		const supabase = supabaseClient();
 
+		// 필요한 필드 + 회사명 조인
+		const select = `
+      id,
+      company_id,
+      status,
+      service_type,
+      scheduled_at,
+      memo,
+      created_at,
+      updated_at,
+      company:companies(name)
+    `;
+
 		let query = supabase
 			.from('schedules')
-			.select('*', { count: 'exact' })
+			.select(select, { count: 'exact' })
 			.gte('scheduled_at', from)
 			.lt('scheduled_at', toExclusive)
 			.order('scheduled_at', { ascending: true })
@@ -28,16 +54,24 @@ export async function fetchSchedulesByMonth(
 		const { data, error, count } = await query;
 		if (error) throw error;
 
-		const dateFormatData: ISchedule[] = data.map((value) => ({
-			id: value.id,
-			companyId: value.company_id,
-			status: value.status,
-			serviceType: value.service_type,
-			scheduledAt: new Date(value.scheduled_at),
-			memo: value.memo,
-			createdAt: new Date(value.created_at),
-			updatedAt: new Date(value.updated_at),
-		}));
+		const dateFormatData: ISchedule[] = (data ?? []).map((value: any) => {
+			// company가 객체/배열로 오는 경우 모두 대비
+			const companyName = Array.isArray(value.company)
+				? value.company[0]?.name
+				: value.company?.name;
+
+			return {
+				id: value.id,
+				companyId: value.company_id,
+				companyName, // ← 추가됨
+				status: value.status,
+				serviceType: value.service_type,
+				scheduledAt: new Date(value.scheduled_at),
+				memo: value.memo,
+				createdAt: new Date(value.created_at),
+				updatedAt: new Date(value.updated_at),
+			} as ISchedule;
+		});
 
 		return {
 			rows: dateFormatData ?? [],
@@ -58,18 +92,33 @@ export async function createSchedule(schedule: ISchedule) {
 		const supabase = supabaseClient();
 
 		const payload = {
-			company_id: schedule.companyId, // 회사 선택/연결된 값
+			company_id: schedule.companyId,
 			service_type: schedule.serviceType, // 'aqm' | 'hepa' | 'voc' | 'as'
 			status: schedule.status, // 'requested' | 'confirmed'
-			scheduled_at: schedule.scheduledAt.toISOString(), // DATE 컬럼
-			memo: schedule.memo ?? null, // 선택사항
+			scheduled_at: schedule.scheduledAt.toISOString(),
+			memo: schedule.memo ?? null,
 		};
 
-		return await supabase
+		const { data, error } = await supabase
 			.from('schedules')
 			.insert(payload)
-			.select('id') // 필요하면 반환 컬럼 확장
+			.select('id')
 			.single();
+
+		if (error) return { error };
+
+		// ✅ 이벤트명은 생성/수정/취소 중 하나여야 합니다.
+		// 생성 시:
+		await fetch('/api/emails', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				type: schedule.status,
+				scheduleId: data.id,
+			}),
+		}).catch(console.error); // 메일 실패해도 생성은 성공 처리
+
+		return { data }; // ✅ 성공값 반환 잊지 않기
 	} catch (error) {
 		return { error };
 	}
@@ -105,6 +154,12 @@ export async function updateSchedule(
 		throw error;
 	}
 
+	await fetch('/api/emails', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ type: schedule.status, scheduleId: data.id }),
+	}).catch(console.error);
+
 	// 반환 시 다시 camelCase로 매핑
 	return {
 		id: data.id,
@@ -118,18 +173,46 @@ export async function updateSchedule(
 	};
 }
 
-export async function deleteSchedule(id: string): Promise<boolean> {
+export async function cancelSchedule(id: string): Promise<boolean> {
 	const supabase = supabaseClient();
 
-	const { error } = await supabase.from('schedules').delete().eq('id', id);
+	const { error } = await supabase
+		.from('schedules')
+		.update({ status: 'cancelled' })
+		.eq('id', id);
 
 	if (error) {
-		console.error('Error deleting schedule:', error);
+		console.error('Error cancelling schedule:', error);
 		throw error;
 	}
 
+	await fetch('/api/emails', {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ type: 'cancelled', scheduleId: id }),
+	}).catch(console.error);
+
 	return true;
 }
+
+// export async function deleteSchedule(id: string): Promise<boolean> {
+// 	const supabase = supabaseClient();
+
+// 	const { error } = await supabase.from('schedules').delete().eq('id', id);
+
+// 	if (error) {
+// 		console.error('Error deleting schedule:', error);
+// 		throw error;
+// 	}
+
+// 	await fetch('/api/emails', {
+// 		method: 'POST',
+// 		headers: { 'Content-Type': 'application/json' },
+// 		body: JSON.stringify({ type: 'cancelled', scheduleId: id }),
+// 	}).catch(console.error);
+
+// 	return true;
+// }
 
 export interface ILatestServiceSchedule {
 	companyId: string;

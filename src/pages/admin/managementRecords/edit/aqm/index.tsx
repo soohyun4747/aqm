@@ -20,7 +20,7 @@ import {
 } from '@/src/utils/supabase/aqmResults';
 import { createManagementRecord } from '@/src/utils/supabase/managementRecord';
 import { useRouter } from 'next/router';
-import { Services } from '../../../companies/edit';
+import { Services } from '@/src/utils/supabase/companyServices';
 
 export type MicrobioAnalysisType = 'pass' | 'fail';
 

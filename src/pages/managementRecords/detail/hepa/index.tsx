@@ -6,9 +6,7 @@ import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import { useEffect, useState } from 'react';
 import { fetchHepaFiltersWithCompanyId } from '@/src/utils/supabase/hepaFilters';
-import {
-	fetchHepaResultsByRecordId,
-} from '@/src/utils/supabase/hepaResults';
+import { fetchHepaResultsByRecordId } from '@/src/utils/supabase/hepaResults';
 import { IHEPAResult } from '@/src/pages/admin/managementRecords/edit/hepa';
 import {
 	HepaFilterNames,
@@ -26,7 +24,6 @@ function AdminManagementRecordsEditHepaPage() {
 		useManagementRecordStore();
 
 	useEffect(() => {
-
 		return () => {
 			setManagementRecord(undefined);
 		};
@@ -132,9 +129,9 @@ function AdminManagementRecordsEditHepaPage() {
 									{managementRecord?.managerName}
 								</p>
 							</div>
-							<div className='flex flex-col gap-1'>
+							<div className='flex flex-col'>
 								<p className='text-Gray-900 body-lg-medium'>
-									날짜 및 시간
+									관리 날짜
 								</p>
 								<div className='flex items-center gap-2'>
 									<Calendar
@@ -143,8 +140,27 @@ function AdminManagementRecordsEditHepaPage() {
 									/>
 									<p className='text-Gray-500 body-lg-regular'>
 										{managementRecord &&
+											new Date(
+												managementRecord?.date
+											).toLocaleDateString()}
+									</p>
+								</div>
+							</div>
+							<div className='flex flex-col'>
+								<p className='text-Gray-900 body-lg-medium'>
+									등록일
+								</p>
+								<div className='flex items-center gap-2'>
+									<Calendar
+										fill='#9CA3AF'
+										size={12}
+									/>
+									<p className='text-Gray-500 body-lg-regular'>
+										{managementRecord?.createdAt &&
 											toLocaleStringWithoutSec(
-												new Date(managementRecord?.date)
+												new Date(
+													managementRecord.createdAt
+												)
 											)}
 									</p>
 								</div>

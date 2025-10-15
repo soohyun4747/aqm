@@ -1,26 +1,25 @@
 import { Calendar } from '@/src/components/calendar/Calendar';
-import {
-	ISchedule,
-	ScheduleCard,
-	serviceNames,
-} from '@/src/components/calendar/ScheduleCard';
+import { ScheduleCard } from '@/src/components/calendar/ScheduleCard';
 import { CalendarTopbar } from '@/src/components/CalendarTopbar';
 import { Card } from '@/src/components/Card';
 import { GNB } from '@/src/components/GNB';
-import { today } from '@/src/utils/date';
-import { useEffect, useMemo, useState } from 'react';
+import { daysSince, today } from '@/src/utils/date';
+import { useEffect, useState } from 'react';
 import {
+	cancelSchedule,
 	createSchedule as createScheduleApi,
 	fetchConfirmedSchedulesWithin3WeeksByCompany,
 	fetchLatestConfirmedSchedules,
 	fetchRequestedSchedules,
 	fetchSchedulesByMonth,
+	ISchedule,
 	updateSchedule,
 } from '../../utils/supabase/schedule';
 import { IToastMessage, ToastMessage } from '../../components/ToastMessage';
 import { IUser, useUserStore } from '@/src/stores/userStore';
 import { ScheduleAddModal } from '@/src/components/modals/ScheduleAddModal';
 import {
+	useScheduleDeleteModalOpenStore,
 	useScheduleDetailModalOpenStore,
 	useScheduleEditModalOpenStore,
 } from '@/src/stores/modalOpenStore';
@@ -32,7 +31,9 @@ import {
 	filterRequired,
 	formatOverdueLabel,
 } from '@/src/utils/schedule';
-import { RequiredScheduleCard } from '@/src/components/calendar/RequiredScheduleCard';
+import { ScheduleCardRequired } from '@/src/components/calendar/ScheduleCardRequired';
+import { serviceNames } from '@/src/utils/supabase/companyServices';
+import { Modal } from '@/src/components/modal/Modal';
 
 function CompanyCalendarPage() {
 	// month는 0~11로 통일합니다 (JS Date 규약)
@@ -55,11 +56,21 @@ function CompanyCalendarPage() {
 		setOpen: setScheduleDetailModalOpen,
 	} = useScheduleDetailModalOpenStore();
 	const { schedule, setSchedule } = useSelectedScheduleStore();
+	const {
+		open: scheduleDeleteModalOpen,
+		setOpen: setScheduleDeleteModalOpen,
+	} = useScheduleDeleteModalOpenStore();
 
 	//modal 다 이쪽으로 빼기
 
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 	const user = useUserStore((state) => state.user);
+
+	useEffect(() => {
+		return () => {
+			setSchedule(undefined);
+		};
+	}, []);
 
 	useEffect(() => {
 		if (user?.company) {
@@ -76,11 +87,17 @@ function CompanyCalendarPage() {
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [year, month, user]);
 
+	const reUpdateSchedules = (companyId: string) => {
+		getSetRequiredSchedules(companyId);
+		getSetUpcomingSchedules(companyId);
+		getSetRequestedSchedules(companyId);
+		getSetMonthSchedules(companyId);
+	};
+
 	const getSetUpcomingSchedules = async (companyId: string) => {
 		try {
-			const data = await fetchConfirmedSchedulesWithin3WeeksByCompany(
-				companyId
-			);
+			const data =
+				await fetchConfirmedSchedulesWithin3WeeksByCompany(companyId);
 			setUpcomingSchedules(data.rows);
 		} catch (error) {
 			console.error(error);
@@ -115,10 +132,12 @@ function CompanyCalendarPage() {
 					status: 'required',
 					title: serviceNames[it.serviceType],
 					delayedLabel:
-						it.isOverdue &&
-						formatOverdueLabel(Math.abs(it.daysLeft)),
+						it.lastConfirmedAt &&
+						formatOverdueLabel(
+							daysSince(it.lastConfirmedAt, { inclusive: true })
+						),
 					//delayed: 연체된 경우 연체된 일수, 개월수 등 표시,
-					scheduledAt: it.dueDate, // 기한을 날짜로 노출
+					scheduledAt: it.lastConfirmedAt, // 기한을 날짜로 노출
 					createdAt: now,
 					updatedAt: now,
 				}));
@@ -152,7 +171,7 @@ function CompanyCalendarPage() {
 				});
 				console.log(data.error);
 			} else {
-				await getSetMonthSchedules(user.company.id);
+				await reUpdateSchedules(user.company.id);
 				setToastMessage({
 					status: 'confirm',
 					message: '스케줄을 요청하였습니다',
@@ -171,7 +190,7 @@ function CompanyCalendarPage() {
 		try {
 			await updateSchedule({ ...schedule, status: 'requested' });
 			if (user?.company) {
-				getSetMonthSchedules(user.company.id);
+				reUpdateSchedules(user.company.id);
 			}
 			setScheduleEditModalOpen(false);
 			setScheduleDetailModalOpen(false);
@@ -186,6 +205,32 @@ function CompanyCalendarPage() {
 				message: '일정 수정을 실패하였습니다',
 			});
 			console.error(error);
+		}
+	};
+
+	const onCancelSchedule = async () => {
+		if (schedule?.id) {
+			try {
+				await cancelSchedule(schedule.id);
+				//이메일 전송 코드 추가
+				if (user?.company) {
+					reUpdateSchedules(user.company.id);
+				}
+				setScheduleDeleteModalOpen(false);
+				setScheduleDetailModalOpen(false);
+				setToastMessage({
+					status: 'confirm',
+					message: '일정을 취소하였습니다',
+				});
+			} catch (error) {
+				console.error(error);
+				setScheduleDeleteModalOpen(false);
+				setScheduleDetailModalOpen(false);
+				setToastMessage({
+					status: 'error',
+					message: '일정 취소를 실패하였습니다',
+				});
+			}
 		}
 	};
 
@@ -247,17 +292,19 @@ function CompanyCalendarPage() {
 							<p className='text-Gray-900 heading-md'>
 								요청된 일정
 							</p>
-							{requestedSchedules.length > 0 ? (
-								requestedSchedules.map((schedule) => (
-									<ScheduleCard {...schedule} />
-								))
-							) : (
-								<p className='text-Gray-400 body-md-regular text-center'>
-									요청온 일정이 없습니다.
-									<br />
-									일정 요청이 오면 이곳에 표시됩니다.
-								</p>
-							)}
+							<div className='max-h-[400px] overflow-y-auto flex flex-col gap-6'>
+								{requestedSchedules.length > 0 ? (
+									requestedSchedules.map((schedule) => (
+										<ScheduleCard {...schedule} />
+									))
+								) : (
+									<p className='text-Gray-400 body-md-regular text-center'>
+										요청온 일정이 없습니다.
+										<br />
+										일정 요청이 오면 이곳에 표시됩니다.
+									</p>
+								)}
+							</div>
 						</div>
 					</Card>
 					<Card>
@@ -267,7 +314,7 @@ function CompanyCalendarPage() {
 							</p>
 							{requiredSchedules.length > 0 ? (
 								requiredSchedules.map((schedule) => (
-									<RequiredScheduleCard {...schedule} />
+									<ScheduleCardRequired {...schedule} />
 								))
 							) : (
 								<p className='text-Gray-400 body-md-regular text-center'>
@@ -289,7 +336,6 @@ function CompanyCalendarPage() {
 			)}
 			{scheduleDetailModalOpen && schedule && (
 				<ScheduleDetailModal
-					schedule={schedule}
 					onClose={() => setScheduleDetailModalOpen(false)}
 				/>
 			)}
@@ -298,7 +344,21 @@ function CompanyCalendarPage() {
 					schedule={schedule}
 					onClose={() => setScheduleEditModalOpen(false)}
 					onEdit={onEditSchedule}
+					onCancelSchedule={() => setScheduleDeleteModalOpen(true)}
 				/>
+			)}
+
+			{scheduleDeleteModalOpen && schedule && (
+				<Modal
+					onClose={() => setScheduleDeleteModalOpen(false)}
+					title='일정 취소'
+					firstBtnProps={{
+						variant: 'danger',
+						children: '일정 취소',
+						onClick: onCancelSchedule,
+					}}>
+					<>해당 일정을 취소하시겠습니까?</>
+				</Modal>
 			)}
 			{toastMessage && (
 				<ToastMessage

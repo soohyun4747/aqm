@@ -125,9 +125,9 @@ function CompanyManagementRecordsEditVocPage() {
 									{managementRecord?.managerName}
 								</p>
 							</div>
-							<div className='flex flex-col gap-1'>
+							<div className='flex flex-col'>
 								<p className='text-Gray-900 body-lg-medium'>
-									날짜 및 시간
+									관리 날짜
 								</p>
 								<div className='flex items-center gap-2'>
 									<Calendar
@@ -136,8 +136,27 @@ function CompanyManagementRecordsEditVocPage() {
 									/>
 									<p className='text-Gray-500 body-lg-regular'>
 										{managementRecord &&
+											new Date(
+												managementRecord?.date
+											).toLocaleDateString()}
+									</p>
+								</div>
+							</div>
+							<div className='flex flex-col'>
+								<p className='text-Gray-900 body-lg-medium'>
+									등록일
+								</p>
+								<div className='flex items-center gap-2'>
+									<Calendar
+										fill='#9CA3AF'
+										size={12}
+									/>
+									<p className='text-Gray-500 body-lg-regular'>
+										{managementRecord?.createdAt &&
 											toLocaleStringWithoutSec(
-												new Date(managementRecord?.date)
+												new Date(
+													managementRecord.createdAt
+												)
 											)}
 									</p>
 								</div>

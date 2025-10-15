@@ -1,28 +1,21 @@
 import { Calendar } from '@/src/components/calendar/Calendar';
-import {
-	ISchedule,
-	ScheduleCard,
-	serviceNames,
-} from '@/src/components/calendar/ScheduleCard';
+import { ScheduleCard } from '@/src/components/calendar/ScheduleCard';
 import { CalendarTopbar } from '@/src/components/CalendarTopbar';
 import { Card } from '@/src/components/Card';
 import { GNB } from '@/src/components/GNB';
-import { today } from '@/src/utils/date';
+import { daysSince, today } from '@/src/utils/date';
 import { useEffect, useMemo, useState } from 'react';
 import {
+	cancelSchedule,
 	createSchedule,
-	deleteSchedule,
 	fetchConfirmedSchedulesWithin3WeeksByCompany,
 	fetchLatestConfirmedSchedules,
 	fetchRequestedSchedules,
 	fetchSchedulesByMonth,
+	ISchedule,
 	updateSchedule,
 } from '../../../utils/supabase/schedule';
-import {
-	IToastMessage,
-	ToastMessage,
-	ToastMessageStatusType,
-} from '../../../components/ToastMessage';
+import { IToastMessage, ToastMessage } from '../../../components/ToastMessage';
 import {
 	useScheduleAddModalOpenStore,
 	useScheduleDeleteModalOpenStore,
@@ -40,7 +33,8 @@ import {
 	filterRequired,
 	formatOverdueLabel,
 } from '@/src/utils/schedule';
-import { RequiredScheduleCard } from '@/src/components/calendar/RequiredScheduleCard';
+import { ScheduleCardRequired } from '@/src/components/calendar/ScheduleCardRequired';
+import { serviceNames } from '@/src/utils/supabase/companyServices';
 
 export type ViewType = 'calendar' | 'list';
 
@@ -77,6 +71,10 @@ function AdminCalendarPage() {
 		getSetRequiredSchedules();
 		getSetUpcomingSchedules();
 		getSetRequestedSchedules();
+
+		return () => {
+			setSchedule(undefined);
+		};
 	}, []);
 
 	useEffect(() => {
@@ -127,10 +125,12 @@ function AdminCalendarPage() {
 					status: 'required',
 					title: serviceNames[it.serviceType],
 					delayedLabel:
-						it.isOverdue &&
-						formatOverdueLabel(Math.abs(it.daysLeft)),
+						it.lastConfirmedAt &&
+						formatOverdueLabel(
+							daysSince(it.lastConfirmedAt, { inclusive: true })
+						),
 					//delayed: 연체된 경우 연체된 일수, 개월수 등 표시,
-					scheduledAt: it.dueDate, // 기한을 날짜로 노출
+					scheduledAt: it.lastConfirmedAt, // 기한을 날짜로 노출
 					createdAt: now,
 					updatedAt: now,
 				}));
@@ -156,6 +156,12 @@ function AdminCalendarPage() {
 	const monthConfirmedSchedules = useMemo(() => {
 		return monthSchedules.filter(
 			(schedule) => schedule.status === 'confirmed'
+		);
+	}, [monthSchedules]);
+
+	const monthCancelledSchedules = useMemo(() => {
+		return monthSchedules.filter(
+			(schedule) => schedule.status === 'cancelled'
 		);
 	}, [monthSchedules]);
 
@@ -219,24 +225,25 @@ function AdminCalendarPage() {
 		}
 	};
 
-	const onDeleteSchedule = async () => {
+	const onCancelSchedule = async () => {
 		if (schedule?.id) {
 			try {
-				await deleteSchedule(schedule.id);
+				await cancelSchedule(schedule.id);
 				//이메일 전송 코드 추가
 				reUpdateSchedules();
 				setScheduleDeleteModalOpen(false);
 				setScheduleDetailModalOpen(false);
 				setToastMessage({
 					status: 'confirm',
-					message: '일정을 삭제하였습니다',
+					message: '일정을 취소하였습니다',
 				});
 			} catch (error) {
 				console.error(error);
 				setScheduleDeleteModalOpen(false);
+				setScheduleDetailModalOpen(false);
 				setToastMessage({
 					status: 'error',
-					message: '일정 삭제를 실패하였습니다',
+					message: '일정 취소를 실패하였습니다',
 				});
 			}
 		}
@@ -273,7 +280,7 @@ function AdminCalendarPage() {
 					}
 				}}
 			/>
-			<div className='flex gap-4 p-6 min-h-[calc(100vh-151px)]'>
+			<div className='flex flex-col md:flex-row gap-4 p-6 min-h-[calc(100vh-151px)]'>
 				{view === 'calendar' ? (
 					<Calendar
 						year={year}
@@ -285,6 +292,7 @@ function AdminCalendarPage() {
 						onConfirmSchedule={onConfirmSchedule}
 						requestedSchedules={monthRequestedSchedules}
 						confirmedSchedules={monthConfirmedSchedules}
+						cancelledSchedules={monthCancelledSchedules}
 					/>
 				)}
 				<div className='flex flex-col gap-4'>
@@ -311,17 +319,19 @@ function AdminCalendarPage() {
 							<p className='text-Gray-900 heading-md'>
 								요청온 일정
 							</p>
-							{requestedSchedules.length > 0 ? (
-								requestedSchedules.map((schedule) => (
-									<ScheduleCard {...schedule} />
-								))
-							) : (
-								<p className='text-Gray-400 body-md-regular text-center'>
-									요청온 일정이 없습니다.
-									<br />
-									일정 요청이 오면 이곳에 표시됩니다.
-								</p>
-							)}
+							<div className='max-h-[400px] overflow-y-auto flex flex-col gap-6'>
+								{requestedSchedules.length > 0 ? (
+									requestedSchedules.map((schedule) => (
+										<ScheduleCard {...schedule} />
+									))
+								) : (
+									<p className='text-Gray-400 body-md-regular text-center'>
+										요청온 일정이 없습니다.
+										<br />
+										일정 요청이 오면 이곳에 표시됩니다.
+									</p>
+								)}
+							</div>
 						</div>
 					</Card>
 					<Card>
@@ -331,7 +341,7 @@ function AdminCalendarPage() {
 							</p>
 							{requiredSchedules.length > 0 ? (
 								requiredSchedules.map((schedule) => (
-									<RequiredScheduleCard {...schedule} />
+									<ScheduleCardRequired {...schedule} />
 								))
 							) : (
 								<p className='text-Gray-400 body-md-regular text-center'>
@@ -352,14 +362,13 @@ function AdminCalendarPage() {
 			)}
 			{scheduleDetailModalOpen && schedule && (
 				<ScheduleDetailModal
-					schedule={schedule}
 					onClose={() => setScheduleDetailModalOpen(false)}
 					onConfirm={onConfirmSchedule}
 				/>
 			)}
 			{scheduleEditModalOpen && schedule && (
 				<ScheduleEditModal
-					schedule={schedule}
+				schedule={schedule}
 					onClose={() => setScheduleEditModalOpen(false)}
 					onEdit={onEditSchedule}
 				/>
@@ -367,13 +376,13 @@ function AdminCalendarPage() {
 			{scheduleDeleteModalOpen && schedule && (
 				<Modal
 					onClose={() => setScheduleDeleteModalOpen(false)}
-					title='일정 삭제'
+					title='일정 취소'
 					firstBtnProps={{
 						variant: 'danger',
-						children: '삭제',
-						onClick: onDeleteSchedule,
+						children: '일정 취소',
+						onClick: onCancelSchedule,
 					}}>
-					<>해당 일정을 삭제하시겠습니까?</>
+					<>해당 일정을 취소하시겠습니까?</>
 				</Modal>
 			)}
 

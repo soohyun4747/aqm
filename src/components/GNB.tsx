@@ -1,6 +1,5 @@
 import Image from 'next/image';
 import { useRouter } from 'next/router';
-import { NotificationBell } from './Notification';
 import { ProfileInitial } from './ProfileInitial';
 import { screenTypes, useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { NotificationMob } from './NotificationMob';
@@ -9,7 +8,6 @@ import { Menu } from './icons/Menu';
 import { ChevronRight } from './icons/ChevronRight';
 import { useEffect, useState } from 'react';
 import { userTypes, useUserStore } from '@/src/stores/userStore';
-import { supabaseClient } from '@/lib/supabase/client';
 import { logout } from '../utils/supabase/login';
 
 const adminPathTitles: { [key: string]: string } = {
@@ -56,7 +54,7 @@ export function GNB() {
 		} else {
 			setMenuOpen(false); // Change state when clicking outside
 		}
-	}
+	};
 
 	return (
 		<>
@@ -93,7 +91,11 @@ export function GNB() {
 									? adminEmail
 									: user?.company?.email ?? ''
 							}
-							color={'gray'}
+							onClick={() => {
+								if (user?.userType === 'company') {
+									router.push('/profile');
+								}
+							}}
 						/>
 						<div className='w-[1px] h-[32px] bg-Gray-200' />
 						<p
@@ -113,15 +115,23 @@ export function GNB() {
 							height={28}
 						/>
 						<div className='flex items-center gap-4'>
-							<NotificationMob />
+							{/* <NotificationMob /> */}
 							<IconButton
 								id={menuId}
 								icon={<Menu id={menuId} />}
 								onClick={() => setMenuOpen(true)}
 							/>
 							<ProfileInitial
-								email={'soohyun4747@gmail.com'}
-								color={'orange'}
+								email={
+									user?.userType === 'admin'
+										? adminEmail
+										: user?.company?.email ?? ''
+								}
+								onClick={() => {
+									if (user?.userType === 'company') {
+										router.push('/profile');
+									}
+								}}
 							/>
 						</div>
 					</div>

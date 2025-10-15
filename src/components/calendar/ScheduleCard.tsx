@@ -1,34 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Badge } from '../Badge';
 import { Clock } from '../icons/Clock';
-import { ScheduleStatusType } from './DateSection';
-import { ServiceType } from '@/src/pages/admin/companies/edit';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import { Building } from '../icons/Building';
 import { ICompany, useUserStore } from '@/src/stores/userStore';
-import { fetchCompanyInfobyId } from '@/src/utils/supabase/company';
 import { useSelectedScheduleStore } from '@/src/stores/selectedScheduleStore';
 import { useScheduleDetailModalOpenStore } from '@/src/stores/modalOpenStore';
-
-export interface ISchedule {
-	id?: string;
-	scheduledAt: Date;
-	serviceType: ServiceType;
-	status: ScheduleStatusType;
-	memo?: string;
-	companyId: string;
-	companyName?: string;
-	delayedLabel?: string;
-	createdAt?: Date;
-	updatedAt?: Date;
-}
-
-export const serviceNames: { [key: string]: string } = {
-	aqm: 'AQM 검사',
-	hepa: 'HEPA 필터 교체',
-	voc: 'VOC 필터 교체',
-	as: '장비 설치/AS',
-};
+import { ISchedule } from '@/src/utils/supabase/schedule';
+import { serviceNames } from '@/src/utils/supabase/companyServices';
 
 export const getServiceDropdownOptions = () => {
 	const options = Object.keys(serviceNames).map((serviceId) => ({
@@ -55,24 +34,12 @@ export function ScheduleCard(props: ISchedule) {
 }
 
 const AdminSchedule = (props: ISchedule) => {
-	// const [company, setCompany] = useState<ICompany>();
 	const setSelectedSchedule = useSelectedScheduleStore(
 		(state) => state.setSchedule
 	);
 	const setScheduleDetailModalOpen = useScheduleDetailModalOpenStore(
 		(state) => state.setOpen
 	);
-
-	// useEffect(() => {
-	// 	if (props) {
-	// 		getSetCompanyInfo(props);
-	// 	}
-	// }, [props]);
-
-	// const getSetCompanyInfo = async (schedule: ISchedule) => {
-	// 	const companyInfo = await fetchCompanyInfobyId(schedule.companyId);
-	// 	setCompany(companyInfo);
-	// };
 
 	return (
 		<div
