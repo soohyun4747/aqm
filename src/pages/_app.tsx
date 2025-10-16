@@ -8,6 +8,7 @@ import { fetchCompanyWithCompanyId } from '../utils/supabase/company';
 import { useRouter, usePathname } from 'next/navigation';
 import { fetchSession } from '../utils/supabase/session';
 import { useSelectedCompanyStore } from '../stores/selectedCompanyStore';
+import LoadingOverlay from '../components/LoadingOverlay';
 
 function App({ Component, pageProps }: AppProps) {
 	const setScreenType = useScreenTypeStore((state) => state.setScreenType);
@@ -90,7 +91,12 @@ function App({ Component, pageProps }: AppProps) {
 		};
 	}, [setUser, router, pathname]);
 
-	return <Component {...pageProps} />;
+	return (
+		<div className='min-h-dvh bg-background text-foreground'>
+			<Component {...pageProps} />
+			<LoadingOverlay />
+		</div>
+	);
 }
 
 export default App;

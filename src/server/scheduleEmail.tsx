@@ -10,7 +10,7 @@ import { UserType } from '../stores/userStore';
 export type ScheduleMailType =
 	| 'requested'
 	| 'confirmed'
-	| 'edited'
+	// | 'edited'
 	| 'cancelled';
 
 export interface IScheduleRoute {
@@ -34,7 +34,7 @@ export interface ScheduleEmailProps {
 export const scheduleSubjectMap = {
 	requested: '스케줄이 요청되었습니다',
 	confirmed: '스케줄이 확정되었습니다',
-	edited: '스케줄이 수정되었습니다',
+	// edited: '스케줄이 수정되었습니다',
 	cancelled: '스케줄이 취소되었습니다',
 } as const;
 

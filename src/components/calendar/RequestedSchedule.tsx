@@ -72,7 +72,7 @@ const RequestedScheduleAdmin = ({ schedule }: { schedule: ISchedule }) => {
 						{formatToHHMM(schedule.scheduledAt)}{' '}
 						{serviceNames[schedule.serviceType]}
 					</p>
-					<button className='hidden md:flex justify-center items-center px-[1px] py-2 rounded-[6px] bg-Orange-600 min-w-[30px]'>
+					<button className='hidden md:flex justify-center items-center px-[1px] py-2 rounded-[6px] bg-Orange-600 min-w-[30px] cursor-pointer'>
 						<p className='text-white text-[10px] font-[normal] font-[400] leading-[16px]'>
 							확정
 						</p>

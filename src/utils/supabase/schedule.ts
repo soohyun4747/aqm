@@ -130,7 +130,8 @@ export async function createSchedule(schedule: ISchedule) {
 }
 
 export async function updateSchedule(
-	schedule: ISchedule
+	schedule: ISchedule,
+	agent: UserType
 ): Promise<ISchedule | null> {
 	if (!schedule.id) {
 		throw new Error('Schedule ID is required for update.');
@@ -162,7 +163,11 @@ export async function updateSchedule(
 	await fetch('/api/emails', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ type: schedule.status, scheduleId: data.id }),
+		body: JSON.stringify({
+			type: schedule.status,
+			agent: agent,
+			scheduleId: data.id,
+		}),
 	}).catch(console.error);
 
 	// 반환 시 다시 camelCase로 매핑

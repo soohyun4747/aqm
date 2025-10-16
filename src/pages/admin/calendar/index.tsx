@@ -35,6 +35,7 @@ import {
 } from '@/src/utils/schedule';
 import { ScheduleCardRequired } from '@/src/components/calendar/ScheduleCardRequired';
 import { serviceNames } from '@/src/utils/supabase/companyServices';
+import { useLoadingStore } from '@/src/stores/loadingStore';
 
 export type ViewType = 'calendar' | 'list';
 
@@ -66,6 +67,7 @@ function AdminCalendarPage() {
 		open: scheduleDeleteModalOpen,
 		setOpen: setScheduleDeleteModalOpen,
 	} = useScheduleDeleteModalOpenStore();
+	const { open: openLoading, close: closeLoading } = useLoadingStore();
 
 	useEffect(() => {
 		getSetRequiredSchedules();
@@ -166,6 +168,7 @@ function AdminCalendarPage() {
 	}, [monthSchedules]);
 
 	const addNewSchedule = async (schedule: ISchedule) => {
+		openLoading();
 		setScheduleAddModalOpen(false);
 		const data: any = await createSchedule(schedule);
 		// 모달 닫기
@@ -183,13 +186,15 @@ function AdminCalendarPage() {
 				message: '스케줄을 생성하였습니다',
 			});
 		}
+		closeLoading();
 	};
 
 	const onEditSchedule = async (schedule: ISchedule) => {
+		openLoading();
 		setScheduleEditModalOpen(false);
 		setScheduleDetailModalOpen(false);
 		try {
-			await updateSchedule({ ...schedule, status: 'confirmed' });
+			await updateSchedule({ ...schedule, status: 'confirmed' }, 'admin');
 			reUpdateSchedules();
 			setToastMessage({
 				status: 'confirm',
@@ -202,12 +207,14 @@ function AdminCalendarPage() {
 			});
 			console.error(error);
 		}
+		closeLoading();
 	};
 
 	const onConfirmSchedule = async (schedule: ISchedule) => {
+		openLoading();
 		setScheduleDetailModalOpen(false);
 		try {
-			await updateSchedule({ ...schedule, status: 'confirmed' });
+			await updateSchedule({ ...schedule, status: 'confirmed' }, 'admin');
 			reUpdateSchedules();
 			setToastMessage({
 				status: 'confirm',
@@ -220,9 +227,11 @@ function AdminCalendarPage() {
 			});
 			console.error(error);
 		}
+		closeLoading();
 	};
 
 	const onCancelSchedule = async () => {
+		openLoading();
 		setScheduleDeleteModalOpen(false);
 		setScheduleDetailModalOpen(false);
 		if (schedule?.id) {
@@ -247,6 +256,7 @@ function AdminCalendarPage() {
 				message: '스케줄 정보가 없습니다',
 			});
 		}
+		closeLoading();
 	};
 
 	return (

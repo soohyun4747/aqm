@@ -34,6 +34,7 @@ import {
 import { ScheduleCardRequired } from '@/src/components/calendar/ScheduleCardRequired';
 import { serviceNames } from '@/src/utils/supabase/companyServices';
 import { Modal } from '@/src/components/modal/Modal';
+import { useLoadingStore } from '@/src/stores/loadingStore';
 
 function CompanyCalendarPage() {
 	// month는 0~11로 통일합니다 (JS Date 규약)
@@ -61,7 +62,7 @@ function CompanyCalendarPage() {
 		setOpen: setScheduleDeleteModalOpen,
 	} = useScheduleDeleteModalOpenStore();
 
-	//modal 다 이쪽으로 빼기
+	const { open: openLoading, close: closeLoading } = useLoadingStore();
 
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 	const user = useUserStore((state) => state.user);
@@ -159,6 +160,7 @@ function CompanyCalendarPage() {
 	};
 
 	const addNewSchedule = async (schedule: ISchedule, user?: IUser) => {
+		openLoading();
 		// 모달 닫기
 		setScheduleAddModalOpen(false);
 		if (user?.company) {
@@ -185,13 +187,18 @@ function CompanyCalendarPage() {
 				status: 'error',
 			});
 		}
+		closeLoading();
 	};
 
 	const onEditSchedule = async (schedule: ISchedule) => {
+		openLoading();
 		setScheduleEditModalOpen(false);
 		setScheduleDetailModalOpen(false);
 		try {
-			await updateSchedule({ ...schedule, status: 'requested' });
+			await updateSchedule(
+				{ ...schedule, status: 'requested' },
+				'company'
+			);
 			if (user?.company) {
 				reUpdateSchedules(user.company.id);
 			}
@@ -206,9 +213,11 @@ function CompanyCalendarPage() {
 			});
 			console.error(error);
 		}
+		closeLoading();
 	};
 
 	const onCancelSchedule = async () => {
+		openLoading();
 		setScheduleDeleteModalOpen(false);
 		setScheduleEditModalOpen(false);
 		setScheduleDetailModalOpen(false);
@@ -236,6 +245,7 @@ function CompanyCalendarPage() {
 				message: '스케줄 정보가 없습니다',
 			});
 		}
+		closeLoading();
 	};
 
 	return (

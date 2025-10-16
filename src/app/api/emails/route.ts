@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase/admin';
 import { sendScheduleEmails } from '@/src/server/scheduleEmail';
 
 const schema = z.object({
-	type: z.enum(['requested', 'confirmed', 'edited', 'cancelled']),
+	type: z.enum(['requested', 'confirmed', 'cancelled']),
 	agent: z.enum(['company', 'admin']),
 	scheduleId: z.uuid(),
 });
