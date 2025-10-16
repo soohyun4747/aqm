@@ -1,32 +1,51 @@
 import { resend, EMAIL_FROM, ADMIN_EMAILS } from '@/lib/resend';
 import CustomerScheduleEmail, {
-	ScheduleMailType,
-	scheduleSubjectMap,
 } from '@/src/emails/CustomerScheduleEmail';
 import AdminScheduleEmail from '@/src/emails/AdminScheduleEmail';
 import { render } from '@react-email/components';
 import { ServiceType } from '../utils/supabase/companyServices';
 import { ScheduleStatusType } from '../utils/supabase/schedule';
+import { UserType } from '../stores/userStore';
 
-interface ISchedule {
+export type ScheduleMailType =
+	| 'requested'
+	| 'confirmed'
+	| 'edited'
+	| 'cancelled';
+
+export interface IScheduleRoute {
 	id?: string;
-	scheduledAt: Date;
+	scheduledAt: string;
 	serviceType: ServiceType;
 	status: ScheduleStatusType;
 	memo?: string;
 	companyId: string;
 	companyName?: string;
 	delayedLabel?: string;
-	createdAt?: Date;
-	updatedAt?: Date;
 }
+
+export interface ScheduleEmailProps {
+	type: ScheduleMailType;
+	agent: UserType;
+	schedule: IScheduleRoute;
+	manageUrl: string;
+}
+
+export const scheduleSubjectMap = {
+	requested: '스케줄이 요청되었습니다',
+	confirmed: '스케줄이 확정되었습니다',
+	edited: '스케줄이 수정되었습니다',
+	cancelled: '스케줄이 취소되었습니다',
+} as const;
+
 
 export async function sendScheduleEmails(args: {
 	type: ScheduleMailType;
-	schedule: ISchedule;
+	agent: UserType;
+	schedule: IScheduleRoute;
 	companyEmail: string;
 }) {
-	const { type, schedule, companyEmail } = args;
+	const { type, schedule, companyEmail, agent } = args;
 
 	const manageUrl = `${process.env.APP_BASE_URL}/schedules/${schedule.id}`;
 
@@ -34,12 +53,11 @@ export async function sendScheduleEmails(args: {
 	const customerHtml = await render(
 		<CustomerScheduleEmail
 			type={type}
+			agent={agent}
 			schedule={schedule}
 			manageUrl={manageUrl}
 		/>
 	);
-
-	console.log({ EMAIL_FROM, companyEmail });
 
 	await resend.emails.send({
 		from: EMAIL_FROM,
@@ -53,13 +71,9 @@ export async function sendScheduleEmails(args: {
 		const adminHtml = await render(
 			<AdminScheduleEmail
 				type={type}
+				agent={agent}
 				schedule={schedule}
 				manageUrl={manageUrl}
-				// companyName={customer.companyName}
-				// serviceTypeLabel={label}
-				// scheduleDateTime={scheduleDateTime}
-				// memo={schedule.memo}
-				// linkUrl={manageUrl}
 			/>
 		);
 

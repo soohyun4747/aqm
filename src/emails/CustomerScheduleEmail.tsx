@@ -1,41 +1,14 @@
 import * as React from 'react';
 import { Html, Head, Body, Container, Text, Hr } from '@react-email/components';
-import { toLocaleStringWithoutSec } from '../utils/date';
-import { ISchedule } from '../utils/supabase/schedule';
+import { formatDateTimeString } from '../utils/date';
 import { serviceNames } from '../utils/supabase/companyServices';
+import {
+	ScheduleEmailProps,
+	scheduleSubjectMap,
+} from '../server/scheduleEmail';
 
-export type ScheduleMailType =
-	| 'requested'
-	| 'confirmed'
-	| 'edited'
-	| 'cancelled';
-
-export interface CustomerScheduleEmailProps {
-	type: ScheduleMailType;
-	schedule: ISchedule;
-    manageUrl: string;
-	// companyName: string;
-	// serviceTypeLabel: string;
-	// scheduleDateTime: string; // 로컬 표시 문자열
-	// memo?: string | null;
-	// manageUrl: string;
-}
-
-export const scheduleSubjectMap = {
-	requested: '스케줄이 요청되었습니다',
-	confirmed: '스케줄이 확정되었습니다',
-	edited: '스케줄이 수정되었습니다',
-	cancelled: '스케줄이 취소되었습니다',
-} as const;
-
-export default function CustomerScheduleEmail(
-	props: CustomerScheduleEmailProps
-) {
-	const {
-		type,
-		schedule,
-        manageUrl
-	} = props;
+export default function CustomerScheduleEmail(props: ScheduleEmailProps) {
+	const { type, schedule, manageUrl, agent } = props;
 
 	return (
 		<Html lang='ko'>
@@ -57,10 +30,19 @@ export default function CustomerScheduleEmail(
 					</Text>
 					<Hr />
 					<Text>
+						주체:{' '}
+						<b>
+							{agent === 'company'
+								? '고객'
+								: '관리자'}
+						</b>
+					</Text>
+					<Text>
 						서비스: <b>{serviceNames[schedule.serviceType]}</b>
 					</Text>
 					<Text>
-						일정: <b>{toLocaleStringWithoutSec(schedule.scheduledAt)}</b>
+						일정:{' '}
+						<b>{formatDateTimeString(schedule.scheduledAt)}</b>
 					</Text>
 					{schedule.memo ? <Text>메모: {schedule.memo}</Text> : null}
 					<Hr />

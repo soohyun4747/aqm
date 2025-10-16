@@ -159,6 +159,8 @@ function CompanyCalendarPage() {
 	};
 
 	const addNewSchedule = async (schedule: ISchedule, user?: IUser) => {
+		// 모달 닫기
+		setScheduleAddModalOpen(false);
 		if (user?.company) {
 			// 회사 사용자라면 company_id를 강제 세팅
 			const payload = { ...schedule, company_id: user.company.id };
@@ -183,23 +185,21 @@ function CompanyCalendarPage() {
 				status: 'error',
 			});
 		}
-		setScheduleAddModalOpen(false);
 	};
 
 	const onEditSchedule = async (schedule: ISchedule) => {
+		setScheduleEditModalOpen(false);
+		setScheduleDetailModalOpen(false);
 		try {
 			await updateSchedule({ ...schedule, status: 'requested' });
 			if (user?.company) {
 				reUpdateSchedules(user.company.id);
 			}
-			setScheduleEditModalOpen(false);
-			setScheduleDetailModalOpen(false);
 			setToastMessage({
 				status: 'confirm',
 				message: '일정을 수정 요청하였습니다',
 			});
 		} catch (error) {
-			setScheduleEditModalOpen(false);
 			setToastMessage({
 				status: 'error',
 				message: '일정 수정을 실패하였습니다',
@@ -209,28 +209,32 @@ function CompanyCalendarPage() {
 	};
 
 	const onCancelSchedule = async () => {
+		setScheduleDeleteModalOpen(false);
+		setScheduleEditModalOpen(false);
+		setScheduleDetailModalOpen(false);
 		if (schedule?.id) {
 			try {
-				await cancelSchedule(schedule.id);
+				await cancelSchedule(schedule.id, 'company');
 				//이메일 전송 코드 추가
 				if (user?.company) {
 					reUpdateSchedules(user.company.id);
 				}
-				setScheduleDeleteModalOpen(false);
-				setScheduleDetailModalOpen(false);
 				setToastMessage({
 					status: 'confirm',
 					message: '일정을 취소하였습니다',
 				});
 			} catch (error) {
 				console.error(error);
-				setScheduleDeleteModalOpen(false);
-				setScheduleDetailModalOpen(false);
 				setToastMessage({
 					status: 'error',
 					message: '일정 취소를 실패하였습니다',
 				});
 			}
+		} else {
+			setToastMessage({
+				status: 'error',
+				message: '스케줄 정보가 없습니다',
+			});
 		}
 	};
 

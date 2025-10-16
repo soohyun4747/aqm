@@ -166,7 +166,9 @@ function AdminCalendarPage() {
 	}, [monthSchedules]);
 
 	const addNewSchedule = async (schedule: ISchedule) => {
+		setScheduleAddModalOpen(false);
 		const data: any = await createSchedule(schedule);
+		// 모달 닫기
 		if (data?.error) {
 			setToastMessage({
 				message: '스케줄 추가를 실패하였습니다',
@@ -181,23 +183,19 @@ function AdminCalendarPage() {
 				message: '스케줄을 생성하였습니다',
 			});
 		}
-
-		// 모달 닫기
-		setScheduleAddModalOpen(false);
 	};
 
 	const onEditSchedule = async (schedule: ISchedule) => {
+		setScheduleEditModalOpen(false);
+		setScheduleDetailModalOpen(false);
 		try {
 			await updateSchedule({ ...schedule, status: 'confirmed' });
 			reUpdateSchedules();
-			setScheduleEditModalOpen(false);
-			setScheduleDetailModalOpen(false);
 			setToastMessage({
 				status: 'confirm',
 				message: '일정을 수정 확정하였습니다',
 			});
 		} catch (error) {
-			setScheduleEditModalOpen(false);
 			setToastMessage({
 				status: 'error',
 				message: '일정 수정을 실패하였습니다',
@@ -207,16 +205,15 @@ function AdminCalendarPage() {
 	};
 
 	const onConfirmSchedule = async (schedule: ISchedule) => {
+		setScheduleDetailModalOpen(false);
 		try {
 			await updateSchedule({ ...schedule, status: 'confirmed' });
 			reUpdateSchedules();
-			setScheduleDetailModalOpen(false);
 			setToastMessage({
 				status: 'confirm',
 				message: '일정을 확정하였습니다',
 			});
 		} catch (error) {
-			setScheduleDetailModalOpen(false);
 			setToastMessage({
 				status: 'error',
 				message: '일정 확정을 실패하였습니다',
@@ -226,26 +223,29 @@ function AdminCalendarPage() {
 	};
 
 	const onCancelSchedule = async () => {
+		setScheduleDeleteModalOpen(false);
+		setScheduleDetailModalOpen(false);
 		if (schedule?.id) {
 			try {
-				await cancelSchedule(schedule.id);
+				await cancelSchedule(schedule.id, 'admin');
 				//이메일 전송 코드 추가
 				reUpdateSchedules();
-				setScheduleDeleteModalOpen(false);
-				setScheduleDetailModalOpen(false);
 				setToastMessage({
 					status: 'confirm',
 					message: '일정을 취소하였습니다',
 				});
 			} catch (error) {
 				console.error(error);
-				setScheduleDeleteModalOpen(false);
-				setScheduleDetailModalOpen(false);
 				setToastMessage({
 					status: 'error',
 					message: '일정 취소를 실패하였습니다',
 				});
 			}
+		} else {
+			setToastMessage({
+				status: 'error',
+				message: '스케줄 정보가 없습니다',
+			});
 		}
 	};
 
@@ -368,7 +368,7 @@ function AdminCalendarPage() {
 			)}
 			{scheduleEditModalOpen && schedule && (
 				<ScheduleEditModal
-				schedule={schedule}
+					schedule={schedule}
 					onClose={() => setScheduleEditModalOpen(false)}
 					onEdit={onEditSchedule}
 				/>

@@ -2,6 +2,7 @@
 import { supabaseClient } from '@/lib/supabase/client';
 import { monthRangeTimestamptz } from '../date';
 import { ServiceType } from './companyServices';
+import { UserType } from '@/src/stores/userStore';
 
 export interface ISchedule {
 	id?: string;
@@ -16,7 +17,11 @@ export interface ISchedule {
 	updatedAt?: Date;
 }
 
-export type ScheduleStatusType = 'confirmed' | 'requested' | 'required' | 'cancelled';
+export type ScheduleStatusType =
+	| 'confirmed'
+	| 'requested'
+	| 'required'
+	| 'cancelled';
 
 export async function fetchSchedulesByMonth(
 	year: number,
@@ -173,7 +178,10 @@ export async function updateSchedule(
 	};
 }
 
-export async function cancelSchedule(id: string): Promise<boolean> {
+export async function cancelSchedule(
+	id: string,
+	agent: UserType
+): Promise<boolean> {
 	const supabase = supabaseClient();
 
 	const { error } = await supabase
@@ -189,7 +197,11 @@ export async function cancelSchedule(id: string): Promise<boolean> {
 	await fetch('/api/emails', {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({ type: 'cancelled', scheduleId: id }),
+		body: JSON.stringify({
+			type: 'cancelled',
+			agent: agent,
+			scheduleId: id,
+		}),
 	}).catch(console.error);
 
 	return true;

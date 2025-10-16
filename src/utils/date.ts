@@ -184,3 +184,24 @@ export function daysSince(
 ): number {
 	return daysBetween(date, new Date(), opts);
 }
+
+export function formatDateTimeString(datetimeStr: string): string {
+	const date = new Date(datetimeStr); // 이미 KST로 변환됨
+
+	const year = date.getFullYear();
+	const month = date.getMonth() + 1;
+	const day = date.getDate();
+
+	let hours = date.getHours();
+	const minutes = date.getMinutes();
+
+	const ampm = hours < 12 ? '오전' : '오후';
+	if (hours > 12) hours -= 12;
+	if (hours === 0) hours = 12;
+
+	const formatted = `${year}년 ${month}월 ${day}일 ${ampm} ${hours}시 ${String(
+		minutes
+	).padStart(2, '0')}분`;
+
+	return formatted;
+}

@@ -5,12 +5,13 @@ import { sendScheduleEmails } from '@/src/server/scheduleEmail';
 
 const schema = z.object({
 	type: z.enum(['requested', 'confirmed', 'edited', 'cancelled']),
+	agent: z.enum(['company', 'admin']),
 	scheduleId: z.uuid(),
 });
 
 export async function POST(req: NextRequest) {
 	try {
-		const { type, scheduleId } = schema.parse(await req.json());
+		const { type, scheduleId, agent } = schema.parse(await req.json());
 		const supabase = supabaseAdmin();
 
 		// ✅ 서버가 DB에서 신뢰 가능한 데이터 재조회 (회사 이메일/이름 포함)
@@ -35,6 +36,7 @@ export async function POST(req: NextRequest) {
 
 		await sendScheduleEmails({
 			type: type,
+			agent: agent,
 			schedule: {
 				id: data.id,
 				companyId: data.company_id,
