@@ -1,5 +1,5 @@
 import { supabaseClient } from '@/lib/supabase/client';
-import { IHEPAResult } from '@/src/pages/admin/managementRecords/edit/hepa';
+import { IHEPAResult } from '@/src/pages/admin/managementRecords/edit/hepa/[id]';
 
 export interface IHEPAResultRow {
 	id?: string;

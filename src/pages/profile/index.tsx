@@ -9,7 +9,7 @@ import { ICompany } from '@/src/stores/userStore';
 import { loadCompanyDetails } from '@/src/utils/supabase/company';
 import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
-import { IHepaFilter, vocFilterSpec } from '../admin/companies/edit';
+import { IHepaFilter, vocFilterSpec } from '../admin/companies/edit/[id]';
 
 export default function ProfilePage() {
 	// 회사 기본 정보
@@ -188,7 +188,7 @@ export default function ProfilePage() {
 									{hepaFilters.map((filter, idx) => (
 										<div
 											key={idx}
-											className='flex items-center gap-3'>
+											className='flex md:flex-row flex-col md:items-center gap-3'>
 											<InputBox
 												label={'필터 유형'}
 												inputAttr={{
@@ -245,7 +245,7 @@ export default function ProfilePage() {
 									<div className='flex items-center justify-between'>
 										<p>VOC 필터 교체 (6개월)</p>
 									</div>
-									<div className='flex items-center gap-3'>
+									<div className='flex md:flex-row flex-col md:items-center gap-3'>
 										<InputBox
 											style={{ flex: 1 }}
 											label='가로(mm)'

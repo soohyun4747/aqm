@@ -79,7 +79,7 @@ function ScheduleEditCompanyModal(props: ScheduleEditModalProps) {
 						setServiceType(newServiceType as ServiceType);
 					}}
 				/>
-				<div className='flex self-stretch gap-4'>
+				<div className='flex md:flex-rol flex-col self-stretch gap-4'>
 					<DatePicker
 						date={date}
 						onChange={(newDate) => {
@@ -164,7 +164,7 @@ function ScheduleEditAdminModal(props: ScheduleEditModalProps) {
 					}}
 					style={{ flex: 1 }}
 				/>
-				<div className='flex self-stretch gap-4'>
+				<div className='flex md:flex-rol flex-col self-stretch gap-4'>
 					<DatePicker
 						date={date}
 						onChange={(newDate) => {
@@ -178,14 +178,14 @@ function ScheduleEditAdminModal(props: ScheduleEditModalProps) {
 						}}
 					/>
 				</div>
-				{/* <InputBox
+				<InputBox
 					label='메모'
 					inputAttr={{
 						placeholder: '메모 입력',
 						value: memo,
 						onChange: (e) => setMemo(e.target.value),
 					}}
-				/> */}
+				/>
 			</div>
 		</Modal>
 	);

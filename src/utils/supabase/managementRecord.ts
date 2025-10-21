@@ -2,7 +2,7 @@ import { supabaseClient } from '@/lib/supabase/client';
 import { PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
 import { ServiceType } from './companyServices';
 
-interface ManagementRecordRow {
+export interface IManagementRecordRow {
 	id: string;
 	company_id: string;
 	date: string;
@@ -84,7 +84,7 @@ export async function createManagementRecord(props: {
 	managerName: string;
 	comment: string;
 	serviceType: ServiceType; // 'AQM' 등
-}): Promise<ManagementRecordRow> {
+}): Promise<IManagementRecordRow> {
 	const supabase = supabaseClient();
 	const { data, error } = await supabase
 		.from('management_records')
@@ -99,7 +99,7 @@ export async function createManagementRecord(props: {
 		.single();
 
 	if (error) throw error;
-	return data as ManagementRecordRow;
+	return data as IManagementRecordRow;
 }
 
 export async function fetchManagementRecordById(recordId: string) {
@@ -110,7 +110,7 @@ export async function fetchManagementRecordById(recordId: string) {
 		.eq('id', recordId)
 		.single();
 	if (error) throw error;
-	return data as ManagementRecordRow;
+	return data as IManagementRecordRow;
 }
 
 export async function fetchManagementRecordsByCompany(

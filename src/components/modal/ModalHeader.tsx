@@ -8,7 +8,7 @@ export interface ModalHeaderProps {
 
 export function ModalHeader(props: ModalHeaderProps) {
 	return (
-		<div className='flex items-center justify-between p-5 rounded-tl-[8px] rounded-tr-[8px] border border-Gray-200 border-b-0 min-w-[416px] w-[416px] bg-white'>
+		<div className='flex items-center justify-between p-5 rounded-tl-[8px] rounded-tr-[8px] border border-Gray-200 border-b-0 md:min-w-[416px] md:w-[416px] bg-white'>
 			<p className='text-Gray-900 body-lg-semibold md:heading-md'>
 				{props.title}
 			</p>

@@ -13,8 +13,8 @@ interface SearchFieldProps {
 
 export function SearchField(props: SearchFieldProps) {
 	return (
-		<div className='flex items-center gap-2 h-fit'>
-			<div className='flex items-center px-4 py-2 gap-[10px] bg-Gray-50 border border-Gray-300 rounded-[8px] w-[325px]'>
+		<div className='flex items-center gap-2 h-fit w-full'>
+			<div className='flex items-center px-4 py-2 gap-[10px] bg-Gray-50 border border-Gray-300 rounded-[8px] md:w-[325px] w-full'>
 				<Search
 					fill='#6B7280'
 					size={16}

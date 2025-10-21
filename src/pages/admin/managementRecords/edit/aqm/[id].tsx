@@ -18,9 +18,15 @@ import {
 	loadAqmBundleAsFiles,
 	upsertAqmResult,
 } from '@/src/utils/supabase/aqmResults';
-import { createManagementRecord } from '@/src/utils/supabase/managementRecord';
+import {
+	createManagementRecord,
+	fetchManagementRecordById,
+	IManagementRecordRow,
+} from '@/src/utils/supabase/managementRecord';
 import { useRouter } from 'next/router';
 import { Services } from '@/src/utils/supabase/companyServices';
+import { DropdownSearchable } from '@/src/components/DropdownSearchable';
+import { usePathname } from 'next/navigation';
 
 export type MicrobioAnalysisType = 'pass' | 'fail';
 
@@ -54,28 +60,33 @@ function AdminManagementRecordsEditAQMPage() {
 	const [saving, setSaving] = useState(false);
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
-	const { managementRecord, setManagementRecord } =
-		useManagementRecordStore();
-
 	const router = useRouter();
+	const pathname = usePathname();
+	const recordId = pathname?.split('/').at(5);
 
 	useEffect(() => {
-		return () => {
-			setManagementRecord(undefined);
-		};
-	}, []);
-
-	useEffect(() => {
-		if (managementRecord) {
-			loadAqmResult(managementRecord);
+		if (recordId) {
+			getSetManagementRecordAndResult(recordId);
 		}
-	}, [managementRecord]);
+	}, [recordId]);
 
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
 
-	const loadAqmResult = async (managementRecord: IManagementRecord) => {
+	const getSetManagementRecordAndResult = async (recordId: string) => {
+		try {
+			const recordInfo = await fetchManagementRecordById(recordId);
+			if (recordInfo) {
+				loadAqmResult(recordInfo);
+			}
+		} catch (error) {
+			console.error(error);
+			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
+		}
+	};
+
+	const loadAqmResult = async (managementRecord: IManagementRecordRow) => {
 		try {
 			const { record, result, files } = await loadAqmBundleAsFiles(
 				managementRecord.id
@@ -196,140 +207,147 @@ function AdminManagementRecordsEditAQMPage() {
 	};
 
 	return (
-		<div className='flex flex-col bg-Gray-100 min-h-screen'>
+		<div>
 			<GNB />
-			<div className='flex justify-between items-center px-6 py-4 bg-white'>
-				<p className='text-Gray-900 heading-md'>AQM 검사 기록</p>
-				<Button
-					onClick={managementRecord ? handleUpdate : handleNewSave}
-					disabled={saving}>
-					{saving ? '저장 중…' : '저장하기'}
-				</Button>
-			</div>
-
-			<div className='p-6 flex gap-4'>
-				<div className='flex flex-col gap-4 w-[330px]'>
-					<Card>
-						<div className='flex flex-col gap-[12px]'>
-							<DatePicker
-								date={date}
-								onChange={(date) => setDate(date)}
-							/>
-							<Dropdown
-								isMandatory
-								label={'고객'}
-								options={companyOptions}
-								value={companyId}
-								id={'aqm_company_dropdown'}
-								onChange={(value) => setCompanyId(value)}
-							/>
-							<InputBox
-								isMandatory
-								label='관리자'
-								inputAttr={{
-									value: manager,
-									onChange: (e) => setManager(e.target.value),
-								}}
-							/>
-						</div>
-					</Card>
-					<Card className='flex-1'>
-						<div className='flex flex-col gap-[6px]'>
-							<p className='heading-md text-Gray-900'>코멘트</p>
-							<TextAreaBox
-								textareaAttr={{
-									rows: 15,
-									value: comment,
-									onChange: (e) => setComment(e.target.value),
-								}}
-							/>
-						</div>
-					</Card>
-					<Card>
-						<div className='flex flex-col gap-4'>
-							<p className='heading-md text-Gray-900'>
-								미생물 분석
-							</p>
-							<FileUploadDrop
-								file={microbioFile}
-								availableTypes={['.png', '.jpg', '.jpeg']}
-								onFileChange={(file) => setMicrobioFile(file)}
-							/>
-							<Radio
-								label={'합격'}
-								onClick={() => setMicrobioAnal('pass')}
-								selected={microbioAnal === 'pass'}
-							/>
-							<Radio
-								label={'불합격'}
-								onClick={() => setMicrobioAnal('fail')}
-								selected={microbioAnal === 'fail'}
-							/>
-						</div>
-					</Card>
+			<div className='flex flex-col bg-Gray-100 min-h-screen pt-[60px] md:pt-0'>
+				<div className='flex justify-between items-center px-6 py-4 bg-white'>
+					<p className='text-Gray-900 heading-md'>AQM 검사 기록</p>
+					<Button
+						onClick={recordId ? handleUpdate : handleNewSave}
+						disabled={saving}>
+						{saving ? '저장 중…' : '저장하기'}
+					</Button>
 				</div>
-				<div className='flex flex-col gap-4 flex-1'>
-					<Card>
-						<div className='flex flex-col gap-6'>
-							<div className='flex flex-col gap-2 border-b border-Gray-200 pb-4'>
-								<p className='heading-md text-Gray-900'>
-									PM Measurements
-								</p>
-								<p className='body-lg-regular text-Gray-500'>
-									PM 검사 파일을 넣어주세요
-								</p>
+				<div className='p-6 flex md:flex-row flex-col gap-4'>
+					<div className='flex flex-col gap-4 w-[330px]'>
+						<Card>
+							<div className='flex flex-col gap-[12px]'>
+								<DatePicker
+									date={date}
+									onChange={(date) => setDate(date)}
+								/>
+								<DropdownSearchable
+									isMandatory
+									label={'고객'}
+									options={companyOptions}
+									value={companyId}
+									id={'aqm_company_dropdown'}
+									onChange={(value) => setCompanyId(value)}
+								/>
+								<InputBox
+									isMandatory
+									label='관리자'
+									inputAttr={{
+										value: manager,
+										onChange: (e) =>
+											setManager(e.target.value),
+									}}
+								/>
 							</div>
-							<FileUploadDrop
-								file={pmFile}
-								onFileChange={(file) => setPmFile(file)}
-								availableTypes={['.csv', '.xlsx', '.xls']}
-							/>
-						</div>
-					</Card>
-					<Card>
-						<div className='flex flex-col gap-6'>
-							<div className='flex flex-col gap-2 border-b border-Gray-200 pb-4'>
+						</Card>
+						<Card className='flex-1'>
+							<div className='flex flex-col gap-[6px]'>
 								<p className='heading-md text-Gray-900'>
-									VOC Measurements
+									코멘트
 								</p>
-								<p className='body-lg-regular text-Gray-500'>
-									VOC 검사 파일을 넣어주세요.
-								</p>
+								<TextAreaBox
+									textareaAttr={{
+										rows: 15,
+										value: comment,
+										onChange: (e) =>
+											setComment(e.target.value),
+									}}
+								/>
 							</div>
-							<FileUploadDrop
-								file={vocFile}
-								onFileChange={(file) => setVocFile(file)}
-								availableTypes={['.csv', '.xlsx', '.xls']}
-							/>
-						</div>
-					</Card>
-					<Card>
-						<div className='flex flex-col gap-6'>
-							<div className='flex flex-col gap-2 border-b border-Gray-200 pb-4'>
+						</Card>
+						<Card>
+							<div className='flex flex-col gap-4'>
 								<p className='heading-md text-Gray-900'>
-									Air Quality Measurements
+									미생물 분석
 								</p>
-								<p className='body-lg-regular text-Gray-500'>
-									AQM 검사 파일을 넣어주세요.
-								</p>
+								<FileUploadDrop
+									file={microbioFile}
+									availableTypes={['.png', '.jpg', '.jpeg']}
+									onFileChange={(file) =>
+										setMicrobioFile(file)
+									}
+								/>
+								<Radio
+									label={'합격'}
+									onClick={() => setMicrobioAnal('pass')}
+									selected={microbioAnal === 'pass'}
+								/>
+								<Radio
+									label={'불합격'}
+									onClick={() => setMicrobioAnal('fail')}
+									selected={microbioAnal === 'fail'}
+								/>
 							</div>
-							<FileUploadDrop
-								file={aqmFile}
-								onFileChange={(file) => setAqmFile(file)}
-								availableTypes={['.txt', '.Txt']}
-							/>
-						</div>
-					</Card>
+						</Card>
+					</div>
+					<div className='flex flex-col gap-4 flex-1'>
+						<Card>
+							<div className='flex flex-col gap-6'>
+								<div className='flex flex-col gap-2 border-b border-Gray-200 pb-4'>
+									<p className='heading-md text-Gray-900'>
+										PM Measurements
+									</p>
+									<p className='body-lg-regular text-Gray-500'>
+										PM 검사 파일을 넣어주세요
+									</p>
+								</div>
+								<FileUploadDrop
+									file={pmFile}
+									onFileChange={(file) => setPmFile(file)}
+									availableTypes={['.csv', '.xlsx', '.xls']}
+								/>
+							</div>
+						</Card>
+						<Card>
+							<div className='flex flex-col gap-6'>
+								<div className='flex flex-col gap-2 border-b border-Gray-200 pb-4'>
+									<p className='heading-md text-Gray-900'>
+										VOC Measurements
+									</p>
+									<p className='body-lg-regular text-Gray-500'>
+										VOC 검사 파일을 넣어주세요.
+									</p>
+								</div>
+								<FileUploadDrop
+									file={vocFile}
+									onFileChange={(file) => setVocFile(file)}
+									availableTypes={['.csv', '.xlsx', '.xls']}
+								/>
+							</div>
+						</Card>
+						<Card>
+							<div className='flex flex-col gap-6'>
+								<div className='flex flex-col gap-2 border-b border-Gray-200 pb-4'>
+									<p className='heading-md text-Gray-900'>
+										Air Quality Measurements
+									</p>
+									<p className='body-lg-regular text-Gray-500'>
+										AQM 검사 파일을 넣어주세요.
+									</p>
+								</div>
+								<FileUploadDrop
+									file={aqmFile}
+									onFileChange={(file) => setAqmFile(file)}
+									availableTypes={['.txt', '.Txt']}
+								/>
+							</div>
+						</Card>
+					</div>
 				</div>
+				{toastMessage && (
+					<ToastMessage
+						status={toastMessage.status}
+						message={toastMessage.message}
+						setToastMessage={setToastMessage}
+					/>
+				)}
+				{saving && <SavingOverlay />}
 			</div>
-			{toastMessage && (
-				<ToastMessage
-					status={toastMessage.status}
-					message={toastMessage.message}
-					setToastMessage={setToastMessage}
-				/>
-			)}
-			{saving && <SavingOverlay />}
 		</div>
 	);
 }

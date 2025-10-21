@@ -1,7 +1,7 @@
 import { supabaseClient } from '@/lib/supabase/client';
 import { fetchManagementRecordById, ManagementRecords_BUCKET } from './managementRecord';
 import { downloadAsFile, removeFile, uploadFileToPath } from './storage';
-import { MicrobioAnalysisType } from '@/src/pages/admin/managementRecords/edit/aqm';
+import { MicrobioAnalysisType } from '@/src/pages/admin/managementRecords/edit/aqm/[id]';
 import { sanitizeFileName } from '../string';
 
 export interface AQMResultRow {

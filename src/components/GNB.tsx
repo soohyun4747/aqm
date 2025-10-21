@@ -54,7 +54,7 @@ export function GNB() {
 		} else {
 			setMenuOpen(false); // Change state when clicking outside
 		}
-	};
+	};	
 
 	return (
 		<>
@@ -89,7 +89,7 @@ export function GNB() {
 							email={
 								user?.userType === 'admin'
 									? adminEmail
-									: user?.company?.email ?? ''
+									: (user?.company?.email ?? '')
 							}
 							onClick={() => {
 								if (user?.userType === 'company') {
@@ -106,7 +106,7 @@ export function GNB() {
 					</div>
 				</div>
 			) : (
-				<div className='flex flex-col'>
+				<div className='flex flex-col fixed w-full bg-white z-[30]'>
 					<div className='px-4 h-[60px] flex items-center justify-between'>
 						<Image
 							src={'/Logo.svg'}
@@ -125,7 +125,7 @@ export function GNB() {
 								email={
 									user?.userType === 'admin'
 										? adminEmail
-										: user?.company?.email ?? ''
+										: (user?.company?.email ?? '')
 								}
 								onClick={() => {
 									if (user?.userType === 'company') {
@@ -141,26 +141,34 @@ export function GNB() {
 								boxShadow:
 									'0px 4px 6px -1px rgba(0,0,0,0.1), 0px 2px 4px -2px rgba(0,0,0,0.05)',
 							}}
-							className='flex flex-col bg-white '>
-							{Object.values(pathTitles).map((menu, i) => (
+							className='flex flex-col bg-white fixed w-full top-[60px]'>
+							{Object.keys(pathTitles).map((path, i) => (
 								<>
 									{i !== 0 && (
 										<div className='h-[1px] self-stretch bg-Gray-100' />
 									)}
-									{pathTitles[menu] === router.pathname ? (
-										<div className='px-4 py-3 items-center justify-between'>
+									{path === router.pathname ? (
+										<div
+											className='px-4 py-3 items-center justify-between'
+											onClick={() =>
+												router.push(
+													Object.keys(pathTitles)[i]
+												)
+											}>
 											<p className='body-md-medium text-Primary-600'>
-												{menu}
+												{pathTitles[path]}
 											</p>
-											<ChevronRight
-												size={12}
-												fill='#1C64F2'
-											/>
 										</div>
 									) : (
-										<div className='px-4 py-3 items-center'>
+										<div
+											className='px-4 py-3 items-center'
+											onClick={() =>
+												router.push(
+													Object.keys(pathTitles)[i]
+												)
+											}>
 											<p className='body-md-medium text-Gray-900'>
-												{menu}
+												{pathTitles[path]}
 											</p>
 										</div>
 									)}

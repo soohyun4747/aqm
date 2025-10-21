@@ -1,7 +1,7 @@
 import { supabaseClient } from '@/lib/supabase/client';
 import { PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
 import { Option } from '@/src/components/Dropdown';
-import { IHepaFilter } from '@/src/pages/admin/companies/edit';
+import { IHepaFilter } from '@/src/pages/admin/companies/edit/[id]';
 import { fileNameFromPath } from '../file';
 import { ICompany } from '@/src/stores/userStore';
 import { sanitizeFileName } from '../string';
@@ -76,27 +76,55 @@ export const fetchCompanies = async (page: number, search: string) => {
 		const from = page * PAGE_SIZE;
 		const to = from + PAGE_SIZE - 1;
 
-		let query = supabase
-			.from('companies')
-			.select('id, name, email, phone, address, floor_image_path', {
-				count: 'exact',
-			})
-			.order('created_at', { ascending: false })
-			.range(from, to);
+		// 공통 쿼리 빌더 (필터 재사용을 위해 함수로 분리)
+		const base = () =>
+			supabase
+				.from('companies')
+				.select('id, name, email, phone, address, floor_image_path', {
+					count: 'exact',
+				});
+
+		// --- 1) count 전용 HEAD 요청 (동일한 필터 적용) ---
+		let countQuery = base();
 
 		if (search.trim()) {
-			// 이름/이메일 간단 검색 (원하면 phone/address로 확장)
-			query = query.or(
+			countQuery = countQuery.or(
 				`name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`
 			);
 		}
 
-		const { data, error, count } = await query;
+		// head:true 로 데이터는 받지 않고 count만
+		const { count, error: countErr } = await countQuery
+			.order('created_at', { ascending: false }) // 정렬은 count에는 영향 없지만 동일성 유지
+			.limit(1) // 일부 호스팅에서 HEAD 최적화가 없을 수 있어 최소 limit
+			.maybeSingle(); // payload 최소화
+
+		if (countErr) throw countErr;
+
+		// 총 개수가 0이거나, 현재 page의 시작 인덱스가 개수 이상이면 빈 결과 반환
+		if (!count || from >= count) {
+			return { rows: [], count: count ?? 0 };
+		}
+
+		// --- 2) 실제 페이지 데이터 조회 ---
+		let dataQuery = base()
+			.order('created_at', { ascending: false })
+			.range(from, Math.min(to, count - 1)); // 상한 클램핑
+
+		if (search.trim()) {
+			dataQuery = dataQuery.or(
+				`name.ilike.%${search.trim()}%,email.ilike.%${search.trim()}%`
+			);
+		}
+
+		const { data, error } = await dataQuery;
 		if (error) throw error;
 
-		return { rows: data, count };
+		return { rows: data ?? [], count: count ?? 0 };
 	} catch (e) {
 		console.error('회사 목록 로딩 실패:', e);
+		// 416 방어: 서버가 이미 에러를 던져도 UI가 무너지지 않게 빈 결과 반환
+		return { rows: [], count: 0 };
 	}
 };
 
@@ -168,9 +196,9 @@ export const loadCompanyDetails = async (
 const makePassword = (email: string, phone: string) => {
 	const local = (email.split('@')[0] || '').trim();
 	const digits = (phone.match(/\d/g) || []).join('');
-	const last3 = digits.slice(-3) || '000';
+	const last4 = digits.slice(-4) || '000';
 	// 최소 6자 보장(로컬파트가 너무 짧을 경우 대비)
-	const pwd = `${local}${last3}`;
+	const pwd = `${local}${last4}`;
 	return pwd.length >= 6 ? pwd : (pwd + '000000').slice(0, 6);
 };
 

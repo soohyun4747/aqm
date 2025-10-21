@@ -249,138 +249,142 @@ function CompanyCalendarPage() {
 	};
 
 	return (
-		<div className='flex flex-col'>
+		<div>
 			<GNB />
-			<CalendarTopbar
-				year={year}
-				month={month} // 0~11 전달
-				onClickToday={() => {
-					setYear(today.getFullYear());
-					setMonth(today.getMonth()); // 0~11
-				}}
-				onClickAddNewSchedule={() => setScheduleAddModalOpen(true)}
-				onClickPrevMonth={() => {
-					if (month === 0) {
-						setYear(year - 1);
-						setMonth(11);
-					} else {
-						setMonth(month - 1);
-					}
-				}}
-				onClickNextMonth={() => {
-					if (month === 11) {
-						setYear(year + 1);
-						setMonth(0);
-					} else {
-						setMonth(month + 1);
-					}
-				}}
-			/>
-			<div className='flex gap-4 p-6'>
-				<Calendar
+			<div className='flex flex-col pt-[60px] md:pt-0'>
+				<CalendarTopbar
 					year={year}
-					month={month}
-					schedules={monthSchedules}
+					month={month} // 0~11 전달
+					onClickToday={() => {
+						setYear(today.getFullYear());
+						setMonth(today.getMonth()); // 0~11
+					}}
+					onClickAddNewSchedule={() => setScheduleAddModalOpen(true)}
+					onClickPrevMonth={() => {
+						if (month === 0) {
+							setYear(year - 1);
+							setMonth(11);
+						} else {
+							setMonth(month - 1);
+						}
+					}}
+					onClickNextMonth={() => {
+						if (month === 11) {
+							setYear(year + 1);
+							setMonth(0);
+						} else {
+							setMonth(month + 1);
+						}
+					}}
 				/>
-				<div className='flex flex-col gap-4'>
-					<Card>
-						<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
-							<p className='text-Gray-900 heading-md'>
-								다가오는 일정
-							</p>
-							{upcomingSchedules.length > 0 ? (
-								upcomingSchedules.map((schedule) => (
-									<ScheduleCard {...schedule} />
-								))
-							) : (
-								<p className='text-Gray-400 body-md-regular text-center'>
-									다가오는 일정이 없습니다.
-									<br />
-									3주 이내의 일정은 이곳에 표시됩니다.
+				<div className='flex md:flex-row flex-col gap-4 md:p-6'>
+					<Calendar
+						year={year}
+						month={month}
+						schedules={monthSchedules}
+					/>
+					<div className='flex flex-col gap-4'>
+						<Card>
+							<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
+								<p className='text-Gray-900 heading-md'>
+									다가오는 일정
 								</p>
-							)}
-						</div>
-					</Card>
-					<Card>
-						<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
-							<p className='text-Gray-900 heading-md'>
-								요청된 일정
-							</p>
-							<div className='max-h-[400px] overflow-y-auto flex flex-col gap-6'>
-								{requestedSchedules.length > 0 ? (
-									requestedSchedules.map((schedule) => (
+								{upcomingSchedules.length > 0 ? (
+									upcomingSchedules.map((schedule) => (
 										<ScheduleCard {...schedule} />
 									))
 								) : (
 									<p className='text-Gray-400 body-md-regular text-center'>
-										요청온 일정이 없습니다.
+										다가오는 일정이 없습니다.
 										<br />
-										일정 요청이 오면 이곳에 표시됩니다.
+										3주 이내의 일정은 이곳에 표시됩니다.
 									</p>
 								)}
 							</div>
-						</div>
-					</Card>
-					<Card>
-						<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
-							<p className='text-Gray-900 heading-md'>
-								잡아야하는 일정
-							</p>
-							{requiredSchedules.length > 0 ? (
-								requiredSchedules.map((schedule) => (
-									<ScheduleCardRequired {...schedule} />
-								))
-							) : (
-								<p className='text-Gray-400 body-md-regular text-center'>
-									잡아야하는 일정이 없습니다.
-									<br />한 달 이내로 잡아야하는 일정은 이곳에
-									표시됩니다.
+						</Card>
+						<Card>
+							<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
+								<p className='text-Gray-900 heading-md'>
+									요청된 일정
 								</p>
-							)}
-						</div>
-					</Card>
+								<div className='max-h-[400px] overflow-y-auto flex flex-col gap-6'>
+									{requestedSchedules.length > 0 ? (
+										requestedSchedules.map((schedule) => (
+											<ScheduleCard {...schedule} />
+										))
+									) : (
+										<p className='text-Gray-400 body-md-regular text-center'>
+											요청온 일정이 없습니다.
+											<br />
+											일정 요청이 오면 이곳에 표시됩니다.
+										</p>
+									)}
+								</div>
+							</div>
+						</Card>
+						<Card>
+							<div className='flex flex-col gap-6 min-w-[240px] min-h-[112px]'>
+								<p className='text-Gray-900 heading-md'>
+									잡아야하는 일정
+								</p>
+								{requiredSchedules.length > 0 ? (
+									requiredSchedules.map((schedule) => (
+										<ScheduleCardRequired {...schedule} />
+									))
+								) : (
+									<p className='text-Gray-400 body-md-regular text-center'>
+										잡아야하는 일정이 없습니다.
+										<br />한 달 이내로 잡아야하는 일정은
+										이곳에 표시됩니다.
+									</p>
+								)}
+							</div>
+						</Card>
+					</div>
 				</div>
+
+				{scheduleAddModalOpen && (
+					<ScheduleAddModal
+						onClose={() => setScheduleAddModalOpen(false)}
+						onAdd={(schedule) => addNewSchedule(schedule, user)}
+					/>
+				)}
+				{scheduleDetailModalOpen && schedule && (
+					<ScheduleDetailModal
+						onClose={() => setScheduleDetailModalOpen(false)}
+					/>
+				)}
+				{scheduleEditModalOpen && schedule && (
+					<ScheduleEditModal
+						schedule={schedule}
+						onClose={() => setScheduleEditModalOpen(false)}
+						onEdit={onEditSchedule}
+						onCancelSchedule={() =>
+							setScheduleDeleteModalOpen(true)
+						}
+					/>
+				)}
+
+				{scheduleDeleteModalOpen && schedule && (
+					<Modal
+						onClose={() => setScheduleDeleteModalOpen(false)}
+						title='일정 취소'
+						firstBtnProps={{
+							variant: 'danger',
+							children: '일정 취소',
+							onClick: onCancelSchedule,
+						}}>
+						<>해당 일정을 취소하시겠습니까?</>
+					</Modal>
+				)}
+				{toastMessage && (
+					<ToastMessage
+						status={toastMessage.status}
+						message={toastMessage.message}
+						setToastMessage={setToastMessage}
+					/>
+				)}
 			</div>
-
-			{scheduleAddModalOpen && (
-				<ScheduleAddModal
-					onClose={() => setScheduleAddModalOpen(false)}
-					onAdd={(schedule) => addNewSchedule(schedule, user)}
-				/>
-			)}
-			{scheduleDetailModalOpen && schedule && (
-				<ScheduleDetailModal
-					onClose={() => setScheduleDetailModalOpen(false)}
-				/>
-			)}
-			{scheduleEditModalOpen && schedule && (
-				<ScheduleEditModal
-					schedule={schedule}
-					onClose={() => setScheduleEditModalOpen(false)}
-					onEdit={onEditSchedule}
-					onCancelSchedule={() => setScheduleDeleteModalOpen(true)}
-				/>
-			)}
-
-			{scheduleDeleteModalOpen && schedule && (
-				<Modal
-					onClose={() => setScheduleDeleteModalOpen(false)}
-					title='일정 취소'
-					firstBtnProps={{
-						variant: 'danger',
-						children: '일정 취소',
-						onClick: onCancelSchedule,
-					}}>
-					<>해당 일정을 취소하시겠습니까?</>
-				</Modal>
-			)}
-			{toastMessage && (
-				<ToastMessage
-					status={toastMessage.status}
-					message={toastMessage.message}
-					setToastMessage={setToastMessage}
-				/>
-			)}
 		</div>
 	);
 }

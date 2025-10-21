@@ -1,4 +1,4 @@
-import { MicrobioAnalysisType } from "../pages/admin/managementRecords/edit/aqm";
+import { MicrobioAnalysisType } from "../pages/admin/managementRecords/edit/aqm/[id]";
 
 export function StatusLabel({ status }: { status: MicrobioAnalysisType }) {
 	return (

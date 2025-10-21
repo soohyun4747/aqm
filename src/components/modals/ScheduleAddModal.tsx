@@ -12,6 +12,7 @@ import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
 import { useCompanyServiceOptions } from '@/src/hooks/useCompanyServiceOptions';
 import { ISchedule } from '@/src/utils/supabase/schedule';
 import { ServiceType } from '@/src/utils/supabase/companyServices';
+import { DropdownSearchable } from '../DropdownSearchable';
 
 interface ScheduleAddModalProps {
 	onClose: () => void;
@@ -79,7 +80,7 @@ function ScheduleAddCompanyModal(props: ScheduleAddModalProps) {
 						style={{ flex: 1 }}
 					/>
 				</div>
-				<div className='flex self-stretch gap-4'>
+				<div className='flex md:flex-row flex-col self-stretch gap-4'>
 					<DatePicker
 						date={date}
 						onChange={setDate}
@@ -111,8 +112,7 @@ function ScheduleAddAdminModal(props: ScheduleAddModalProps) {
 	const { schedule: selectedSchedule, setSchedule: setSelectedSchedule } =
 		useSelectedScheduleStore();
 
-    
-    const { options: companyServicesOptions } =
+	const { options: companyServicesOptions } =
 		useCompanyServiceOptions(companyId);
 
 	useEffect(() => {
@@ -159,8 +159,9 @@ function ScheduleAddAdminModal(props: ScheduleAddModalProps) {
 				},
 			}}>
 			<div className='flex flex-col gap-4'>
-				<div className='flex self-stretch gap-4'>
-					<Dropdown
+				<div className='flex md:flex-row flex-col self-stretch gap-4'>
+
+					<DropdownSearchable
 						label={'고객'}
 						options={companyOptions}
 						value={companyId}
@@ -181,7 +182,7 @@ function ScheduleAddAdminModal(props: ScheduleAddModalProps) {
 						style={{ flex: 1 }}
 					/>
 				</div>
-				<div className='flex self-stretch gap-4'>
+				<div className='flex md:flex-row flex-col self-stretch gap-4'>
 					<DatePicker
 						date={date}
 						onChange={(newDate) => {

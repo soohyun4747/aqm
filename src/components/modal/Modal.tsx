@@ -9,7 +9,7 @@ interface ModalProps extends ModalHeaderProps, ModalFooterProps {
 export function Modal(props: ModalProps) {
 	return (
 		<div className='fixed top-0 left-0 w-[100vw] h-[100vh] bg-black/40 flex items-center justify-center px-[20px] md:px-0 z-[2]'>
-			<div className='flex flex-col min-w-[416px] w-[416px]'>
+			<div className='flex flex-col md:min-w-[416px] md:w-[416px] min-w-[300px]'>
 				<ModalHeader
 					title={props.title}
 					onClose={props.onClose}

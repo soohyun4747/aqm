@@ -94,7 +94,7 @@ export function ListView({
 						))
 					) : (
 						<div className='flex items-center justify-center w-full h-[70%]'>
-							<p className='text-Gray-400 body-md-regular text-center'>
+							<p className='text-Gray-400 md:body-md-regular  body-sm-regulartext-center'>
 								요청온 일정이 없습니다.
 								<br />
 								요청이 들어오면 이곳에 표시됩니다.
@@ -121,7 +121,7 @@ export function ListView({
 						))
 					) : (
 						<div className='flex items-center justify-center w-full h-[70%]'>
-							<p className='text-Gray-400 body-md-regular text-center'>
+							<p className='text-Gray-400 md:body-md-regular  body-sm-regulartext-center'>
 								확정된 일정이 없습니다.
 								<br />
 								일정이 확정되면 이곳에 표시됩니다.
@@ -148,7 +148,7 @@ export function ListView({
 						))
 					) : (
 						<div className='flex items-center justify-center w-full h-[70%]'>
-							<p className='text-Gray-400 body-md-regular text-center'>
+							<p className='text-Gray-400 md:body-md-regular  body-sm-regulartext-center'>
 								취소된 일정이 없습니다.
 								<br />
 								일정이 취소되면 이곳에 표시됩니다.
@@ -181,7 +181,7 @@ function ListViewConfirmedItem({ schedule }: { schedule: ISchedule }) {
 							size={12}
 							fill='#6B7280'
 						/>
-						<p className='text-Gray-500 body-md-regular'>
+						<p className='text-Gray-500 md:body-md-regular body-sm-regular'>
 							{schedule.companyName}
 						</p>
 					</div>
@@ -190,7 +190,7 @@ function ListViewConfirmedItem({ schedule }: { schedule: ISchedule }) {
 							size={12}
 							fill='#6B7280'
 						/>
-						<p className='text-Gray-500 body-md-regular'>
+						<p className='text-Gray-500 md:body-md-regular body-sm-regular'>
 							{toLocaleStringWithoutSec(schedule.scheduledAt)}
 						</p>
 					</div>
@@ -221,7 +221,7 @@ function ListViewCancelledItem({ schedule }: { schedule: ISchedule }) {
 							size={12}
 							fill='#6B7280'
 						/>
-						<p className='text-Gray-500 body-md-regular'>
+						<p className='text-Gray-500 md:body-md-regular body-sm-regular'>
 							{schedule.companyName}
 						</p>
 					</div>
@@ -230,7 +230,7 @@ function ListViewCancelledItem({ schedule }: { schedule: ISchedule }) {
 							size={12}
 							fill='#6B7280'
 						/>
-						<p className='text-Gray-500 body-md-regular'>
+						<p className='text-Gray-500 md:body-md-regular body-sm-regular'>
 							{toLocaleStringWithoutSec(schedule.scheduledAt)}
 						</p>
 					</div>
@@ -266,7 +266,7 @@ function ListViewRequestedItem({
 							size={12}
 							fill='#6B7280'
 						/>
-						<p className='text-Gray-500 body-md-regular'>
+						<p className='text-Gray-500 md:body-md-regular body-sm-regular'>
 							{schedule.companyName}
 						</p>
 					</div>
@@ -275,7 +275,7 @@ function ListViewRequestedItem({
 							size={12}
 							fill='#6B7280'
 						/>
-						<p className='text-Gray-500 body-md-regular'>
+						<p className='text-Gray-500 md:body-md-regular body-sm-regular'>
 							{toLocaleStringWithoutSec(schedule.scheduledAt)}
 						</p>
 					</div>

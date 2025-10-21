@@ -1,3 +1,4 @@
+import { useScreenTypeStore } from '../stores/screenTypeStore';
 import { getStandardPercents } from '../utils/chart';
 import { CircleCheck } from './icons/CircleCheck';
 import { CircleExclamation } from './icons/CircleExclamation';
@@ -22,6 +23,7 @@ export function BarChart(props: BarChartProps) {
 		props.dangerStandard,
 		props.maxValue
 	);
+	const screenType = useScreenTypeStore((state) => state.screenType);
 
 	const safeStandardBgWidth = `calc((100% - 100px) * ${pSafe / 100})`;
 	const warningStandardBgWidth = `calc((100% - 100px) * ${pWarn / 100})`;
@@ -31,62 +33,64 @@ export function BarChart(props: BarChartProps) {
 		<div className='flex flex-col gap-1'>
 			<div className='flex'>
 				<div className='min-w-[100px]' />
-				<div className='flex w-full'>
-					{props.safeStandard && (
-						<div
-							className='flex gap-[6px] p-2 items-center'
-							style={{
-								width: `calc(100% * ${pSafe / 100})`,
-							}}>
-							<CircleCheck
-								fill='#0E9F6E'
-								size={14}
-							/>
-							<p className='text-Gray-900 body-md-regular'>
-								Safe{' '}
-								{props.safeStandard
-									? `(${props.safeStandard} ${props.unit})`
-									: ''}
-							</p>
-						</div>
-					)}
-					{props.warningStandard && (
-						<div
-							className='flex gap-[6px] p-2 items-center'
-							style={{
-								width: `calc(100% * ${pWarn / 100})`,
-							}}>
-							<CircleExclamation
-								fill='#E3A008'
-								size={14}
-							/>
-							<p className='text-Gray-900 body-md-regular'>
-								Warning{' '}
-								{props.warningStandard
-									? `(${props.warningStandard} ${props.unit})`
-									: ''}
-							</p>
-						</div>
-					)}
-					{props.dangerStandard && (
-						<div
-							className='flex gap-[6px] p-2 items-center'
-							style={{
-								width: `calc(100% * ${pDang / 100})`,
-							}}>
-							<CircleX
-								fill='#F05252'
-								size={14}
-							/>
-							<p className='text-Gray-900 body-md-regular'>
-								Danger{' '}
-								{props.dangerStandard
-									? `(${props.dangerStandard} ${props.unit})`
-									: ''}
-							</p>
-						</div>
-					)}
-				</div>
+				{screenType === 'pc' && (
+					<div className='flex w-full'>
+						{props.safeStandard && (
+							<div
+								className='flex gap-[6px] p-2 items-center'
+								style={{
+									width: `calc(100% * ${pSafe / 100})`,
+								}}>
+								<CircleCheck
+									fill='#0E9F6E'
+									size={14}
+								/>
+								<p className='text-Gray-900 body-md-regular'>
+									Safe{' '}
+									{props.safeStandard
+										? `(${props.safeStandard} ${props.unit})`
+										: ''}
+								</p>
+							</div>
+						)}
+						{props.warningStandard && (
+							<div
+								className='flex gap-[6px] p-2 items-center'
+								style={{
+									width: `calc(100% * ${pWarn / 100})`,
+								}}>
+								<CircleExclamation
+									fill='#E3A008'
+									size={14}
+								/>
+								<p className='text-Gray-900 body-md-regular'>
+									Warning{' '}
+									{props.warningStandard
+										? `(${props.warningStandard} ${props.unit})`
+										: ''}
+								</p>
+							</div>
+						)}
+						{props.dangerStandard && (
+							<div
+								className='flex gap-[6px] p-2 items-center'
+								style={{
+									width: `calc(100% * ${pDang / 100})`,
+								}}>
+								<CircleX
+									fill='#F05252'
+									size={14}
+								/>
+								<p className='text-Gray-900 body-md-regular'>
+									Danger{' '}
+									{props.dangerStandard
+										? `(${props.dangerStandard} ${props.unit})`
+										: ''}
+								</p>
+							</div>
+						)}
+					</div>
+				)}
 			</div>
 			<div className='flex flex-col relative'>
 				<div

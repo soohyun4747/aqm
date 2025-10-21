@@ -1,5 +1,5 @@
 import { SetStateAction } from 'react';
-import { Series } from '../pages/managementRecords/detail/aqm';
+import { Series } from '../pages/managementRecords/detail/aqm/[id]';
 
 const MAX_SIZE = 30 * 1024 * 1024; // 30MB
 

@@ -4,6 +4,7 @@ export interface TableProps {
 	columns: TableHeader[];
 	rows: any[];
 	headerStyle?: CSSProperties;
+	onClickRow?: (row: any) => void;
 }
 
 export interface TableHeader {
@@ -35,11 +36,16 @@ export function Table(props: TableProps) {
 					))}
 				</tr>
 			</thead>
-			<tbody className='relative h-[200px]'>
+			<tbody className='relative md:h-[200px]'>
 				{props.rows.length > 0 ? (
 					props.rows.map((row, i) => {
 						return (
-							<tr key={i}>
+							<tr
+								key={i}
+								onClick={() =>
+									props.onClickRow && props.onClickRow(row)
+								}
+								className={`${props.onClickRow && 'cursor-pointer'}`}>
 								{props.columns.map((col, j) => {
 									const element = col.render
 										? col.render(row[col.field], row)
@@ -48,9 +54,9 @@ export function Table(props: TableProps) {
 										<td
 											style={col.style}
 											key={j}
-											className={`p-4 bg-white border-b border-Gray-200 h-[54px] items-center self-stretch`}>
+											className={`md:p-4 px-4 py-2 bg-white border-b border-Gray-200 md:h-[54px] max-h-[24px] items-center self-stretch`}>
 											{typeof element === 'string' ? (
-												<p className='text-Gray-900 body-md-regular'>
+												<p className='text-Gray-900 body-md-regular min-w-max'>
 													{element}
 												</p>
 											) : (

@@ -122,6 +122,16 @@ body:-webkit-scrollbar {
 		break-before: page; /* 최신 표준 */
 	}
 
+	.print-area-group-1 {
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.print-area-group-2 {
+		flex-direction: row;
+		width: 100%;
+	}
+
 	/* 페이지 여백 조금 줄이고 싶다면 (선택) */
 	@page {
 		margin: 6mm;
