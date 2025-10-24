@@ -54,38 +54,10 @@ function AdminManagementRecordsEditHepaPage() {
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
 	const router = useRouter();
-	const pathname = usePathname();
-	const recordId = pathname?.split('/').at(5);
 
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
-
-	useEffect(() => {
-		if (recordId) {
-			getSetManagementRecordAndResult(recordId);
-		}
-	}, [recordId]);
-
-	const getSetManagementRecordAndResult = async (recordId: string) => {
-		try {
-			const recordInfo = await fetchManagementRecordById(recordId);
-			if (recordInfo) {
-				// store에 있다고 가정한 필드명에 맞게 세팅
-				setDate(new Date(recordInfo.date));
-				setCompanyId(recordInfo.company_id);
-				setManager(recordInfo.manager_name ?? '');
-
-				setComment(recordInfo.comment ?? '');
-
-				getSetHepaResults(recordInfo.id);
-				getSetHepaFilters(recordInfo.company_id);
-			}
-		} catch (error) {
-			console.error(error);
-			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
-		}
-	};
 
 	const onSelectCompany = (companyId: string) => {
 		setCompanyId(companyId);
@@ -96,44 +68,9 @@ function AdminManagementRecordsEditHepaPage() {
 			setHepaResults([]);
 		}
 	};
-
-	const getSetHepaResults = async (recordId: string) => {
-		try {
-			const data = await fetchHepaResultsByRecordId(recordId);
-
-			const mapped: IHEPAResult[] =
-				(data ?? []).map((row) => ({
-					id: row.id,
-					companyId: row.company_id,
-					managementRecordId: row.management_record_id,
-					filterId: row.filter_id,
-					confirm: row.confirm,
-				})) ?? [];
-			setHepaResults(mapped);
-		} catch (error) {
-			console.error(error);
-			setToastMessage({
-				status: 'error',
-				message: '데이터를 불러오는데 실패하였습니다',
-			});
-		}
-	};
-
 	const getSetCompanyOptions = async () => {
 		const options = await fetchCompanyOptions();
 		setCompanyOptions(options);
-	};
-
-	const getSetHepaFilters = async (companyId: string) => {
-		try {
-			const data = await fetchHepaFiltersWithCompanyId(companyId);
-			setHepaFilters((data as unknown as IHepaFilter[]) ?? []);
-		} catch (error) {
-			setToastMessage({
-				status: 'error',
-				message: '데이터를 불러오는데 실패하였습니다',
-			});
-		}
 	};
 
 	const getSetHepaFiltersandInitResults = async (companyId: string) => {
@@ -181,7 +118,8 @@ function AdminManagementRecordsEditHepaPage() {
 		});
 	};
 
-	const handleUpdate = async () => {
+	// ---------- save/update ----------
+	const handleNewSave = async () => {
 		if (!companyId || !manager) {
 			setToastMessage({
 				status: 'warning',
@@ -189,42 +127,38 @@ function AdminManagementRecordsEditHepaPage() {
 			});
 			return;
 		}
-		if (!recordId) {
-			setToastMessage({
-				status: 'error',
-				message: '기존 데이터가 없습니다',
-			});
-			return;
-		}
 		setSaving(true);
 		try {
-			// 1) management_records 업데이트
-			await updateManagementRecord(
-				recordId,
-				companyId,
-				date,
-				manager,
-				comment,
-				'hepa'
-			);
+			// 1) management_records 생성
+			const newManagementRecord = await createManagementRecord({
+				companyId: companyId,
+				date: date,
+				managerName: manager,
+				comment: comment,
+				serviceType: 'hepa',
+			});
 
-			// 2) hepa_results update
+			const managementRecordId = newManagementRecord.id;
+
+			// 2) hepa_results 일괄 insert (현재 상태 전체 저장)
 			const hepaResultsWithIds = hepaResults.map((r) => ({
 				company_id: companyId,
-				management_record_id: recordId,
+				management_record_id: managementRecordId,
 				filter_id: r.filterId,
 				confirm: r.confirm,
 			}));
+
 			if (hepaResultsWithIds.length > 0) {
-				await updateHepaResultsViaRpc(hepaResultsWithIds);
+				await createHepaResults(hepaResultsWithIds);
 			}
 
-			setToastMessage({ status: 'confirm', message: '수정되었습니다' });
+			setToastMessage({ status: 'confirm', message: '저장되었습니다.' });
+			router.push('/admin/managementRecords');
 		} catch (err) {
-			console.error('handleUpdate error:', err);
+			console.error('handleNewSave error:', err);
 			setToastMessage({
 				status: 'error',
-				message: '수정을 실패하였습니다',
+				message: '저장에 실패했습니다.',
 			});
 		} finally {
 			setSaving(false);
@@ -281,7 +215,7 @@ function AdminManagementRecordsEditHepaPage() {
 						HEPA 필터 교체 기록
 					</p>
 					<Button
-						onClick={handleUpdate}
+						onClick={handleNewSave}
 						disabled={saving}>
 						{saving ? '저장 중…' : '저장하기'}
 					</Button>

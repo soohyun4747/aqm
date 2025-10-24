@@ -2,7 +2,7 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const SUPABASE_SERVICE_ROLE_KEY = process.env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!; // 서버 전용 환경변수에 보관
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!; // 서버 전용 환경변수에 보관
 
 // HMR 환경에서도 인스턴스 1개만 유지
 let _admin: SupabaseClient | undefined;

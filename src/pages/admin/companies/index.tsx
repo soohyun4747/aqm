@@ -4,6 +4,7 @@ import { GNB } from '@/src/components/GNB';
 import { Modal } from '@/src/components/modal/Modal';
 import { SearchField } from '@/src/components/SearchField';
 import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
+import { useLoadingStore } from '@/src/stores/loadingStore';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
 import { ICompany } from '@/src/stores/userStore';
@@ -19,6 +20,8 @@ function AdminUsersPage() {
 	const [currentPage, setCurrentPage] = useState(0); // 0-based
 	const [totalRows, setTotalRows] = useState(0);
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
+
+	const { open: openLoading, close: closeLoading } = useLoadingStore();
 
 	const { company, setCompany } = useSelectedCompanyStore();
 	const router = useRouter();
@@ -55,8 +58,6 @@ function AdminUsersPage() {
 		setDeleteModalOpen(false);
 		setCompany(undefined);
 	};
-
-	console.log(currentPage);
 
 	return (
 		<div>
@@ -159,8 +160,10 @@ function AdminUsersPage() {
 							onClick: async () => {
 								if (company) {
 									try {
-										await deleteCompany(company.id);
 										onCloseDeleteModal();
+										openLoading();
+										await deleteCompany(company.id);
+										closeLoading();
 										setToastMessage({
 											status: 'confirm',
 											message: '삭제가 완료되었습니다',

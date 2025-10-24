@@ -10,14 +10,11 @@ import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { today } from '@/src/utils/date';
 import { useEffect, useState } from 'react';
 import {
-	fetchManagementRecordById,
-	updateManagementRecord,
+	createManagementRecord,
 } from '@/src/utils/supabase/managementRecord';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { useRouter } from 'next/router';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
-import { IManagementRecord } from '../..';
-import { usePathname } from 'next/navigation';
 
 function AdminManagementRecordsEditASPage() {
 	const [date, setDate] = useState<Date>(today);
@@ -29,34 +26,11 @@ function AdminManagementRecordsEditASPage() {
 	const [saving, setSaving] = useState(false);
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
-	const pathname = usePathname();
-	const recordId = pathname?.split('/').at(5);
-
-	useEffect(() => {
-		if (recordId) {
-			getSetManagementRecordAndResult(recordId);
-		}
-	}, [pathname]);
+	const router = useRouter();
 
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
-
-	const getSetManagementRecordAndResult = async (recordId: string) => {
-		try {
-			const recordInfo = await fetchManagementRecordById(recordId);
-			if (recordInfo) {
-				setDate(new Date(recordInfo.date));
-				setCompanyId(recordInfo.company_id);
-				setManager(recordInfo.manager_name ?? '');
-
-				setComment(recordInfo.comment ?? '');
-			}
-		} catch (error) {
-			console.error(error);
-			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
-		}
-	};
 
 	const onSelectCompany = (companyId: string) => {
 		setCompanyId(companyId);
@@ -66,8 +40,8 @@ function AdminManagementRecordsEditASPage() {
 		const options = await fetchCompanyOptions();
 		setCompanyOptions(options);
 	};
-
-	const handleUpdate = async () => {
+	// ---------- save/update ----------
+	const handleNewSave = async () => {
 		if (!companyId || !manager) {
 			setToastMessage({
 				status: 'warning',
@@ -75,31 +49,24 @@ function AdminManagementRecordsEditASPage() {
 			});
 			return;
 		}
-		if (!recordId) {
-			setToastMessage({
-				status: 'error',
-				message: '기존 데이터가 없습니다',
-			});
-			return;
-		}
 		setSaving(true);
 		try {
-			// 1) management_records 업데이트
-			await updateManagementRecord(
-				recordId,
-				companyId,
-				date,
-				manager,
-				comment,
-				'as'
-			);
+			// 1) management_records 생성
+			await createManagementRecord({
+				companyId: companyId,
+				date: date,
+				managerName: manager,
+				comment: comment,
+				serviceType: 'as',
+			});
 
-			setToastMessage({ status: 'confirm', message: '수정되었습니다' });
+			setToastMessage({ status: 'confirm', message: '저장되었습니다.' });
+			router.push('/admin/managementRecords');
 		} catch (err) {
-			console.error('handleUpdate error:', err);
+			console.error('handleNewSave error:', err);
 			setToastMessage({
 				status: 'error',
-				message: '수정을 실패하였습니다',
+				message: '저장에 실패했습니다.',
 			});
 		} finally {
 			setSaving(false);
@@ -115,7 +82,7 @@ function AdminManagementRecordsEditASPage() {
 						장비 설치 및 AS 기록
 					</p>
 					<Button
-						onClick={handleUpdate}
+						onClick={handleNewSave}
 						disabled={saving}>
 						{saving ? '저장 중…' : '저장하기'}
 					</Button>

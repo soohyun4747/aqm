@@ -8,41 +8,38 @@ import { InputBox } from '@/src/components/InputBox';
 import { SavingOverlay } from '@/src/components/SavingOverlay';
 import { TextAreaBox } from '@/src/components/TextAreaBox';
 import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
+import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
 import { today } from '@/src/utils/date';
 import { useEffect, useState } from 'react';
-import {
-	HepaFilterNames,
-	HepaFilterType,
-	IHepaFilter,
-} from '../../../companies/edit/[id]';
+import { vocFilterSpec } from '../../../companies/edit/[id]';
 import { Checkbox } from '@/src/components/Checkbox';
-import { fetchHepaFiltersWithCompanyId } from '@/src/utils/supabase/hepaFilters';
 import {
 	createManagementRecord,
 	fetchManagementRecordById,
 	updateManagementRecord,
 } from '@/src/utils/supabase/managementRecord';
-import {
-	createHepaResults,
-	fetchHepaResultsByRecordId,
-	updateHepaResultsViaRpc,
-} from '@/src/utils/supabase/hepaResults';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { useRouter } from 'next/router';
+import {
+	createVocResults,
+	fetchVocResultsByRecordId,
+	IVOCResultRow,
+	updateVocResults,
+} from '@/src/utils/supabase/vocResults';
+import { fetchCompanyServicesByCompanyId } from '@/src/utils/supabase/companyServices';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
 import { usePathname } from 'next/navigation';
 
-export interface IHEPAResult {
+export interface IVOCResult {
 	id?: string;
 	companyId: string;
 	managementRecordId?: string;
-	filterId: string;
 	confirm: boolean;
 }
 
-function AdminManagementRecordsEditHepaPage() {
-	const [hepaResults, setHepaResults] = useState<IHEPAResult[]>([]);
-	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([]);
+function AdminManagementRecordsEditVocPage() {
+	const [vocResults, setVocResults] = useState<IVOCResult[]>([]);
+	const [vocQuantity, setVocQuantity] = useState<number>();
 
 	const [date, setDate] = useState<Date>(today);
 	const [companyId, setCompanyId] = useState('');
@@ -54,68 +51,17 @@ function AdminManagementRecordsEditHepaPage() {
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
 	const router = useRouter();
-	const pathname = usePathname();
-	const recordId = pathname?.split('/').at(5);
 
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
 
-	useEffect(() => {
-		if (recordId) {
-			getSetManagementRecordAndResult(recordId);
-		}
-	}, [recordId]);
-
-	const getSetManagementRecordAndResult = async (recordId: string) => {
-		try {
-			const recordInfo = await fetchManagementRecordById(recordId);
-			if (recordInfo) {
-				// store에 있다고 가정한 필드명에 맞게 세팅
-				setDate(new Date(recordInfo.date));
-				setCompanyId(recordInfo.company_id);
-				setManager(recordInfo.manager_name ?? '');
-
-				setComment(recordInfo.comment ?? '');
-
-				getSetHepaResults(recordInfo.id);
-				getSetHepaFilters(recordInfo.company_id);
-			}
-		} catch (error) {
-			console.error(error);
-			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
-		}
-	};
-
 	const onSelectCompany = (companyId: string) => {
 		setCompanyId(companyId);
 		if (companyId) {
-			getSetHepaFiltersandInitResults(companyId);
+			getSetInitVocResults(companyId);
 		} else {
-			setHepaFilters([]);
-			setHepaResults([]);
-		}
-	};
-
-	const getSetHepaResults = async (recordId: string) => {
-		try {
-			const data = await fetchHepaResultsByRecordId(recordId);
-
-			const mapped: IHEPAResult[] =
-				(data ?? []).map((row) => ({
-					id: row.id,
-					companyId: row.company_id,
-					managementRecordId: row.management_record_id,
-					filterId: row.filter_id,
-					confirm: row.confirm,
-				})) ?? [];
-			setHepaResults(mapped);
-		} catch (error) {
-			console.error(error);
-			setToastMessage({
-				status: 'error',
-				message: '데이터를 불러오는데 실패하였습니다',
-			});
+			setVocResults([]);
 		}
 	};
 
@@ -124,29 +70,24 @@ function AdminManagementRecordsEditHepaPage() {
 		setCompanyOptions(options);
 	};
 
-	const getSetHepaFilters = async (companyId: string) => {
-		try {
-			const data = await fetchHepaFiltersWithCompanyId(companyId);
-			setHepaFilters((data as unknown as IHepaFilter[]) ?? []);
-		} catch (error) {
-			setToastMessage({
-				status: 'error',
-				message: '데이터를 불러오는데 실패하였습니다',
-			});
-		}
+	const getSetVocQuantity = async (companyId: string) => {
+		const vocServiceData = await fetchCompanyServicesByCompanyId(
+			companyId,
+			'voc'
+		);
+
+		setVocQuantity(vocServiceData[0]?.quantity);
 	};
 
-	const getSetHepaFiltersandInitResults = async (companyId: string) => {
+	const getSetInitVocResults = async (companyId: string) => {
 		try {
-			const data = await fetchHepaFiltersWithCompanyId(companyId);
-			setHepaFilters((data as unknown as IHepaFilter[]) ?? []);
-			setHepaResults(
-				data.map((filter) => ({
+			await getSetVocQuantity(companyId);
+			setVocResults([
+				{
 					companyId: companyId,
-					filterId: filter.id!,
 					confirm: false,
-				}))
-			);
+				},
+			]);
 		} catch (error) {
 			setToastMessage({
 				status: 'error',
@@ -155,10 +96,10 @@ function AdminManagementRecordsEditHepaPage() {
 		}
 	};
 
-	const onClickFilterConfirm = (row: IHepaFilter) => {
-		setHepaResults((prev) => {
+	const onClickFilterConfirm = (row: IVOCResult) => {
+		setVocResults((prev) => {
 			if (prev) {
-				const result = prev.find((res) => res.filterId === row.id);
+				const result = prev.find((res) => res.id === row.id);
 				if (result) {
 					result.confirm = !result.confirm;
 					return JSON.parse(JSON.stringify(prev));
@@ -168,7 +109,7 @@ function AdminManagementRecordsEditHepaPage() {
 	};
 
 	const onClickAllCheck = () => {
-		setHepaResults((prev) => {
+		setVocResults((prev) => {
 			if (prev.length > 0) {
 				const allChecked = prev.map((res) => {
 					res.confirm = true;
@@ -181,7 +122,8 @@ function AdminManagementRecordsEditHepaPage() {
 		});
 	};
 
-	const handleUpdate = async () => {
+	// ---------- save/update ----------
+	const handleNewSave = async () => {
 		if (!companyId || !manager) {
 			setToastMessage({
 				status: 'warning',
@@ -189,42 +131,37 @@ function AdminManagementRecordsEditHepaPage() {
 			});
 			return;
 		}
-		if (!recordId) {
-			setToastMessage({
-				status: 'error',
-				message: '기존 데이터가 없습니다',
-			});
-			return;
-		}
 		setSaving(true);
 		try {
-			// 1) management_records 업데이트
-			await updateManagementRecord(
-				recordId,
-				companyId,
-				date,
-				manager,
-				comment,
-				'hepa'
-			);
+			// 1) management_records 생성
+			const newManagementRecord = await createManagementRecord({
+				companyId: companyId,
+				date: date,
+				managerName: manager,
+				comment: comment,
+				serviceType: 'voc',
+			});
 
-			// 2) hepa_results update
-			const hepaResultsWithIds = hepaResults.map((r) => ({
+			const managementRecordId = newManagementRecord.id;
+
+			// 2) voc_results 일괄 insert (현재 상태 전체 저장)
+			const vocResultsWithIds: IVOCResultRow[] = vocResults.map((r) => ({
 				company_id: companyId,
-				management_record_id: recordId,
-				filter_id: r.filterId,
+				management_record_id: managementRecordId,
 				confirm: r.confirm,
 			}));
-			if (hepaResultsWithIds.length > 0) {
-				await updateHepaResultsViaRpc(hepaResultsWithIds);
+
+			if (vocResultsWithIds.length > 0) {
+				await createVocResults(vocResultsWithIds);
 			}
 
-			setToastMessage({ status: 'confirm', message: '수정되었습니다' });
+			setToastMessage({ status: 'confirm', message: '저장되었습니다.' });
+			router.push('/admin/managementRecords');
 		} catch (err) {
-			console.error('handleUpdate error:', err);
+			console.error('handleNewSave error:', err);
 			setToastMessage({
 				status: 'error',
-				message: '수정을 실패하였습니다',
+				message: '저장에 실패했습니다.',
 			});
 		} finally {
 			setSaving(false);
@@ -235,23 +172,27 @@ function AdminManagementRecordsEditHepaPage() {
 		{
 			field: 'filter_type',
 			headerName: '필터 종류',
-			render: (value: HepaFilterType) => HepaFilterNames[value],
+			render: () => 'VOC 필터',
 		},
 		{
 			field: 'width',
 			headerName: '가로',
+			render: () => vocFilterSpec.width,
 		},
 		{
 			field: 'height',
 			headerName: '세로',
+			render: () => vocFilterSpec.height,
 		},
 		{
 			field: 'depth',
 			headerName: '두께',
+			render: () => vocFilterSpec.depth,
 		},
 		{
 			field: 'quantity',
 			headerName: '개수',
+			render: () => vocQuantity,
 		},
 		{
 			field: '',
@@ -262,8 +203,7 @@ function AdminManagementRecordsEditHepaPage() {
 						label={''}
 						onClick={() => onClickFilterConfirm(row)}
 						checked={
-							hepaResults?.find((res) => res.filterId === row.id)
-								?.confirm
+							vocResults.find((res) => res.id === row.id)?.confirm
 						}
 					/>
 				);
@@ -274,19 +214,19 @@ function AdminManagementRecordsEditHepaPage() {
 	return (
 		<div>
 			<GNB />
-
-			<div className='flex flex-col bg-Gray-100 min-h-screen pt-[60px] md:pt-0'>
+			<div className='flex flex-col bg-Gray-100 min-h-screen md:pt-0 pt-[60px] md:pt-0'>
 				<div className='flex justify-between items-center px-6 py-4 bg-white'>
 					<p className='text-Gray-900 heading-md'>
-						HEPA 필터 교체 기록
+						VOC 필터 교체 기록
 					</p>
 					<Button
-						onClick={handleUpdate}
+						onClick={handleNewSave}
 						disabled={saving}>
 						{saving ? '저장 중…' : '저장하기'}
 					</Button>
 				</div>
-				<div className='p-6 flex md:flex-row flex-col gap-4'>
+
+				<div className='p-6 flex flex-col md:flex-row gap-4'>
 					<div className='flex flex-col gap-4 w-[330px]'>
 						<Card>
 							<div className='flex flex-col gap-[12px]'>
@@ -345,7 +285,7 @@ function AdminManagementRecordsEditHepaPage() {
 								<div className='w-full overflow-x-auto'>
 									<Table
 										columns={columns}
-										rows={hepaFilters}
+										rows={vocResults}
 									/>
 								</div>
 							</div>
@@ -365,4 +305,4 @@ function AdminManagementRecordsEditHepaPage() {
 	);
 }
 
-export default AdminManagementRecordsEditHepaPage;
+export default AdminManagementRecordsEditVocPage;

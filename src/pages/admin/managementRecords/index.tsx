@@ -119,7 +119,7 @@ function AdminManagementRecordsPage() {
 									onClick={() =>
 										setServiceChooseModalOpen(true)
 									}>
-									{screenType === 'pc' ? '고객 추가' : '+'}
+									{screenType === 'pc' ? '기록 추가' : '+'}
 								</Button>
 							</div>
 						</div>

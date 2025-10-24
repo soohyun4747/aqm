@@ -13,16 +13,14 @@ import { today } from '@/src/utils/date';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { useEffect, useState } from 'react';
 import {
-	loadAqmBundleAsFiles,
 	upsertAqmResult,
 } from '@/src/utils/supabase/aqmResults';
 import {
-	fetchManagementRecordById,
-	IManagementRecordRow,
+	createManagementRecord,
 } from '@/src/utils/supabase/managementRecord';
 import { useRouter } from 'next/router';
+import { Services } from '@/src/utils/supabase/companyServices';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
-import { usePathname } from 'next/navigation';
 
 export type MicrobioAnalysisType = 'pass' | 'fail';
 
@@ -37,7 +35,6 @@ export interface IAQMResult {
 }
 
 function AdminManagementRecordsEditAQMPage() {
-	const [aqmResult, setAqmResult] = useState<IAQMResult>();
 
 	const [date, setDate] = useState<Date>(today);
 	const [companyId, setCompanyId] = useState('');
@@ -57,91 +54,38 @@ function AdminManagementRecordsEditAQMPage() {
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
 	const router = useRouter();
-	const pathname = usePathname();
-	const recordId = pathname?.split('/').at(5);
 
-	useEffect(() => {
-		if (recordId) {
-			getSetManagementRecordAndResult(recordId);
-		}
-	}, [recordId]);
 
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
-
-	const getSetManagementRecordAndResult = async (recordId: string) => {
-		try {
-			const recordInfo = await fetchManagementRecordById(recordId);
-			if (recordInfo) {
-				loadAqmResult(recordInfo);
-			}
-		} catch (error) {
-			console.error(error);
-			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
-		}
-	};
-
-	const loadAqmResult = async (managementRecord: IManagementRecordRow) => {
-		try {
-			const { record, result, files } = await loadAqmBundleAsFiles(
-				managementRecord.id
-			);
-			setDate(new Date(record.date));
-			setCompanyId(record.company_id);
-			setManager(record.manager_name ?? '');
-			setMicrobioAnal(result?.microbio_analysis ?? undefined);
-			setComment(record.comment);
-
-			// 파일 필드
-			setMicrobioFile(files.microbioFile);
-			setPmFile(files.pmFile);
-			setVocFile(files.vocFile);
-			setAqmFile(files.aqmFile);
-
-			if (result) {
-				setAqmResult({
-					id: result.id,
-					managementRecordId: result.management_record_id,
-					pmFilePath: result.pm_file_path,
-					vocFilePath: result.voc_file_path,
-					aqmFilePath: result.aqm_file_path,
-					microbioFilePath: result.microbio_file_path,
-					microbioAnalysis: result.microbio_analysis,
-				});
-			}
-		} catch (e) {
-			console.error(e);
-			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
-		}
-	};
 
 	const getSetCompanyOptions = async () => {
 		const options = await fetchCompanyOptions();
 		setCompanyOptions(options);
 	};
 
-	const handleUpdate = async () => {
-		if (!aqmResult) {
-			setToastMessage({
-				status: 'warning',
-				message: '기존 정보가 존재하지 않습니다.',
-			});
-			return;
-		}
+	const handleNewSave = async () => {
 		if (!companyId || !manager) {
 			setToastMessage({
 				status: 'warning',
-				message: '필수 값들을 입력해 주세요',
+				message: '필수 값들을 입력해주세요',
 			});
 			return;
 		}
 		setSaving(true);
 		try {
-			// management_records 메타 업데이트가 필요하면 별도 update 함수 작성
+			const rec = await createManagementRecord({
+				companyId,
+				date,
+				managerName: manager,
+				serviceType: Services.aqm,
+				comment: comment,
+			});
+
 			await upsertAqmResult({
 				companyId,
-				recordId: aqmResult.managementRecordId,
+				recordId: rec.id,
 				microbioFile,
 				pmFile,
 				vocFile,
@@ -149,12 +93,13 @@ function AdminManagementRecordsEditAQMPage() {
 				microbioAnal: microbioAnal,
 			});
 
-			setToastMessage({ status: 'confirm', message: '수정되었습니다.' });
+			setToastMessage({ status: 'confirm', message: '저장되었습니다.' });
+			router.push('/admin/managementRecords');
 		} catch (e: any) {
 			console.error(e);
 			setToastMessage({
 				status: 'error',
-				message: e?.message ?? '수정 중 오류',
+				message: e?.message ?? '저장 중 오류',
 			});
 		} finally {
 			setSaving(false);
@@ -168,7 +113,7 @@ function AdminManagementRecordsEditAQMPage() {
 				<div className='flex justify-between items-center px-6 py-4 bg-white'>
 					<p className='text-Gray-900 heading-md'>AQM 검사 기록</p>
 					<Button
-						onClick={handleUpdate}
+						onClick={handleNewSave}
 						disabled={saving}>
 						{saving ? '저장 중…' : '저장하기'}
 					</Button>

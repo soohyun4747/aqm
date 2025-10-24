@@ -1,8 +1,8 @@
 import { supabaseClient } from '@/lib/supabase/client';
 import { fetchManagementRecordById, ManagementRecords_BUCKET } from './managementRecord';
-import { downloadAsFile, removeFile, uploadFileToPath } from './storage';
-import { MicrobioAnalysisType } from '@/src/pages/admin/managementRecords/edit/aqm/[id]';
+import { downloadFile, removeFile, uploadFileToPath } from './storage';
 import { sanitizeFileName } from '../string';
+import { MicrobioAnalysisType } from '@/src/pages/admin/managementRecords/edit/aqm/[id]';
 
 export interface AQMResultRow {
 	id: string;
@@ -68,8 +68,8 @@ export async function upsertAqmResult(props: upsertAqmResultProps) {
 			props.microbioFile.name
 		);
 		microbioPath = await uploadFileToPath(
-			p,
 			props.microbioFile,
+			p,
 			ManagementRecords_BUCKET
 		);
 	}
@@ -86,8 +86,8 @@ export async function upsertAqmResult(props: upsertAqmResultProps) {
 			props.pmFile.name
 		);
 		pmPath = await uploadFileToPath(
-			p,
 			props.pmFile,
+			p,
 			ManagementRecords_BUCKET
 		);
 	}
@@ -104,8 +104,8 @@ export async function upsertAqmResult(props: upsertAqmResultProps) {
 			props.vocFile.name
 		);
 		vocPath = await uploadFileToPath(
-			p,
 			props.vocFile,
+			p,
 			ManagementRecords_BUCKET
 		);
 	}
@@ -122,8 +122,8 @@ export async function upsertAqmResult(props: upsertAqmResultProps) {
 			props.aqmFile.name
 		);
 		aqmPath = await uploadFileToPath(
-			p,
 			props.aqmFile,
+			p,
 			ManagementRecords_BUCKET
 		);
 	}
@@ -179,10 +179,10 @@ export async function loadAqmBundleAsFiles(recordId: string) {
   let vocFile: File|null = null;
   let aqmFile: File|null = null;
 
-  if (result?.microbio_file_path) microbioFile = await downloadAsFile(result.microbio_file_path, ManagementRecords_BUCKET);
-  if (result?.pm_file_path) pmFile = await downloadAsFile(result.pm_file_path, ManagementRecords_BUCKET);
-  if (result?.voc_file_path) vocFile = await downloadAsFile(result.voc_file_path, ManagementRecords_BUCKET);
-  if (result?.aqm_file_path) aqmFile = await downloadAsFile(result.aqm_file_path, ManagementRecords_BUCKET);
+  if (result?.microbio_file_path) microbioFile = await downloadFile(result.microbio_file_path, ManagementRecords_BUCKET);
+  if (result?.pm_file_path) pmFile = await downloadFile(result.pm_file_path, ManagementRecords_BUCKET);
+  if (result?.voc_file_path) vocFile = await downloadFile(result.voc_file_path, ManagementRecords_BUCKET);
+  if (result?.aqm_file_path) aqmFile = await downloadFile(result.aqm_file_path, ManagementRecords_BUCKET);
 
   return { record, result, files: { microbioFile, pmFile, vocFile, aqmFile } };
 }

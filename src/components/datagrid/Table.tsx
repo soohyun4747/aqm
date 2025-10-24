@@ -42,9 +42,6 @@ export function Table(props: TableProps) {
 						return (
 							<tr
 								key={i}
-								onClick={() =>
-									props.onClickRow && props.onClickRow(row)
-								}
 								className={`${props.onClickRow && 'cursor-pointer'}`}>
 								{props.columns.map((col, j) => {
 									const element = col.render
@@ -52,6 +49,14 @@ export function Table(props: TableProps) {
 										: row[col.field];
 									return (
 										<td
+											onClick={() => {
+												if (
+													!col.render &&
+													props.onClickRow
+												) {
+													props.onClickRow(row);
+												}
+											}}
 											style={col.style}
 											key={j}
 											className={`md:p-4 px-4 py-2 bg-white border-b border-Gray-200 md:h-[54px] max-h-[24px] items-center self-stretch`}>
