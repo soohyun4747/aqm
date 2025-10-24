@@ -45,8 +45,9 @@ export function NotificationMob() {
 							onClose={() => setModalOpen(false)}
 						/>
 						<div className='p-4 flex flex-col gap-4 bg-white rounded-b-[8px] border border-Gray-200 border-t-0'>
-							{notis.map((noti) => (
+							{notis.map((noti, i) => (
 								<NotificationListItem
+									key={i}
 									{...noti}
 									title={getNotiTitle(noti)}
 								/>

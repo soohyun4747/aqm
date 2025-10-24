@@ -182,11 +182,11 @@ function AdminUsersPage() {
 							},
 						}}>
 						<p className='body-md-regular text-Gray-900'>
-							고객 "
+							고객 &quot;
 							<span className='text-Red-600'>
 								{company?.name}
 							</span>
-							"를 삭제하시겠습니까?
+							&quot;를 삭제하시겠습니까?
 							<br />
 							관리 기록을 제외한 고객 데이터와 계정이 모두
 							삭제됩니다.

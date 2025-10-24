@@ -50,17 +50,19 @@ export function Calendar(props: CalendarProps) {
 				<div className='flex items-center'>
 					{weekLabels.map((label, i) => (
 						<DayLabel
+							key={i}
 							isFirst={i === 0 ? true : false}
 							isLast={i === weekLabels.length - 1 ? true : false}
 							day={label}
 						/>
 					))}
 				</div>
-				{getMonthGrid(props.year, props.month).map((row) => {
+				{getMonthGrid(props.year, props.month).map((row, j) => {
 					return (
-						<div className='flex items-center'>
-							{row.map((cell) => (
+						<div key={j} className='flex items-center'>
+							{row.map((cell, i) => (
 								<DateSection
+									key={i}
 									date={cell.date}
 									value={cell.day}
 									schedules={props.schedules.filter(
@@ -90,8 +92,11 @@ export function Calendar(props: CalendarProps) {
 			</div>
 			{screenType === 'mobile' && (
 				<div className='p-4 flex flex-col gap-3'>
-					{selectedDateSchedules.map((schedule) => (
-						<ScheduleCard {...schedule} />
+					{selectedDateSchedules.map((schedule, i) => (
+						<ScheduleCard
+							key={i}
+							{...schedule}
+						/>
 					))}
 				</div>
 			)}

@@ -290,8 +290,8 @@ function CompanyCalendarPage() {
 									다가오는 일정
 								</p>
 								{upcomingSchedules.length > 0 ? (
-									upcomingSchedules.map((schedule) => (
-										<ScheduleCard {...schedule} />
+									upcomingSchedules.map((schedule, i) => (
+										<ScheduleCard {...schedule} key={i}/>
 									))
 								) : (
 									<p className='text-Gray-400 body-md-regular text-center'>
@@ -309,8 +309,8 @@ function CompanyCalendarPage() {
 								</p>
 								<div className='max-h-[400px] overflow-y-auto flex flex-col gap-6'>
 									{requestedSchedules.length > 0 ? (
-										requestedSchedules.map((schedule) => (
-											<ScheduleCard {...schedule} />
+										requestedSchedules.map((schedule, i) => (
+											<ScheduleCard {...schedule} key={i} />
 										))
 									) : (
 										<p className='text-Gray-400 body-md-regular text-center'>
@@ -328,8 +328,8 @@ function CompanyCalendarPage() {
 									잡아야하는 일정
 								</p>
 								{requiredSchedules.length > 0 ? (
-									requiredSchedules.map((schedule) => (
-										<ScheduleCardRequired {...schedule} />
+									requiredSchedules.map((schedule, i) => (
+										<ScheduleCardRequired {...schedule} key={i}/>
 									))
 								) : (
 									<p className='text-Gray-400 body-md-regular text-center'>

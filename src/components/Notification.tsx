@@ -111,8 +111,9 @@ export function NotificationList({ notis }: { notis: Notification[] }) {
 					title={'Notifications'}
 					content={
 						<div className='flex flex-col gap-2.5'>
-							{notis.map((noti) => (
+							{notis.map((noti, i) => (
 								<NotificationListItem
+									key={i}
 									{...noti}
 									title={getNotiTitle(noti)}
 								/>

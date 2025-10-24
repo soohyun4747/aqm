@@ -57,7 +57,9 @@ export function ListView({
 	const [dayRequestedSchedules, setDayRequestedSchedules] = useState<
 		DayGroupSchedules[]
 	>([]);
-	const [dayCancelledSchedules, setDayCancelledSchedules] = useState<DayGroupSchedules[]>([]);
+	const [dayCancelledSchedules, setDayCancelledSchedules] = useState<
+		DayGroupSchedules[]
+	>([]);
 
 	// props 변경 시 그룹 재계산
 	useEffect(() => {
@@ -67,7 +69,6 @@ export function ListView({
 	useEffect(() => {
 		setDayConfirmedSchedules(groupSchedulesByDay(confirmedSchedules ?? []));
 	}, [confirmedSchedules]);
-
 
 	useEffect(() => {
 		setDayCancelledSchedules(groupSchedulesByDay(cancelledSchedules ?? []));
@@ -79,13 +80,16 @@ export function ListView({
 				<div className='flex flex-col gap-6 h-full'>
 					<p className='heading-md text-Gray-900'>요청온 일정</p>
 					{dayRequestedSchedules.length > 0 ? (
-						dayRequestedSchedules.map((dayGroup) => (
-							<div className='flex flex-col gap-3'>
+						dayRequestedSchedules.map((dayGroup, i) => (
+							<div
+								key={i}
+								className='flex flex-col gap-3'>
 								<p className='text-Gray-900 body-lg-md'>
 									{dayGroup.day}
 								</p>
-								{dayGroup.schedules.map((schedule) => (
+								{dayGroup.schedules.map((schedule, i) => (
 									<ListViewRequestedItem
+										key={i}
 										schedule={schedule}
 										onConfirmSchedule={onConfirmSchedule}
 									/>
@@ -107,13 +111,16 @@ export function ListView({
 				<div className='flex flex-col gap-6 h-full'>
 					<p className='heading-md text-Gray-900'>확정된 일정</p>
 					{dayConfirmedSchedules.length > 0 ? (
-						dayConfirmedSchedules.map((dayGroup) => (
-							<div className='flex flex-col gap-3'>
+						dayConfirmedSchedules.map((dayGroup, i) => (
+							<div
+								key={i}
+								className='flex flex-col gap-3'>
 								<p className='text-Gray-900 body-lg-md'>
 									{dayGroup.day}
 								</p>
-								{dayGroup.schedules.map((schedule) => (
+								{dayGroup.schedules.map((schedule, j) => (
 									<ListViewConfirmedItem
+									key={j}
 										schedule={schedule}
 									/>
 								))}
@@ -134,13 +141,16 @@ export function ListView({
 				<div className='flex flex-col gap-6 h-full'>
 					<p className='heading-md text-Gray-900'>취소된 일정</p>
 					{dayCancelledSchedules.length > 0 ? (
-						dayCancelledSchedules.map((dayGroup) => (
-							<div className='flex flex-col gap-3'>
+						dayCancelledSchedules.map((dayGroup, i) => (
+							<div
+								key={i}
+								className='flex flex-col gap-3'>
 								<p className='text-Gray-900 body-lg-md'>
 									{dayGroup.day}
 								</p>
-								{dayGroup.schedules.map((schedule) => (
+								{dayGroup.schedules.map((schedule, j) => (
 									<ListViewCancelledItem
+										key={j}
 										schedule={schedule}
 									/>
 								))}

@@ -529,13 +529,13 @@ export default function AdminUsersEditPage() {
 													hepaFilters.length > 1 && (
 														<Button
 															variant='danger'
-															children={'삭제'}
 															onClick={() =>
 																removeHepaFilter(
 																	idx
 																)
-															}
-														/>
+															}>
+															삭제
+														</Button>
 													)}
 											</div>
 										))}

@@ -14,13 +14,17 @@ import { ServiceAddModal } from '@/src/components/modals/ServiceAddModal';
 import { SavingOverlay } from '@/src/components/SavingOverlay';
 import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
-import {
-	saveNewCompany,
-} from '@/src/utils/supabase/company';
+import { saveNewCompany } from '@/src/utils/supabase/company';
 import { ServiceType } from '@/src/utils/supabase/companyServices';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { HepaFilterNames, HepaFilters, HepaFilterType, IHepaFilter, vocFilterSpec } from './[id]';
+import {
+	HepaFilterNames,
+	HepaFilters,
+	HepaFilterType,
+	IHepaFilter,
+	vocFilterSpec,
+} from './[id]';
 
 export default function AdminUsersEditPage() {
 	// 회사 기본 정보
@@ -163,9 +167,7 @@ export default function AdminUsersEditPage() {
 			<GNB />
 			<div className='flex flex-col bg-Gray-100 min-h-screen pt-[60px] md:pt-0'>
 				<div className='flex justify-between items-center px-6 py-4 bg-white'>
-					<p className='text-Gray-900 heading-md'>
-						새 고객 추가
-					</p>
+					<p className='text-Gray-900 heading-md'>새 고객 추가</p>
 					<Button
 						onClick={handleNewSave}
 						disabled={saving}>
@@ -429,13 +431,13 @@ export default function AdminUsersEditPage() {
 													hepaFilters.length > 1 && (
 														<Button
 															variant='danger'
-															children={'삭제'}
 															onClick={() =>
 																removeHepaFilter(
 																	idx
 																)
-															}
-														/>
+															}>
+															삭제
+														</Button>
 													)}
 											</div>
 										))}

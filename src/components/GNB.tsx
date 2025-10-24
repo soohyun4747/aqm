@@ -54,7 +54,7 @@ export function GNB() {
 		} else {
 			setMenuOpen(false); // Change state when clicking outside
 		}
-	};	
+	};
 
 	return (
 		<>
@@ -69,6 +69,7 @@ export function GNB() {
 						/>
 						{Object.values(pathTitles).map((menu, i) => (
 							<p
+								key={i}
 								onClick={() =>
 									router.push(Object.keys(pathTitles)[i])
 								}
