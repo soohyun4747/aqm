@@ -50,9 +50,14 @@ export async function POST(req: NextRequest) {
 		});
 
 		return NextResponse.json({ ok: true });
-	} catch (e: any) {
+	} catch (e: unknown) {
+		if (e instanceof Error) {
+			console.error(e.message);
+			return NextResponse.json({ error: e.message }, { status: 500 });
+		}
+		console.error(e);
 		return NextResponse.json(
-			{ error: e?.message || 'Unknown error' },
+			{ error: '알 수 없는 오류가 발생했습니다.' },
 			{ status: 500 }
 		);
 	}

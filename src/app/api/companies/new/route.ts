@@ -1,6 +1,7 @@
 // app/api/companies/new/route.ts
 import { supabaseAdmin } from '@/lib/supabase/admin';
 import { makePassword, sendAccountEmail } from '@/src/server/accountEmail';
+import { ICompany } from '@/src/stores/userStore';
 import { sanitizeFileName } from '@/src/utils/string';
 import { NextResponse } from 'next/server';
 
@@ -24,7 +25,27 @@ export async function POST(req: Request) {
 	// 1) 요청 파싱 (JSON 또는 multipart/form-data 둘 다 지원)
 	// ────────────────────────────────────────────────────────────────
 	const contentType = req.headers.get('content-type') || '';
-	let payload: any = {};
+	let payload: {
+		name: string;
+		phone: string;
+		email: string;
+		address: string;
+		aqm: boolean;
+		hepa: boolean;
+		voc: boolean;
+		vocQuantity: null | number;
+		hepaFilters: HepaFilterDTO[];
+	} = {
+		name: '',
+		phone: '',
+		email: '',
+		address: '',
+		aqm: false,
+		hepa: false,
+		voc: false,
+		vocQuantity: null,
+		hepaFilters: [],
+	};
 	let floorPlanFile: File | null = null;
 
 	try {
@@ -56,9 +77,14 @@ export async function POST(req: Request) {
 			payload = await req.json();
 			floorPlanFile = null; // JSON 경로에서는 파일 미지원(원하면 Base64 등으로 확장)
 		}
-	} catch (e: any) {
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error(error.message);
+			return NextResponse.json({ error: error.message }, { status: 400 });
+		}
+		console.error(error);
 		return NextResponse.json(
-			{ error: `잘못된 요청 형식입니다: ${e.message}` },
+			{ error: '알 수 없는 오류가 발생했습니다.' },
 			{ status: 400 }
 		);
 	}
@@ -96,9 +122,14 @@ export async function POST(req: Request) {
 
 		if (cErr) throw cErr;
 		companyId = companyRow.id as string;
-	} catch (e: any) {
+	} catch (error: unknown) {
+		if (error instanceof Error) {
+			console.error(error.message);
+			return NextResponse.json({ error: error.message }, { status: 500 });
+		}
+		console.error(error);
 		return NextResponse.json(
-			{ error: `회사 생성 실패: ${e.message}` },
+			{ error: '알 수 없는 오류가 발생했습니다.' },
 			{ status: 500 }
 		);
 	}
@@ -133,11 +164,19 @@ export async function POST(req: Request) {
 				.update({ floor_image_path: floorImagePath })
 				.eq('id', companyId);
 			if (updErr) throw updErr;
-		} catch (e: any) {
+		} catch (error: unknown) {
 			// 파일 업로드 실패 시, 회사 레코드 롤백
 			await safeRollbackCompany(admin, companyId);
+			if (error instanceof Error) {
+				console.error(error.message);
+				return NextResponse.json(
+					{ error: error.message },
+					{ status: 500 }
+				);
+			}
+			console.error(error);
 			return NextResponse.json(
-				{ error: `평면도 업로드 실패: ${e.message}` },
+				{ error: '알 수 없는 오류가 발생했습니다.' },
 				{ status: 500 }
 			);
 		}
@@ -191,10 +230,15 @@ export async function POST(req: Request) {
 			});
 			if (error) throw error;
 		}
-	} catch (e: any) {
+	} catch (error: unknown) {
 		await rollbackAll(admin, companyId, floorImagePath);
+		if (error instanceof Error) {
+			console.error(error.message);
+			return NextResponse.json({ error: error.message }, { status: 500 });
+		}
+		console.error(error);
 		return NextResponse.json(
-			{ error: `서비스 생성 실패: ${e.message}` },
+			{ error: '알 수 없는 오류가 발생했습니다.' },
 			{ status: 500 }
 		);
 	}
@@ -231,10 +275,15 @@ export async function POST(req: Request) {
 			});
 			if (pErr) throw pErr;
 		}
-	} catch (e: any) {
+	} catch (error: unknown) {
 		await rollbackAll(admin, companyId, floorImagePath);
+		if (error instanceof Error) {
+			console.error(error.message);
+			return NextResponse.json({ error: error.message }, { status: 500 });
+		}
+		console.error(error);
 		return NextResponse.json(
-			{ error: `Auth 사용자 생성 실패: ${e.message}` },
+			{ error: '알 수 없는 오류가 발생했습니다.' },
 			{ status: 500 }
 		);
 	}
@@ -266,9 +315,16 @@ export async function POST(req: Request) {
 				resetUrl,
 			});
 		}
-	} catch (e: any) {
-		// 메일 실패는 데이터 롤백하지 않음(운영 편의상)
-		console.warn('계정 안내 메일 발송 실패:', e.message);
+	} catch (e: unknown) {
+		if (e instanceof Error) {
+			console.error(e.message);
+			return NextResponse.json({ error: e.message }, { status: 500 });
+		}
+		console.error(e);
+		return NextResponse.json(
+			{ error: '알 수 없는 오류가 발생했습니다.' },
+			{ status: 500 }
+		);
 	}
 
 	return NextResponse.json({

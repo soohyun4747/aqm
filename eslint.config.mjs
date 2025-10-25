@@ -1,35 +1,24 @@
-// eslint.config.mjs
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-import { FlatCompat } from '@eslint/eslintrc';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { FlatCompat } from "@eslint/eslintrc";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const compat = new FlatCompat({ baseDirectory: __dirname });
 
-export default [
-	...compat.extends('next/core-web-vitals', 'next/typescript'),
+const compat = new FlatCompat({
+  baseDirectory: __dirname,
+});
 
-	// 공통 무시(빌드 산출물 등)
-	{
-		ignores: ['node_modules/', '.next/', 'dist/'],
-	},
+const eslintConfig = [
+  // ✅ Next.js + TypeScript 기본 설정
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
 
-	// 규칙 오버라이드
-	{
-		files: ['**/*.{ts,tsx,js,jsx}'],
-		rules: {
-			// 가장 많이 터진 것들 우선 완화
-			'@typescript-eslint/no-explicit-any': 'off',
-			'react/jsx-key': 'warn',
-			'react/no-children-prop': 'warn',
-			'react/no-unescaped-entities': 'warn',
-			'@next/next/no-img-element': 'warn',
-
-			// 상황에 따라 추가 완화 가능
-			'@typescript-eslint/no-unused-vars': 'warn',
-			'react-hooks/exhaustive-deps': 'warn',
-			'@typescript-eslint/no-unused-expressions': 'warn',
-		},
-	},
+  // ✅ 커스텀 규칙 추가
+  {
+    rules: {
+      "@typescript-eslint/no-explicit-any": "off", // ← any 허용
+    },
+  },
 ];
+
+export default eslintConfig;

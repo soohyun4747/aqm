@@ -12,26 +12,41 @@ export async function POST(req: Request) {
 		const bucket = (form.get('bucket') as string) || 'default';
 
 		if (!(file instanceof File)) {
-			return NextResponse.json({ error: 'file이 누락되었습니다.' }, { status: 400 });
+			return NextResponse.json(
+				{ error: 'file이 누락되었습니다.' },
+				{ status: 400 }
+			);
 		}
 		if (!path) {
-			return NextResponse.json({ error: 'path가 필요합니다.' }, { status: 400 });
+			return NextResponse.json(
+				{ error: 'path가 필요합니다.' },
+				{ status: 400 }
+			);
 		}
 
 		const supabase = supabaseAdmin();
 		const arrayBuffer = await file.arrayBuffer();
 		const buffer = Buffer.from(arrayBuffer);
 
-		const { error } = await supabase.storage.from(bucket).upload(path, buffer, {
-			upsert: false,
-			cacheControl: '3600',
-			contentType: file.type || 'application/octet-stream',
-		});
+		const { error } = await supabase.storage
+			.from(bucket)
+			.upload(path, buffer, {
+				upsert: false,
+				cacheControl: '3600',
+				contentType: file.type || 'application/octet-stream',
+			});
 		if (error) throw error;
 
 		return NextResponse.json({ ok: true, path });
-	} catch (err: any) {
-		console.error(err);
-		return NextResponse.json({ error: err.message }, { status: 500 });
+	} catch (e: unknown) {
+		if (e instanceof Error) {
+			console.error(e.message);
+			return NextResponse.json({ error: e.message }, { status: 500 });
+		}
+		console.error(e);
+		return NextResponse.json(
+			{ error: '알 수 없는 오류가 발생했습니다.' },
+			{ status: 500 }
+		);
 	}
 }

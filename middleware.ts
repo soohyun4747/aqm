@@ -1,8 +1,8 @@
 // middleware.ts (프로젝트 루트)
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs';
 
-export async function middleware(req: any) {
+export async function middleware(req: NextRequest) {
 	const res = NextResponse.next();
 	const supabase = createMiddlewareClient({ req, res });
 

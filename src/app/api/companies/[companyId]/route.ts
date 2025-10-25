@@ -115,8 +115,12 @@ export async function DELETE(
 			},
 			{ status: 200 }
 		);
-	} catch (error: any) {
-		console.error('❌ deleteCompany error:', error);
-		return NextResponse.json({ error: error.message }, { status: 500 });
+	} catch (error: unknown) {
+        if (error instanceof Error) {
+			console.error(error.message);
+			return NextResponse.json({ error: error.message }, { status: 500 });
+		}
+		console.error(error);
+		return NextResponse.json({ error: '알 수 없는 오류가 발생했습니다.' }, { status: 500 });
 	}
 }
