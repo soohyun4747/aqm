@@ -1,5 +1,6 @@
-import { Button } from '@/components/buttons/Button';
-import { ModalFooterProps } from '@/components/modal/ModalFooter';
+import { Button } from "../buttons/Button";
+import { ModalFooterProps } from "../modal/ModalFooter";
+
 
 export function AlertFooter(props: ModalFooterProps) {
 	return (
