@@ -50,16 +50,29 @@ async function collectAllPaths(
 	return paths;
 }
 
+type RouteContext = {
+	params: Record<string, string | string[]>;
+};
+
 // ✅ DELETE /api/companies/:companyId
-export async function DELETE(
-	req: Request,
-	context: { params: { companyId: string } }
-) {
+export async function DELETE(req: Request, context: RouteContext) {
+	// companyId는 string | string[] 가능성이 있으므로 안전하게 문자열로 변환
+	const companyIdParam = context.params.companyId;
+	const companyId = Array.isArray(companyIdParam)
+		? companyIdParam[0]
+		: companyIdParam;
+
+	if (!companyId) {
+		return NextResponse.json(
+			{ error: 'Invalid companyId' },
+			{ status: 400 }
+		);
+	}
+
 	const supabase = supabaseAdmin();
-	const companyId = context.params.companyId;
 
 	try {
-		// 1️⃣ profiles에서 user_id 가져오기
+		// 1) profiles에서 user_id 가져오기
 		const { data: profile, error: profileErr } = await supabase
 			.from('profiles')
 			.select('user_id')
@@ -73,26 +86,23 @@ export async function DELETE(
 			);
 		}
 
-		// 2️⃣ Supabase Auth 계정 삭제
+		// 2) Supabase Auth 계정 삭제
 		const { error: authErr } = await supabase.auth.admin.deleteUser(
 			profile.user_id
 		);
 		if (authErr) throw authErr;
 
-		// 2.5️⃣ Storage: floor-plans 버킷에서 해당 companyId 폴더 전부 삭제
+		// 2.5) Storage 삭제 (필요시)
 		const BUCKET = 'floor-plans';
-		// companyId 최상위 폴더(예: "abc123") 기준으로 재귀 수집
 		const paths = await collectAllPaths(supabase, BUCKET, companyId);
-
 		if (paths.length > 0) {
 			const { error: removeErr } = await supabase.storage
 				.from(BUCKET)
 				.remove(paths);
 			if (removeErr) throw removeErr;
 		}
-		// ⚠️ Supabase Storage는 "폴더" 자체를 지울 필요가 없습니다(접두어 개념).
 
-		// 3️⃣ 관련 데이터 삭제 (순서 중요)
+		// 3) 관련 데이터 삭제
 		await supabase.from('profiles').delete().eq('company_id', companyId);
 		await supabase
 			.from('company_services')
@@ -104,7 +114,7 @@ export async function DELETE(
 			.eq('company_id', companyId);
 		await supabase.from('schedules').delete().eq('company_id', companyId);
 
-		// 4️⃣ 마지막으로 회사 삭제
+		// 4) 회사 삭제
 		await supabase.from('companies').delete().eq('id', companyId);
 
 		return NextResponse.json(
@@ -116,11 +126,14 @@ export async function DELETE(
 			{ status: 200 }
 		);
 	} catch (error: unknown) {
-        if (error instanceof Error) {
+		if (error instanceof Error) {
 			console.error(error.message);
 			return NextResponse.json({ error: error.message }, { status: 500 });
 		}
 		console.error(error);
-		return NextResponse.json({ error: '알 수 없는 오류가 발생했습니다.' }, { status: 500 });
+		return NextResponse.json(
+			{ error: '알 수 없는 오류가 발생했습니다.' },
+			{ status: 500 }
+		);
 	}
 }
