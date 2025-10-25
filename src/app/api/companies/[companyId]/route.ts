@@ -53,10 +53,10 @@ async function collectAllPaths(
 // ✅ DELETE /api/companies/:companyId
 export async function DELETE(
 	req: Request,
-	{ params }: { params: { companyId: string } }
+	context: { params: { companyId: string } }
 ) {
 	const supabase = supabaseAdmin();
-	const companyId = params.companyId;
+	const companyId = context.params.companyId;
 
 	try {
 		// 1️⃣ profiles에서 user_id 가져오기
