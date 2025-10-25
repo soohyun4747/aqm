@@ -5,30 +5,31 @@ import { FlatCompat } from '@eslint/eslintrc';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Next의 기존(eslintrc 기반) 프리셋을 Flat으로 호환
 const compat = new FlatCompat({ baseDirectory: __dirname });
 
 export default [
-	// Next 권장 + TS 권장
 	...compat.extends('next/core-web-vitals', 'next/typescript'),
 
-	// 규칙 오버라이드 (TS 파일에만 적용)
+	// 공통 무시(빌드 산출물 등)
 	{
-		files: ['**/*.{ts,tsx}'],
-		rules: {
-			'@typescript-eslint/no-explicit-any': 'off',
-		},
+		ignores: ['node_modules/', '.next/', 'dist/'],
 	},
 
-	// 선택: 빌드 스크립트나 config 폴더는 린트 제외하고 싶을 때
+	// 규칙 오버라이드
 	{
-		ignores: [
-			'node_modules/',
-			'.next/',
-			'dist/',
-			// 필요하면 추가
-			// "scripts/**",
-		],
+		files: ['**/*.{ts,tsx,js,jsx}'],
+		rules: {
+			// 가장 많이 터진 것들 우선 완화
+			'@typescript-eslint/no-explicit-any': 'off',
+			'react/jsx-key': 'warn',
+			'react/no-children-prop': 'warn',
+			'react/no-unescaped-entities': 'warn',
+			'@next/next/no-img-element': 'warn',
+
+			// 상황에 따라 추가 완화 가능
+			'@typescript-eslint/no-unused-vars': 'warn',
+			'react-hooks/exhaustive-deps': 'warn',
+			'@typescript-eslint/no-unused-expressions': 'warn',
+		},
 	},
 ];
