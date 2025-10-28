@@ -5,10 +5,9 @@ import { GNB } from '@/src/components/GNB';
 import { Calendar } from '@/src/components/icons/Calendar';
 import { StatusLabel } from '@/src/components/StatusLabel';
 import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
-import { IManagementRecord } from '@/src/pages/admin/managementRecords';
 import { MicrobioAnalysisType } from '@/src/pages/admin/managementRecords/edit/aqm/[id]';
-import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
-import { today, toLocaleStringWithoutSec } from '@/src/utils/date';
+import { useLoadingStore } from '@/src/stores/loadingStore';
+import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import {
 	buildAqmData,
 	buildPmDataByChannel,
@@ -51,6 +50,8 @@ function ManagementRecordDetailAqmPage() {
 
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
+	const { open: openLoading, close: closeLoading } = useLoadingStore();
+
 	const pathname = usePathname();
 	const recordId = pathname?.split('/').at(4);
 
@@ -61,15 +62,17 @@ function ManagementRecordDetailAqmPage() {
 	}, [recordId]);
 
 	const getSetManagementRecordAndResult = async (recordId: string) => {
+		openLoading();
 		try {
 			const recordInfo = await fetchManagementRecordById(recordId);
 			if (recordInfo) {
-				loadAqmResult(recordInfo);
+				await loadAqmResult(recordInfo);
 			}
 		} catch (error) {
 			console.error(error);
 			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
 		}
+		closeLoading();
 	};
 
 	const loadAqmResult = async (managementRecord: IManagementRecordRow) => {
@@ -141,7 +144,7 @@ function ManagementRecordDetailAqmPage() {
 									</div>
 									<div className='flex flex-col'>
 										<p className='text-Gray-900 body-lg-medium'>
-											관리 날짜
+											시행일
 										</p>
 										<div className='flex items-center gap-2'>
 											<Calendar

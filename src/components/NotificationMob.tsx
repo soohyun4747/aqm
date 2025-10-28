@@ -4,7 +4,6 @@ import { BellAlert } from './icons/BellAlert';
 import { ModalHeader } from './modal/ModalHeader';
 import {
 	getNotiTitle,
-	NotificationList,
 	NotificationListItem,
 } from './Notification';
 import { IconButton } from './IconButton';

@@ -170,7 +170,7 @@ function AdminCalendarPage() {
 	const addNewSchedule = async (schedule: ISchedule) => {
 		openLoading();
 		setScheduleAddModalOpen(false);
-		const data: any = await createSchedule(schedule);
+		const data: any = await createSchedule(schedule, 'admin');
 		// 모달 닫기
 		if (data?.error) {
 			setToastMessage({

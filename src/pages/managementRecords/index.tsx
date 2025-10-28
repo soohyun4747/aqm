@@ -113,7 +113,7 @@ function CompanyManagementRecordsPage() {
 							columns={[
 								{
 									field: 'date',
-									headerName: '관리 날짜',
+									headerName: '시행일',
 									render: (value) =>
 										new Date(value).toLocaleDateString(),
 								},

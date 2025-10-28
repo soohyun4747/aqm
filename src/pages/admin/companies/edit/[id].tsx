@@ -256,7 +256,7 @@ export default function AdminUsersEditPage() {
 	};
 
 	// 업로드 가능한 파일 타입(이미지)
-	const ACCEPT_TYPES = ['.png', '.jpeg', '.webp', '.svg+xml'];
+	const ACCEPT_TYPES = ['.png', '.jpeg', '.jpg', '.webp', '.svg+xml'];
 
 	return (
 		<div>

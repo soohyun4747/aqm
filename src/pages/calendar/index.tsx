@@ -167,7 +167,7 @@ function CompanyCalendarPage() {
 			// 회사 사용자라면 company_id를 강제 세팅
 			const payload = { ...schedule, company_id: user.company.id };
 
-			const data: any = await createScheduleApi(payload);
+			const data: any = await createScheduleApi(payload, 'company');
 			if (data?.error) {
 				setToastMessage({
 					message: '스케줄 추가를 실패하였습니다',
@@ -291,7 +291,10 @@ function CompanyCalendarPage() {
 								</p>
 								{upcomingSchedules.length > 0 ? (
 									upcomingSchedules.map((schedule, i) => (
-										<ScheduleCard {...schedule} key={i}/>
+										<ScheduleCard
+											{...schedule}
+											key={i}
+										/>
 									))
 								) : (
 									<p className='text-Gray-400 body-md-regular text-center'>
@@ -309,9 +312,14 @@ function CompanyCalendarPage() {
 								</p>
 								<div className='max-h-[400px] overflow-y-auto flex flex-col gap-6'>
 									{requestedSchedules.length > 0 ? (
-										requestedSchedules.map((schedule, i) => (
-											<ScheduleCard {...schedule} key={i} />
-										))
+										requestedSchedules.map(
+											(schedule, i) => (
+												<ScheduleCard
+													{...schedule}
+													key={i}
+												/>
+											)
+										)
 									) : (
 										<p className='text-Gray-400 body-md-regular text-center'>
 											요청온 일정이 없습니다.
@@ -329,7 +337,10 @@ function CompanyCalendarPage() {
 								</p>
 								{requiredSchedules.length > 0 ? (
 									requiredSchedules.map((schedule, i) => (
-										<ScheduleCardRequired {...schedule} key={i}/>
+										<ScheduleCardRequired
+											{...schedule}
+											key={i}
+										/>
 									))
 								) : (
 									<p className='text-Gray-400 body-md-regular text-center'>

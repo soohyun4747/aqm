@@ -137,7 +137,7 @@ export async function fetchManagementRecordsByCompany(
 	}
 
 	query = query
-		.order('date', { ascending: false })
+		.order('created_at', { ascending: false })
 		.range(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE - 1);
 
 	const { data, error, count } = await query;

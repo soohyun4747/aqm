@@ -92,7 +92,7 @@ export async function fetchSchedulesByMonth(
 	}
 }
 
-export async function createSchedule(schedule: ISchedule) {
+export async function createSchedule(schedule: ISchedule, agent: 'company' | 'admin') {
 	try {
 		const supabase = supabaseClient();
 
@@ -112,6 +112,8 @@ export async function createSchedule(schedule: ISchedule) {
 
 		if (error) return { error };
 
+		console.log({ schedule, data });
+
 		// ✅ 이벤트명은 생성/수정/취소 중 하나여야 합니다.
 		// 생성 시:
 		await fetch('/api/emails', {
@@ -120,6 +122,7 @@ export async function createSchedule(schedule: ISchedule) {
 			body: JSON.stringify({
 				type: schedule.status,
 				scheduleId: data.id,
+				agent: 'admin'
 			}),
 		}).catch(console.error); // 메일 실패해도 생성은 성공 처리
 
