@@ -10,7 +10,7 @@ import { useLoadingStore } from '@/src/stores/loadingStore';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import {
 	buildAqmData,
-	buildPmDataByChannel,
+	buildPmDataByPosition,
 	buildVocData,
 	detectUnit,
 } from '@/src/utils/file';
@@ -23,11 +23,11 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-const channelSizes = ['0.3um', '0.5um', '5.0um'];
+// const channelSizes = ['0.3um', '0.5um', '5.0um'];
 
 export type Series = { label: string; value: number };
 
-const aqmDangerStandards: { [key: string]: string } = {
+export const aqmDangerStandards: { [key: string]: string } = {
 	'CO (PPM)': '>10',
 	'CO2 (PPM)': '>1000',
 	'NO (PPM)': '>0.05',
@@ -42,7 +42,7 @@ function ManagementRecordDetailAqmPage() {
 	const [managementRecord, setManagementRecord] =
 		useState<IManagementRecordRow>();
 
-	const [pmDataByChannel, setPmDataByChannel] = useState<
+	const [pmDataByPosition, setPmDataByPosition] = useState<
 		Record<string, Series[]>
 	>({});
 	const [vocData, setVocData] = useState<Series[]>([]);
@@ -87,20 +87,26 @@ function ManagementRecordDetailAqmPage() {
 
 			// ⬇️ PM 차트 데이터 구성
 			if (files.pmFile) {
-				const charts = await buildPmDataByChannel(files.pmFile);
-				setPmDataByChannel(charts); // 채널별 {data(3개), max, unit}
+				const charts = await buildPmDataByPosition(files.pmFile);
+				setPmDataByPosition(charts); // 채널별 {data(3개), max, unit}
 			} else {
-				setPmDataByChannel({});
+				setPmDataByPosition({});
 			}
 			// 데이터 로드 이후
 			if (files.vocFile) {
 				const data = await buildVocData(files.vocFile);
 				setVocData(data);
+			} else {
+				setVocData([]);
 			}
 
 			if (files.aqmFile) {
-				buildAqmData(files.aqmFile).then(setAqmData);
+				const data = await buildAqmData(files.aqmFile);
+				setAqmData(data)
+			} else {
+				setAqmData([]);
 			}
+
 		} catch (e) {
 			console.error(e);
 			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
@@ -232,29 +238,29 @@ function ManagementRecordDetailAqmPage() {
 										</p>
 									</div>
 									<div className='flex flex-col gap-12'>
-										{channelSizes.map((size) => (
-											<div
-												key={size}
-												className='flex flex-col gap-1'>
-												<p className='text-Primary-700 body-lg-medium'>
-													{size}{' '}
-													<span className='text-Gray-400 body-lg-regular'>
-														(particle size)
-													</span>
-												</p>
-												<BarChart
-													safeStandard={'0-50'}
-													warningStandard={'51-100'}
-													dangerStandard={'>100'}
-													maxValue={150}
-													unit={'CNT'}
-													data={
-														pmDataByChannel[size] ??
-														[]
-													} // ← 여기 길이가 3 (position1~3)
-												/>
-											</div>
-										))}
+										{Object.keys(pmDataByPosition).map(
+											(pos) => (
+												<div
+													key={pos}
+													className='flex flex-col gap-1'>
+													<p className='text-Primary-700 body-lg-medium'>
+														{pos}
+													</p>
+													<BarChart
+														safeStandard={''}
+														warningStandard={''}
+														dangerStandard={''}
+														maxValue={200}
+														unit={'CNT'}
+														data={
+															pmDataByPosition[
+																pos
+															] ?? []
+														} // ← 여기 길이가 3 (position1~3)
+													/>
+												</div>
+											)
+										)}
 									</div>
 								</div>
 							</Card>

@@ -12,15 +12,14 @@ import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { today } from '@/src/utils/date';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { useEffect, useState } from 'react';
-import {
-	upsertAqmResult,
-} from '@/src/utils/supabase/aqmResults';
-import {
-	createManagementRecord,
-} from '@/src/utils/supabase/managementRecord';
+import { upsertAqmResult } from '@/src/utils/supabase/aqmResults';
+import { createManagementRecord } from '@/src/utils/supabase/managementRecord';
 import { useRouter } from 'next/router';
 import { Services } from '@/src/utils/supabase/companyServices';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
+import { BarChart } from '@/src/components/BarChart';
+import { Series } from '@/src/pages/managementRecords/detail/aqm/[id]';
+import { buildPmDataByPosition } from '@/src/utils/file';
 
 export type MicrobioAnalysisType = 'pass' | 'fail';
 
@@ -35,7 +34,6 @@ export interface IAQMResult {
 }
 
 function AdminManagementRecordsEditAQMPage() {
-
 	const [date, setDate] = useState<Date>(today);
 	const [companyId, setCompanyId] = useState('');
 	const [manager, setManager] = useState('');
@@ -47,6 +45,10 @@ function AdminManagementRecordsEditAQMPage() {
 	const [vocFile, setVocFile] = useState<File | null>(null);
 	const [aqmFile, setAqmFile] = useState<File | null>(null);
 
+	const [pmDataByPosition, setPmDataByPosition] = useState<
+		Record<string, Series[]>
+	>({});
+
 	const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
 
 	// 저장 로딩
@@ -55,10 +57,23 @@ function AdminManagementRecordsEditAQMPage() {
 
 	const router = useRouter();
 
-
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
+
+	useEffect(() => {
+		if (pmFile) {
+			getSetPmDataByPosition(pmFile);
+		} else {
+			setPmDataByPosition({});
+		}
+	}, [pmFile]);
+
+
+	const getSetPmDataByPosition = async (pmFile: File) => {
+		const charts = await buildPmDataByPosition(pmFile);
+		setPmDataByPosition(charts); // 채널별 {data(3개), max, unit}
+	};
 
 	const getSetCompanyOptions = async () => {
 		const options = await fetchCompanyOptions();
@@ -201,6 +216,30 @@ function AdminManagementRecordsEditAQMPage() {
 									onFileChange={(file) => setPmFile(file)}
 									availableTypes={['.csv', '.xlsx', '.xls']}
 								/>
+								<div className='flex flex-col gap-12'>
+									{Object.keys(pmDataByPosition).map(
+										(pos) => (
+											<div
+												key={pos}
+												className='flex flex-col gap-1'>
+												<p className='text-Primary-700 body-lg-medium'>
+													{pos}
+												</p>
+												<BarChart
+													safeStandard={''}
+													warningStandard={''}
+													dangerStandard={''}
+													maxValue={200}
+													unit={'CNT'}
+													data={
+														pmDataByPosition[pos] ??
+														[]
+													} // ← 여기 길이가 3 (position1~3)
+												/>
+											</div>
+										)
+									)}
+								</div>
 							</div>
 						</Card>
 						<Card>

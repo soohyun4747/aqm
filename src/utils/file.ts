@@ -116,10 +116,10 @@ const toNum = (v: unknown) => {
 	return Number.isFinite(n) ? n : NaN;
 };
 
-/** 최종: pmFile → 채널별(series 3개) 데이터 */
-export async function buildPmDataByChannel(
+/** 최종: pmFile → 포지션별(각 포지션에 채널 3개) 데이터 */
+export async function buildPmDataByPosition(
 	file: File
-): Promise<Record<'0.3um' | '0.5um' | '5.0um', Series[]>> {
+): Promise<Record<string, Series[]>> {
 	const text = await file.text();
 	const rows = parseCsv(text);
 
@@ -160,22 +160,25 @@ export async function buildPmDataByChannel(
 
 	const avg = (arr: number[]) =>
 		arr.length ? arr.reduce((s, v) => s + v, 0) / arr.length : 0;
-	const label = (k: string) => {
+
+	// 위치 라벨: "position{숫자}" 형태, 숫자 미검출시 원문 보존
+	const toPositionLabel = (k: string) => {
 		const m = k.match(/\d+/);
 		return m ? `position${parseInt(m[0], 10)}` : `position-${k}`;
 	};
 
-	const toSeries = (k: 'ch1' | 'ch2' | 'ch3'): Series[] =>
-		locations.map((loc) => ({
-			label: label(loc),
-			value: Number(avg(acc[loc][k]).toFixed(2)),
-		}));
+	// ▶︎ 결과: { position1: [{label:'0.3um',value:..},{label:'0.5um',..},{label:'5.0um',..}], ... }
+	const result: Record<string, Series[]> = {};
+	for (const loc of locations) {
+		const label = toPositionLabel(loc);
+		result[label] = [
+			{ label: '0.3um', value: Number(avg(acc[loc].ch1).toFixed(2)) },
+			{ label: '0.5um', value: Number(avg(acc[loc].ch2).toFixed(2)) },
+			{ label: '5.0um', value: Number(avg(acc[loc].ch3).toFixed(2)) },
+		];
+	}
 
-	return {
-		'0.3um': toSeries('ch1'),
-		'0.5um': toSeries('ch2'),
-		'5.0um': toSeries('ch3'),
-	};
+	return result;
 }
 
 export async function buildVocData(file: File): Promise<Series[]> {
@@ -214,73 +217,73 @@ export async function buildVocData(file: File): Promise<Series[]> {
 
 // 평균 계산
 function mean(arr: number[]): number {
-  const valid = arr.filter((v) => !Number.isNaN(v));
-  return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : 0;
+	const valid = arr.filter((v) => !Number.isNaN(v));
+	return valid.length ? valid.reduce((a, b) => a + b, 0) / valid.length : 0;
 }
 
 // txt 파싱 → BarChart data
 export async function buildAqmData(file: File): Promise<Series[]> {
-  const text = await file.text();
-  const lines = text.split(/\r?\n/).map((l) => l.trim());
+	const text = await file.text();
+	const lines = text.split(/\r?\n/).map((l) => l.trim());
 
-  let headers: string[] = [];
-  const data: string[][] = [];
+	let headers: string[] = [];
+	const data: string[][] = [];
 
-  for (const line of lines) {
-    if (!line) continue;
-    if (line.startsWith("Current/Time")) {
-      headers = line.split("\t").map((h) => h.trim());
-      continue;
-    }
-    if (/^\d{2}\/\d{2}\/\d{2}/.test(line)) {
-      const parts = line.split("\t").map((p) => p.trim());
-      data.push(parts);
-    }
-  }
+	for (const line of lines) {
+		if (!line) continue;
+		if (line.startsWith('Current/Time')) {
+			headers = line.split('\t').map((h) => h.trim());
+			continue;
+		}
+		if (/^\d{2}\/\d{2}\/\d{2}/.test(line)) {
+			const parts = line.split('\t').map((p) => p.trim());
+			data.push(parts);
+		}
+	}
 
-  const valuesByField: Record<string, number[]> = {};
-  data.forEach((row) => {
-    headers.forEach((h, i) => {
-      if (i === 0) return; // 시간 제외
-      const v = parseFloat(row[i]);
-      if (!valuesByField[h]) valuesByField[h] = [];
-      if (!isNaN(v)) valuesByField[h].push(v);
-    });
-  });
+	const valuesByField: Record<string, number[]> = {};
+	data.forEach((row) => {
+		headers.forEach((h, i) => {
+			if (i === 0) return; // 시간 제외
+			const v = parseFloat(row[i]);
+			if (!valuesByField[h]) valuesByField[h] = [];
+			if (!isNaN(v)) valuesByField[h].push(v);
+		});
+	});
 
-  // BarChart용 데이터: label = 항목, value = 평균값
-  return Object.entries(valuesByField).map(([field, arr]) => ({
-    label: field,
-    value: Number(mean(arr).toFixed(2)),
-  }));
+	// BarChart용 데이터: label = 항목, value = 평균값
+	return Object.entries(valuesByField).map(([field, arr]) => ({
+		label: field,
+		value: Number(mean(arr).toFixed(2)),
+	}));
 }
 
 // 라벨에서 단위를 추론해 "°C", "ppm", "ppb", "mbar", "%", "µg/m³" 등 반환
 export function detectUnit(label: string): string {
-  const s = (label ?? "").trim();
+	const s = (label ?? '').trim();
 
-  // 가장 명시적인 케이스 우선
-  if (/[µu]g\/m3/i.test(s)) return "µg/m³";   // "µg/m3", "ug/m3" 모두 처리
-  if (/\bppb\b/i.test(s))   return "ppb";
-  if (/\bppm\b/i.test(s))   return "ppm";
-  if (/\bmbar\b/i.test(s))  return "mbar";
-  if (/%/.test(s))          return "%";
+	// 가장 명시적인 케이스 우선
+	if (/[µu]g\/m3/i.test(s)) return 'µg/m³'; // "µg/m3", "ug/m3" 모두 처리
+	if (/\bppb\b/i.test(s)) return 'ppb';
+	if (/\bppm\b/i.test(s)) return 'ppm';
+	if (/\bmbar\b/i.test(s)) return 'mbar';
+	if (/%/.test(s)) return '%';
 
-  // 온도: "(C)" 또는 "°C"가 들어 있으면
-  if (/\(c\)|°c/i.test(s))  return "°C";
+	// 온도: "(C)" 또는 "°C"가 들어 있으면
+	if (/\(c\)|°c/i.test(s)) return '°C';
 
-  // 필드명 힌트(단위 표기가 없더라도 일반적으로 쓰는 단위 추론)
-  const lc = s.toLowerCase();
-  if (/\bco2\b/.test(lc))   return "ppm";
-  if (/\bco\b/.test(lc))    return "ppm";
-  if (/\bno\b/.test(lc))    return "ppm";
-  if (/\bso2\b/.test(lc))   return "ppm";
-  if (/\bo3\b/.test(lc))    return "ppb";
-  if (/\bfmh\b/.test(lc))   return "ppb";
-  if (/\bbp\b/.test(lc))    return "mbar";
-  if (/\brh\b/.test(lc))    return "%";
-  if (/\bt\s*ambient\b|\bdpt\b|\bwbt\b/.test(lc)) return "°C";
+	// 필드명 힌트(단위 표기가 없더라도 일반적으로 쓰는 단위 추론)
+	const lc = s.toLowerCase();
+	if (/\bco2\b/.test(lc)) return 'ppm';
+	if (/\bco\b/.test(lc)) return 'ppm';
+	if (/\bno\b/.test(lc)) return 'ppm';
+	if (/\bso2\b/.test(lc)) return 'ppm';
+	if (/\bo3\b/.test(lc)) return 'ppb';
+	if (/\bfmh\b/.test(lc)) return 'ppb';
+	if (/\bbp\b/.test(lc)) return 'mbar';
+	if (/\brh\b/.test(lc)) return '%';
+	if (/\bt\s*ambient\b|\bdpt\b|\bwbt\b/.test(lc)) return '°C';
 
-  // 기본값
-  return "";
+	// 기본값
+	return '';
 }

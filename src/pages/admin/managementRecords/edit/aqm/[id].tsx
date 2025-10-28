@@ -23,6 +23,14 @@ import {
 import { useRouter } from 'next/router';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
 import { usePathname } from 'next/navigation';
+import { aqmDangerStandards, Series } from '@/src/pages/managementRecords/detail/aqm/[id]';
+import {
+	buildAqmData,
+	buildPmDataByPosition,
+	buildVocData,
+	detectUnit,
+} from '@/src/utils/file';
+import { BarChart } from '@/src/components/BarChart';
 
 export type MicrobioAnalysisType = 'pass' | 'fail';
 
@@ -50,13 +58,18 @@ function AdminManagementRecordsEditAQMPage() {
 	const [vocFile, setVocFile] = useState<File | null>(null);
 	const [aqmFile, setAqmFile] = useState<File | null>(null);
 
+	const [pmDataByPosition, setPmDataByPosition] = useState<
+		Record<string, Series[]>
+	>({});
+	const [vocData, setVocData] = useState<Series[]>([]);
+	const [aqmData, setAqmData] = useState<Series[]>([]);
+
 	const [companyOptions, setCompanyOptions] = useState<Option[]>([]);
 
 	// 저장 로딩
 	const [saving, setSaving] = useState(false);
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
-	const router = useRouter();
 	const pathname = usePathname();
 	const recordId = pathname?.split('/').at(5);
 
@@ -69,6 +82,45 @@ function AdminManagementRecordsEditAQMPage() {
 	useEffect(() => {
 		getSetCompanyOptions();
 	}, []);
+
+	useEffect(() => {
+		if (pmFile) {
+			getSetPmDataByPosition(pmFile);
+		} else {
+			setPmDataByPosition({});
+		}
+	}, [pmFile]);
+
+	useEffect(() => {
+		if (vocFile) {
+			getSetVocData(vocFile);
+		} else {
+			setVocData([]);
+		}
+	}, [vocFile]);
+
+	useEffect(() => {
+		if (aqmFile) {
+			getSetAqmData(aqmFile);
+		} else {
+			setAqmData([]);
+		}
+	}, [aqmFile]);
+
+	const getSetPmDataByPosition = async (pmFile: File) => {
+		const charts = await buildPmDataByPosition(pmFile);
+		setPmDataByPosition(charts); // 채널별 {data(3개), max, unit}
+	};
+
+	const getSetVocData = async (vocFile: File) => {
+		const data = await buildVocData(vocFile);
+		setVocData(data);
+	};
+
+	const getSetAqmData = async (aqmFile: File) => {
+		const data = await buildAqmData(aqmFile);
+		setAqmData(data);
+	};
 
 	const getSetManagementRecordAndResult = async (recordId: string) => {
 		try {
@@ -200,7 +252,7 @@ function AdminManagementRecordsEditAQMPage() {
 								/>
 							</div>
 						</Card>
-						<Card className='flex-1'>
+						<Card>
 							<div className='flex flex-col gap-[6px]'>
 								<p className='heading-md text-Gray-900'>
 									코멘트
@@ -256,6 +308,30 @@ function AdminManagementRecordsEditAQMPage() {
 									onFileChange={(file) => setPmFile(file)}
 									availableTypes={['.csv', '.xlsx', '.xls']}
 								/>
+								<div className='flex flex-col gap-12'>
+									{Object.keys(pmDataByPosition).map(
+										(pos) => (
+											<div
+												key={pos}
+												className='flex flex-col gap-1'>
+												<p className='text-Primary-700 body-lg-medium'>
+													{pos}
+												</p>
+												<BarChart
+													safeStandard={''}
+													warningStandard={''}
+													dangerStandard={''}
+													maxValue={200}
+													unit={'CNT'}
+													data={
+														pmDataByPosition[pos] ??
+														[]
+													} // ← 여기 길이가 3 (position1~3)
+												/>
+											</div>
+										)
+									)}
+								</div>
 							</div>
 						</Card>
 						<Card>
@@ -273,6 +349,22 @@ function AdminManagementRecordsEditAQMPage() {
 									onFileChange={(file) => setVocFile(file)}
 									availableTypes={['.csv', '.xlsx', '.xls']}
 								/>
+								<div className='flex flex-col gap-1'>
+									<p className='text-Primary-700 body-lg-medium'>
+										VOCs{' '}
+										<span className='text-Gray-400 body-lg-regular'>
+											(Volatile Organic Compounds)
+										</span>
+									</p>
+									<BarChart
+										safeStandard={'0-400'}
+										warningStandard={'401-500'}
+										dangerStandard={'>501'}
+										maxValue={600}
+										unit={'µg/m3'}
+										data={vocData}
+									/>
+								</div>
 							</div>
 						</Card>
 						<Card>
@@ -290,6 +382,33 @@ function AdminManagementRecordsEditAQMPage() {
 									onFileChange={(file) => setAqmFile(file)}
 									availableTypes={['.txt', '.Txt']}
 								/>
+								{aqmData.map((d) => (
+									<div
+										key={d.label}
+										className='flex flex-col gap-1'>
+										<p className='text-Primary-700 body-lg-medium'>
+											{d.label}
+										</p>
+										<BarChart
+											safeStandard={''} // 항목별 기준 다르면 여기서 분기 처리
+											warningStandard={''}
+											dangerStandard={
+												aqmDangerStandards[d.label] ??
+												''
+											}
+											maxValue={Math.ceil(d.value * 1.2)} // 평균값 기반으로 여유 잡기
+											unit={detectUnit(d.label)} // 단위 표시
+											data={[
+												{
+													label: d.label.split(
+														'('
+													)[0],
+													value: d.value,
+												},
+											]} // 🔑 한 항목 = 막대 1개
+										/>
+									</div>
+								))}
 							</div>
 						</Card>
 					</div>
