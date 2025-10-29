@@ -72,7 +72,7 @@ export default function LoginPage() {
 		<div className='p-6 flex gap-6 min-h-screen max-h-screen items-center overflow-hidden relative'>
 			<div className='flex items-center justify-center h-full flex-1 flex-col gap-6'>
 				<Image
-					src={'/logo.svg'}
+					src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/logo.svg`}
 					alt={'logo'}
 					height={36}
 					width={202.28}

@@ -124,7 +124,7 @@ export default function ResetPasswordPage() {
 		<main className='mx-auto max-w-lg px-4 py-10 flex flex-col gap-6'>
 			<div className='flex justify-between px-2'>
 				<Image
-					src={'/logo.svg'}
+					src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/logo.svg`}
 					alt={'logo'}
 					width={157.33}
 					height={28}

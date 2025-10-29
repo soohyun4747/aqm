@@ -62,7 +62,7 @@ export function GNB() {
 				<div className='px-6 py-3 bg-white border-b border-Gray-200 flex items-center justify-between no-print'>
 					<div className='flex items-center gap-8'>
 						<Image
-							src={'/logo.svg'}
+							src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/logo.svg`}
 							alt={'logo'}
 							width={157.33}
 							height={28}
@@ -110,7 +110,7 @@ export function GNB() {
 				<div className='flex flex-col fixed w-full bg-white z-[30]'>
 					<div className='px-4 h-[60px] flex items-center justify-between'>
 						<Image
-							src={'/logo.svg'}
+							src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/logo.svg`}
 							alt={'logo'}
 							width={157.33}
 							height={28}
