@@ -112,8 +112,6 @@ export async function createSchedule(schedule: ISchedule, agent: 'company' | 'ad
 
 		if (error) return { error };
 
-		console.log({ schedule, data });
-
 		// ✅ 이벤트명은 생성/수정/취소 중 하나여야 합니다.
 		// 생성 시:
 		await fetch('/api/emails', {

@@ -205,3 +205,29 @@ export function formatDateTimeString(datetimeStr: string): string {
 
 	return formatted;
 }
+
+// lib/date-utils.ts
+export const fmtYMD = (d: Date) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Seoul", year: "numeric", month: "2-digit", day: "2-digit" })
+    .format(d); // YYYY-MM-DD
+
+export const isWeekend = (d: Date) => {
+  const day = new Intl.DateTimeFormat("en-US", { weekday: "short", timeZone: "Asia/Seoul" }).format(d);
+  return day === "Sat" || day === "Sun";
+};
+
+// 2025년 한국 공휴일(대체공휴 포함 주요일자) — 필요시 보강하세요.
+export const KR_HOLIDAYS_2025 = new Set<string>([
+  "2025-01-01", // 신정
+  "2025-01-27", "2025-01-28", "2025-01-29", // 설연휴
+  "2025-03-01", // 삼일절
+  "2025-05-05", // 어린이날
+  "2025-06-06", // 현충일
+  "2025-08-15", // 광복절
+  "2025-10-03", // 개천절
+  "2025-10-05", "2025-10-06", // 추석 (예: 5~6일, 실제 연휴는 해마다 확인 필요)
+  "2025-10-09", // 한글날
+  "2025-12-25", // 성탄절
+]);
+
+export const isKRHoliday = (d: Date) => KR_HOLIDAYS_2025.has(fmtYMD(d));

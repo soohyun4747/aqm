@@ -1,4 +1,10 @@
-import { getMonthGrid, isToday } from '@/src/utils/date';
+import {
+	fmtYMD,
+	getMonthGrid,
+	isKRHoliday,
+	isToday,
+	isWeekend,
+} from '@/src/utils/date';
 import { DateSection } from './DateSection';
 import { useEffect, useState } from 'react';
 import { ScheduleCard } from './ScheduleCard';
@@ -10,6 +16,7 @@ const weekLabels = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
 export interface CalendarProps {
 	year: number;
 	month: number;
+	confirmedDates?: string[];
 	schedules: ISchedule[];
 }
 
@@ -59,33 +66,43 @@ export function Calendar(props: CalendarProps) {
 				</div>
 				{getMonthGrid(props.year, props.month).map((row, j) => {
 					return (
-						<div key={j} className='flex items-center'>
-							{row.map((cell, i) => (
-								<DateSection
-									key={i}
-									date={cell.date}
-									value={cell.day}
-									schedules={props.schedules.filter(
-										(schedule) => {
-											return (
-												schedule.scheduledAt.getFullYear() ===
-													cell.date.getFullYear() &&
-												schedule.scheduledAt.getMonth() ===
-													cell.date.getMonth() &&
-												schedule.scheduledAt.getDate() ===
-													cell.date.getDate()
-											);
+						<div
+							key={j}
+							className='flex items-center'>
+							{row.map((cell, i) => {
+								// ✅ 이미 예약된(confirmed) 날짜와 주말,공휴일 비활성화
+								const isConfirmedBlocked =
+									!!props.confirmedDates?.includes(
+										fmtYMD(cell.date)
+									);
+								return (
+									<DateSection
+										key={i}
+										date={cell.date}
+										value={cell.day}
+										schedules={props.schedules.filter(
+											(schedule) => {
+												return (
+													schedule.scheduledAt.getFullYear() ===
+														cell.date.getFullYear() &&
+													schedule.scheduledAt.getMonth() ===
+														cell.date.getMonth() &&
+													schedule.scheduledAt.getDate() ===
+														cell.date.getDate()
+												);
+											}
+										)}
+										notCurrentMonth={
+											cell.inCurrentMonth ? false : true
 										}
-									)}
-									disabled={
-										cell.inCurrentMonth ? false : true
-									}
-									selectedDate={selectedDate}
-									onSelectDate={(date) =>
-										setSelectedDate(date)
-									}
-								/>
-							))}
+										disabled={isConfirmedBlocked}
+										selectedDate={selectedDate}
+										onSelectDate={(date) => {
+											setSelectedDate(date);
+										}}
+									/>
+								);
+							})}
 						</div>
 					);
 				})}

@@ -35,6 +35,7 @@ import { ScheduleCardRequired } from '@/src/components/calendar/ScheduleCardRequ
 import { serviceNames } from '@/src/utils/supabase/companyServices';
 import { Modal } from '@/src/components/modal/Modal';
 import { useLoadingStore } from '@/src/stores/loadingStore';
+import { useConfirmedDays } from '@/src/hooks/useConfirmedDays';
 
 function CompanyCalendarPage() {
 	// month는 0~11로 통일합니다 (JS Date 규약)
@@ -67,6 +68,10 @@ function CompanyCalendarPage() {
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 	const user = useUserStore((state) => state.user);
 
+	// ✅ confirmed 날짜 세트 훅 (회사 스코프)
+	const { confirmedYmdSet, setMonth: setMonthForConfirmed } =
+		useConfirmedDays(user?.company?.id);
+
 	useEffect(() => {
 		return () => {
 			setSchedule(undefined);
@@ -85,7 +90,8 @@ function CompanyCalendarPage() {
 		if (user?.company) {
 			getSetMonthSchedules(user.company.id);
 		}
-		// eslint-disable-next-line react-hooks/exhaustive-deps
+		// ✅ 달 바뀔 때 confirmed 재조회
+		setMonthForConfirmed(year, month);
 	}, [year, month, user]);
 
 	const reUpdateSchedules = (companyId: string) => {
@@ -282,6 +288,7 @@ function CompanyCalendarPage() {
 						year={year}
 						month={month}
 						schedules={monthSchedules}
+						confirmedDates={[...confirmedYmdSet]}
 					/>
 					<div className='flex flex-col gap-4'>
 						<Card>

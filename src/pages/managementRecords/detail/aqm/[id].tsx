@@ -23,8 +23,6 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-// const channelSizes = ['0.3um', '0.5um', '5.0um'];
-
 export type Series = { label: string; value: number };
 
 export const aqmDangerStandards: { [key: string]: string } = {
