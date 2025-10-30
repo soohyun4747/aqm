@@ -31,8 +31,9 @@ export default function AdminUsersEditPage() {
 	const [name, setName] = useState('');
 	const [phone, setPhone] = useState('');
 	const [email, setEmail] = useState('');
-	const [address, setAddress] = useState('');
-	const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
+        const [address, setAddress] = useState('');
+        const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
+        const [kakaoPhones, setKakaoPhones] = useState<string[]>(['']);
 
 	// 서비스 상태 (모달로 추가/삭제)
 	const [aqm, setAqm] = useState<boolean>(false);
@@ -107,9 +108,24 @@ export default function AdminUsersEditPage() {
 		);
 	};
 
-	const removeHepaFilter = (idx: number) => {
-		setHepaFilters((prev) => prev.filter((_, i) => i !== idx));
-	};
+        const removeHepaFilter = (idx: number) => {
+                setHepaFilters((prev) => prev.filter((_, i) => i !== idx));
+        };
+
+        const addKakaoPhone = () => {
+                setKakaoPhones((prev) => [...prev, '']);
+        };
+
+        const updateKakaoPhone = (idx: number, value: string) => {
+                setKakaoPhones((prev) => prev.map((phone, i) => (i === idx ? value : phone)));
+        };
+
+        const removeKakaoPhone = (idx: number) => {
+                setKakaoPhones((prev) => {
+                        if (prev.length === 1) return [''];
+                        return prev.filter((_, i) => i !== idx);
+                });
+        };
 
 	const isMandatoryInfoFilled = () => {
 		if (name && phone && email && address) {
@@ -127,17 +143,18 @@ export default function AdminUsersEditPage() {
 		if (isMandatoryInfoFilled()) {
 			try {
 				setSaving(true);
-				await saveNewCompany(
-					floorPlanFile,
-					name,
-					phone,
-					email,
-					address,
-					aqm,
-					hepa,
-					hepaFilters,
-					voc,
-					vocQuantity
+                                await saveNewCompany(
+                                        floorPlanFile,
+                                        name,
+                                        phone,
+                                        email,
+                                        address,
+                                        kakaoPhones,
+                                        aqm,
+                                        hepa,
+                                        hepaFilters,
+                                        voc,
+                                        vocQuantity
 				);
 
 				setToastMessage({
@@ -203,11 +220,11 @@ export default function AdminUsersEditPage() {
 									style={{ flex: 1 }}
 								/>
 							</div>
-							<div className='flex items-center gap-4'>
-								<InputBox
-									label='이메일'
-									inputAttr={{
-										placeholder: 'contact@company.com',
+                                                        <div className='flex items-center gap-4'>
+                                                                <InputBox
+                                                                        label='이메일'
+                                                                        inputAttr={{
+                                                                                placeholder: 'contact@company.com',
 										value: email,
 										onChange: (e: any) =>
 											setEmail(e.target.value),
@@ -224,14 +241,62 @@ export default function AdminUsersEditPage() {
 											setAddress(e.target.value),
 									}}
 									isMandatory
-									style={{ flex: 1 }}
-								/>
-							</div>
+                                                                        style={{ flex: 1 }}
+                                                                />
+                                                        </div>
 
-							<div className='flex flex-col gap-2'>
-								<p className='text-Gray-900 body-md-medium'>
-									평면도
-								</p>
+                                                        <div className='flex flex-col gap-2'>
+                                                                <p className='text-Gray-900 body-md-medium'>
+                                                                        카카오 알림 수신 번호
+                                                                </p>
+                                                                <div className='flex flex-col gap-3'>
+                                                                        {kakaoPhones.map((value, idx) => (
+                                                                                <div
+                                                                                        key={`kakao-phone-${idx}`}
+                                                                                        className='flex items-center gap-3'>
+                                                                                        <InputBox
+                                                                                                label={`전화번호 ${idx + 1}`}
+                                                                                                inputAttr={{
+                                                                                                        placeholder:
+                                                                                                                '010-0000-0000',
+                                                                                                        value,
+                                                                                                        onChange: (
+                                                                                                                e: any
+                                                                                                        ) =>
+                                                                                                                updateKakaoPhone(
+                                                                                                                        idx,
+                                                                                                                        e.target
+                                                                                                                                .value
+                                                                                                                ),
+                                                                                                }}
+                                                                                                style={{ flex: 1 }}
+                                                                                        />
+                                                                                        <IconButton
+                                                                                                icon={<Trashcan />}
+                                                                                                disabled={
+                                                                                                        kakaoPhones.length ===
+                                                                                                        1
+                                                                                                }
+                                                                                                onClick={() =>
+                                                                                                        removeKakaoPhone(
+                                                                                                                idx
+                                                                                                        )
+                                                                                                }
+                                                                                        />
+                                                                                </div>
+                                                                        ))}
+                                                                        <Button
+                                                                                variant='alternative'
+                                                                                onClick={addKakaoPhone}>
+                                                                                <Plus /> 번호 추가
+                                                                        </Button>
+                                                                </div>
+                                                        </div>
+
+                                                        <div className='flex flex-col gap-2'>
+                                                                <p className='text-Gray-900 body-md-medium'>
+                                                                        평면도
+                                                                </p>
 								<FileUploadDrop
 									file={floorPlanFile}
 									availableTypes={ACCEPT_TYPES}

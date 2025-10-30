@@ -10,6 +10,9 @@ import { removeFile } from './storage';
 
 const floorPlans_BUCKET = 'floor-plans';
 
+const sanitizePhones = (phones: string[] = []) =>
+        phones.map((phone) => phone.trim()).filter((phone) => phone.length > 0);
+
 export async function fetchCompanyWithCompanyId(companyId: string) {
 	try {
 		const supabase = supabaseClient();
@@ -25,15 +28,17 @@ export async function fetchCompanyWithCompanyId(companyId: string) {
 		if (cErr) {
 			console.error('회사 데이터 로딩 실패:', cErr.message);
 		} else if (c) {
-			const company = {
-				id: c.id,
-				name: c.name,
-				phone: c.phone ?? undefined,
-				email: c.email ?? undefined,
-				address: c.address ?? undefined,
-				floorImagePath: c.floor_image_path ?? undefined,
-				kakaoPhones: c.kakao_phones ?? undefined,
-			};
+                        const company: ICompany = {
+                                id: c.id,
+                                name: c.name,
+                                phone: c.phone ?? '',
+                                email: c.email ?? '',
+                                address: c.address ?? '',
+                                floorImagePath: c.floor_image_path ?? undefined,
+                                kakaoPhones: Array.isArray(c.kakao_phones)
+                                        ? c.kakao_phones
+                                        : [],
+                        };
 
 			return company;
 		}
@@ -199,28 +204,31 @@ export const loadCompanyDetails = async (
 };
 
 export const saveNewCompany = async (
-	floorPlanFile: File | null,
-	name: string,
-	phone: string,
-	email: string,
-	address: string,
-	aqm: boolean,
-	hepa: boolean,
-	hepaFilters: IHepaFilter[],
-	voc: boolean,
-	vocQuantity: number
+        floorPlanFile: File | null,
+        name: string,
+        phone: string,
+        email: string,
+        address: string,
+        kakaoPhones: string[],
+        aqm: boolean,
+        hepa: boolean,
+        hepaFilters: IHepaFilter[],
+        voc: boolean,
+        vocQuantity: number
 ) => {
-	const fd = new FormData();
-	if (floorPlanFile) fd.append('floorPlanFile', floorPlanFile);
-	fd.append('name', name);
-	fd.append('phone', phone);
-	fd.append('email', email);
-	fd.append('address', address);
-	fd.append('aqm', String(aqm));
-	fd.append('hepa', String(hepa));
-	fd.append('voc', String(voc));
-	fd.append('vocQuantity', String(vocQuantity ?? ''));
-	fd.append('hepaFilters', JSON.stringify(hepaFilters));
+        const fd = new FormData();
+        if (floorPlanFile) fd.append('floorPlanFile', floorPlanFile);
+        fd.append('name', name);
+        fd.append('phone', phone);
+        fd.append('email', email);
+        fd.append('address', address);
+        const sanitizedPhones = sanitizePhones(kakaoPhones);
+        fd.append('kakaoPhones', JSON.stringify(sanitizedPhones));
+        fd.append('aqm', String(aqm));
+        fd.append('hepa', String(hepa));
+        fd.append('voc', String(voc));
+        fd.append('vocQuantity', String(vocQuantity ?? ''));
+        fd.append('hepaFilters', JSON.stringify(hepaFilters));
 
 	const res = await fetch('/api/companies/new', {
 		method: 'POST',
@@ -233,19 +241,20 @@ export const saveNewCompany = async (
 };
 
 export const updateCompany = async (
-	company: ICompany,
-	floorPlanFile: File | null,
-	name: string,
-	phone: string,
-	email: string,
-	address: string,
-	aqm: boolean,
-	voc: boolean,
-	vocQuantity: number,
-	hepa: boolean,
-	hepaFilters: IHepaFilter[]
+        company: ICompany,
+        floorPlanFile: File | null,
+        name: string,
+        phone: string,
+        email: string,
+        address: string,
+        kakaoPhones: string[],
+        aqm: boolean,
+        voc: boolean,
+        vocQuantity: number,
+        hepa: boolean,
+        hepaFilters: IHepaFilter[]
 ) => {
-	const supabase = supabaseClient();
+        const supabase = supabaseClient();
 
 	// (1) floor plan 업로드
 	let floorImagePath = null;
@@ -269,18 +278,22 @@ export const updateCompany = async (
 	}
 
 	// (2) 회사 정보 업데이트
-	const { error: updateErr } = await supabase
-		.from('companies')
-		.update({
-			name,
-			phone,
-			email,
-			address,
-			floor_image_path: floorImagePath,
-		})
-		.eq('id', company.id);
+        const { error: updateErr } = await supabase
+                .from('companies')
+                .update({
+                        name,
+                        phone,
+                        email,
+                        address,
+                        kakao_phones: (() => {
+                                const sanitized = sanitizePhones(kakaoPhones);
+                                return sanitized.length ? sanitized : null;
+                        })(),
+                        floor_image_path: floorImagePath,
+                })
+                .eq('id', company.id);
 
-	if (updateErr) throw updateErr;
+        if (updateErr) throw updateErr;
 
 	// (3) 기존 서비스 목록 가져오기
 	const { data: services, error: sErr } = await supabase
@@ -403,18 +416,47 @@ export async function deleteCompany(companyId: string) {
 	});
 }
 
-export async function fetchCompanyInfobyId(id: string) {
-	const supabase = supabaseClient();
-	const { data, error } = await supabase
-		.from('companies')
-		.select('*')
-		.eq('id', id)
-		.single(); // id는 PK라서 하나만 반환
+export async function fetchCompanyInfobyId(id: string): Promise<ICompany> {
+        const supabase = supabaseClient();
+        const { data, error } = await supabase
+                .from('companies')
+                .select(
+                        'id, name, email, phone, address, floor_image_path, kakao_phones'
+                )
+                .eq('id', id)
+                .single(); // id는 PK라서 하나만 반환
 
-	if (error) {
-		console.error('❌ fetchCompanyInfobyId error:', error.message);
-		throw error;
-	}
+        if (error) {
+                console.error('❌ fetchCompanyInfobyId error:', error.message);
+                throw error;
+        }
 
-	return data; // 없으면 null
+        return {
+                id: data.id,
+                name: data.name ?? '',
+                email: data.email ?? '',
+                phone: data.phone ?? '',
+                address: data.address ?? '',
+                floorImagePath: data.floor_image_path ?? undefined,
+                kakaoPhones: Array.isArray(data.kakao_phones)
+                        ? data.kakao_phones
+                        : [],
+        };
 }
+
+export const updateCompanyKakaoPhones = async (
+        companyId: string,
+        kakaoPhones: string[]
+) => {
+        const supabase = supabaseClient();
+        const sanitized = sanitizePhones(kakaoPhones);
+
+        const { error } = await supabase
+                .from('companies')
+                .update({ kakao_phones: sanitized.length ? sanitized : null })
+                .eq('id', companyId);
+
+        if (error) throw error;
+
+        return sanitized;
+};
