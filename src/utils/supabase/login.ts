@@ -4,13 +4,11 @@ import { SetStateAction } from 'react';
 export async function fetchLogin(
 	email: string,
 	password: string,
+	rememberMeChecked: boolean,
 	setErr: (value: SetStateAction<string | null>) => void
 ) {
 	try {
-		const supabase = supabaseClient();
-
-		console.log({email, password});
-		
+		const supabase = supabaseClient(rememberMeChecked);
 
 		const { data: signInData, error } =
 			await supabase.auth.signInWithPassword({
@@ -18,9 +16,8 @@ export async function fetchLogin(
 				password,
 			});
 
-		console.log(error);
-		
 		if (error) {
+			console.log(error);
 			setErr(error.message);
 			return;
 		}

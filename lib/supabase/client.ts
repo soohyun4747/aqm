@@ -5,22 +5,39 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 const URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
-const g = globalThis as unknown as { __sb?: SupabaseClient };
+type Mode = 'local' | 'session';
+
+const g = globalThis as unknown as {
+  __sb_local?: SupabaseClient;
+  __sb_session?: SupabaseClient;
+};
+
+function getMode(explicit?: boolean): Mode {
+  if (typeof window === 'undefined') return 'local';
+  if (explicit === true) return 'local';
+  if (explicit === false) return 'session';
+  // 마지막 선택값 기억(없으면 local)
+  const saved = window.localStorage.getItem('auth_storage');
+  return (saved === 'session' ? 'session' : 'local') as Mode;
+}
 
 export function supabaseClient(rememberMeChecked?: boolean) {
-  if (g.__sb) return g.__sb;
   if (typeof window === 'undefined') throw new Error('browser only');
 
-  const storage =
-    rememberMeChecked === true ? window.localStorage : window.sessionStorage;
+  const mode = getMode(rememberMeChecked);
+  const key = mode === 'local' ? '__sb_local' : '__sb_session';
 
-  g.__sb = createClient(URL, ANON, {
+  if (g[key]) return g[key] as SupabaseClient;
+
+  const storage = mode === 'local' ? window.localStorage : window.sessionStorage;
+
+  g[key] = createClient(URL, ANON, {
     auth: {
       persistSession: true,
       autoRefreshToken: true,
-      storage,            // ✅ storageKey 지정 안 함(기본값 사용)
-      // storageKey: 제거!
+      storage,          // ✅ 모드별 storage 주입
     },
   });
-  return g.__sb;
+
+  return g[key]!;
 }

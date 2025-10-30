@@ -31,7 +31,12 @@ export default function LoginPage() {
 
 		try {
 			// 1) 로그인
-			const authUser = await fetchLogin(email, password, setErr);
+			const authUser = await fetchLogin(
+				email,
+				password,
+				rememberMeChecked,
+				setErr
+			);
 
 			if (authUser) {
 				// 2) 프로필 조회 (role, company_id)
