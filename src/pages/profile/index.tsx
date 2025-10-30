@@ -1,13 +1,11 @@
 'use client';
 
 import { Card2 } from '@/src/components/Card2';
-import { FileUploadDrop } from '@/src/components/FileUploadDrop';
 import { GNB } from '@/src/components/GNB';
 import { InputBox } from '@/src/components/InputBox';
 import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
 import { ICompany } from '@/src/stores/userStore';
 import { loadCompanyDetails } from '@/src/utils/supabase/company';
-import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { IHepaFilter, vocFilterSpec } from '../admin/companies/edit/[id]';
 

@@ -48,6 +48,7 @@ function AdminUsersPage() {
 					phone: row.phone ?? '',
 					address: row.address ?? '',
 					floorImagePath: row.floor_image_path ?? '',
+					kakaoPhones: row.kakao_phones
 				}))
 			);
 			setTotalRows(data.count ?? 0);

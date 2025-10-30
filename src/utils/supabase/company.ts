@@ -16,7 +16,9 @@ export async function fetchCompanyWithCompanyId(companyId: string) {
 
 		const { data: c, error: cErr } = await supabase
 			.from('companies')
-			.select('id, name, phone, email, address, floor_image_path')
+			.select(
+				'id, name, phone, email, address, floor_image_path, kakao_phones'
+			)
 			.eq('id', companyId)
 			.single();
 
@@ -30,6 +32,7 @@ export async function fetchCompanyWithCompanyId(companyId: string) {
 				email: c.email ?? undefined,
 				address: c.address ?? undefined,
 				floorImagePath: c.floor_image_path ?? undefined,
+				kakaoPhones: c.kakao_phones ?? undefined,
 			};
 
 			return company;
@@ -80,9 +83,12 @@ export const fetchCompanies = async (page: number, search: string) => {
 		const base = () =>
 			supabase
 				.from('companies')
-				.select('id, name, email, phone, address, floor_image_path', {
-					count: 'exact',
-				});
+				.select(
+					'id, name, email, phone, address, floor_image_path, kakao_phones',
+					{
+						count: 'exact',
+					}
+				);
 
 		// --- 1) count 전용 HEAD 요청 (동일한 필터 적용) ---
 		let countQuery = base();
@@ -192,16 +198,6 @@ export const loadCompanyDetails = async (
 	};
 };
 
-// // 비밀번호 규칙: 이메일 로컬파트 + 휴대폰 마지막 4자리(숫자만 추출)
-// const makePassword = (email: string, phone: string) => {
-// 	const local = (email.split('@')[0] || '').trim();
-// 	const digits = (phone.match(/\d/g) || []).join('');
-// 	const last4 = digits.slice(-4) || '000';
-// 	// 최소 6자 보장(로컬파트가 너무 짧을 경우 대비)
-// 	const pwd = `${local}${last4}`;
-// 	return pwd.length >= 6 ? pwd : (pwd + '000000').slice(0, 6);
-// };
-
 export const saveNewCompany = async (
 	floorPlanFile: File | null,
 	name: string,
@@ -234,196 +230,6 @@ export const saveNewCompany = async (
 	const json = await res.json();
 	if (!res.ok) throw new Error(json.error || 'Failed to create company');
 	return json;
-
-	// const supabase = supabaseClient();
-
-	// // (1) 회사 레코드 먼저 생성 (파일 경로 없이)
-	// const { data: companyRow, error: cErr } = await supabase
-	// 	.from('companies')
-	// 	.insert({
-	// 		name,
-	// 		phone: phone || null,
-	// 		email: email || null,
-	// 		address: address || null,
-	// 		// floor_image_path는 파일 업로드 이후에 update로 채움
-	// 	})
-	// 	.select('id')
-	// 	.single();
-	// if (cErr) throw cErr;
-
-	// const companyId = companyRow.id as string;
-
-	// // (2) 평면도 Storage 업로드 (선택) — 회사 폴더 경로로 업로드 (RLS 통과)
-	// let floorImagePath: string | null = null;
-	// if (floorPlanFile) {
-	// 	const fileName = `${Date.now()}_${sanitizeFileName(
-	// 		floorPlanFile.name
-	// 	)}`;
-	// 	const path = `${companyId}/${fileName}`; // 회사별 폴더
-	// 	const { data: up, error: upErr } = await supabase.storage
-	// 		.from(floorPlans_BUCKET)
-	// 		.upload(path, floorPlanFile, { upsert: false });
-
-	// 	if (upErr) throw upErr;
-
-	// 	floorImagePath = up?.path ?? path;
-
-	// 	const { error: updErr } = await supabase
-	// 		.from('companies')
-	// 		.update({ floor_image_path: floorImagePath })
-	// 		.eq('id', companyId);
-	// 	if (updErr) throw updErr;
-	// }
-
-	// // (3) 서비스 생성 (체크된 것만)
-	// if (aqm) {
-	// 	const { error } = await supabase.from('company_services').insert({
-	// 		company_id: companyId,
-	// 		service_type: 'aqm',
-	// 	});
-	// 	if (error) throw error;
-	// }
-
-	// if (hepa) {
-	// 	const { data: hepaSvc, error: hepaErr } = await supabase
-	// 		.from('company_services')
-	// 		.insert({
-	// 			company_id: companyId,
-	// 			service_type: 'hepa',
-	// 		})
-	// 		.select('id')
-	// 		.single();
-	// 	if (hepaErr) throw hepaErr;
-
-	// 	const hepaServiceId = hepaSvc.id as string;
-
-	// 	if (hepaFilters.length) {
-	// 		const payload = hepaFilters.map((f) => ({
-	// 			company_id: companyId,
-	// 			company_service_id: hepaServiceId,
-	// 			filter_type: f.filterType === 'preFrame' ? 'pre' : f.filterType, // 'hepa' | 'pre'
-	// 			width: Number(f.width) || 0,
-	// 			height: Number(f.height) || 0,
-	// 			depth: Number(f.depth) || 0,
-	// 			quantity: Number(f.quantity) || 0,
-	// 		}));
-	// 		const { error: hErr } = await supabase
-	// 			.from('hepa_filters')
-	// 			.insert(payload);
-	// 		if (hErr) throw hErr;
-	// 	}
-	// }
-
-	// if (voc) {
-	// 	const { error } = await supabase.from('company_services').insert({
-	// 		company_id: companyId,
-	// 		service_type: 'voc',
-	// 		quantity: vocQuantity || null,
-	// 	});
-	// 	if (error) throw error;
-	// }
-
-	// // (4) Auth 계정 생성 (Admin API)
-	// //    - email: 전달받은 email
-	// //    - password: 로컬파트 + phone 마지막 4자리
-	// const admin = supabaseAdmin();
-	// const password = makePassword(email, phone);
-
-	// const { data: userCreate, error: userErr } =
-	// 	await admin.auth.admin.createUser({
-	// 		id: companyId,
-	// 		email,
-	// 		password,
-	// 		email_confirm: true,
-	// 		user_metadata: {
-	// 			company_id: companyId,
-	// 			created_by: 'saveNewCompany',
-	// 		},
-	// 	});
-
-	// if (userErr) {
-	// 	console.error('Auth user 생성 실패:', userErr.message);
-
-	// 	// (1) 업로드한 평면도 이미지 제거
-	// 	if (floorImagePath) {
-	// 		try {
-	// 			await supabase.storage
-	// 				.from(floorPlans_BUCKET)
-	// 				.remove([floorImagePath]);
-	// 		} catch (rmErr) {
-	// 			console.warn('floor plan 삭제 실패:', rmErr);
-	// 		}
-	// 	}
-
-	// 	// (2) hepa_filters 삭제 (company_id 기준)
-	// 	try {
-	// 		await supabase
-	// 			.from('hepa_filters')
-	// 			.delete()
-	// 			.eq('company_id', companyId);
-	// 	} catch (rmErr) {
-	// 		console.warn('hepa_filters 삭제 실패:', rmErr);
-	// 	}
-
-	// 	// (3) company_services 삭제 (company_id 기준)
-	// 	try {
-	// 		await supabase
-	// 			.from('company_services')
-	// 			.delete()
-	// 			.eq('company_id', companyId);
-	// 	} catch (rmErr) {
-	// 		console.warn('company_services 삭제 실패:', rmErr);
-	// 	}
-
-	// 	// (4) companies 삭제 (최종)
-	// 	try {
-	// 		await supabase.from('companies').delete().eq('id', companyId);
-	// 	} catch (rmErr) {
-	// 		console.warn('companies 삭제 실패:', rmErr);
-	// 	}
-
-	// 	throw userErr;
-	// }
-
-	// const authUserId = userCreate.user?.id;
-
-	// if (authUserId) {
-	// 	const { error: pErr } = await admin.from('profiles').insert({
-	// 		user_id: authUserId, // PK
-	// 		company_id: companyId,
-	// 		role: 'company', // 필요 시 'admin' 지정 가능
-	// 	});
-	// 	if (pErr) {
-	// 		console.warn('profiles insert failed:', pErr.message);
-	// 	}
-	// }
-
-	// const appLoginUrl = `${process.env.APP_URL}/login`;
-
-	// try {
-	// 	// (A) 비밀번호 설정 링크 생성
-	// 	const { data: linkData, error: linkErr } =
-	// 		await admin.auth.admin.generateLink({
-	// 			type: 'recovery', // 사용자가 최초로 비밀번호 설정하도록 유도
-	// 			email, // 위에서 createUser 한 동일 이메일
-	// 		});
-	// 	if (linkErr) throw linkErr;
-
-	// 	const resetUrl = linkData.properties?.action_link;
-
-	// 	// (B) 메일 발송
-	// 	if (email && resetUrl) {
-	// 		await sendAccountEmail({
-	// 			to: email,
-	// 			companyName: name,
-	// 			loginUrl: appLoginUrl,
-	// 			resetUrl,
-	// 		});
-	// 	}
-	// } catch (mailErr) {
-	// 	console.warn('계정 안내 메일 발송 실패:', (mailErr as Error).message);
-	// 	// 여기서 롤백까지는 보통 하지 않고, 관리자 화면에서 수동 재발송 버튼을 두는 편이 안전합니다.
-	// }
 };
 
 export const updateCompany = async (

@@ -187,13 +187,14 @@ export function daysSince(
 
 export function formatDateTimeString(datetimeStr: string): string {
 	const date = new Date(datetimeStr); // 이미 KST로 변환됨
+	const kst = new Date(date.getTime() + 9 * 60 * 60 * 1000); // UTC+9
 
-	const year = date.getFullYear();
-	const month = date.getMonth() + 1;
-	const day = date.getDate();
+	const year = kst.getFullYear();
+	const month = kst.getMonth() + 1;
+	const day = kst.getDate();
 
-	let hours = date.getHours();
-	const minutes = date.getMinutes();
+	let hours = kst.getHours();
+	const minutes = kst.getMinutes();
 
 	const ampm = hours < 12 ? '오전' : '오후';
 	if (hours > 12) hours -= 12;

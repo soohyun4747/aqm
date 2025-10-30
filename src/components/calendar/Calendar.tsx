@@ -37,7 +37,8 @@ export function Calendar(props: CalendarProps) {
 						selectedDate.getFullYear() &&
 					schedule.scheduledAt.getMonth() ===
 						selectedDate.getMonth() &&
-					schedule.scheduledAt.getDate() === selectedDate.getDate()
+					schedule.scheduledAt.getDate() === selectedDate.getDate() &&
+					schedule.status !== 'cancelled'
 				);
 			});
 			setSelectedDateSchedules(filtered);

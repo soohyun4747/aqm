@@ -22,6 +22,7 @@ export interface ICompany {
   id: string;
   name: string;
   phone: string;
+  kakaoPhones: string[]
   email: string;
   address: string;
   floorImagePath?: string;
