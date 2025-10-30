@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
 			.select(
 				`
         id, company_id, status, service_type, scheduled_at, memo,
-        companies:company_id ( name, email )
+        companies:company_id ( name, email, kakao_phones )
       `
 			)
 			.eq('id', scheduleId)
@@ -34,20 +34,23 @@ export async function POST(req: NextRequest) {
 			);
 		}
 
-		await sendScheduleEmails({
-			type: type,
-			agent: agent,
-			schedule: {
-				id: data.id,
-				companyId: data.company_id,
-				companyName: data.companies.name,
-				status: data.status,
-				serviceType: data.service_type,
-				scheduledAt: data.scheduled_at,
-				memo: data.memo ?? null,
-			},
-			companyEmail: data.companies.email, // 고객 메일로 사용
-		});
+                await sendScheduleEmails({
+                        type: type,
+                        agent: agent,
+                        schedule: {
+                                id: data.id,
+                                companyId: data.company_id,
+                                companyName: data.companies.name,
+                                status: data.status,
+                                serviceType: data.service_type,
+                                scheduledAt: data.scheduled_at,
+                                memo: data.memo ?? null,
+                        },
+                        companyEmail: data.companies.email ?? null, // 고객 메일로 사용
+                        companyKakaoPhones: Array.isArray(data.companies.kakao_phones)
+                                ? data.companies.kakao_phones
+                                : [],
+                });
 
 		return NextResponse.json({ ok: true });
 	} catch (e: unknown) {

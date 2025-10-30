@@ -6,6 +6,7 @@ import { render } from '@react-email/components';
 import { ServiceType } from '../utils/supabase/companyServices';
 import { ScheduleStatusType } from '../utils/supabase/schedule';
 import { UserType } from '../stores/userStore';
+import { sendScheduleKakaoNotifications } from './kakaoNotification';
 
 export type ScheduleMailType =
 	| 'requested'
@@ -40,48 +41,61 @@ export const scheduleSubjectMap = {
 
 
 export async function sendScheduleEmails(args: {
-	type: ScheduleMailType;
-	agent: UserType;
-	schedule: IScheduleRoute;
-	companyEmail: string;
+        type: ScheduleMailType;
+        agent: UserType;
+        schedule: IScheduleRoute;
+        companyEmail: string | null;
+        companyKakaoPhones?: string[];
 }) {
-	const { type, schedule, companyEmail, agent } = args;
+        const { type, schedule, companyEmail, agent, companyKakaoPhones = [] } = args;
 
-	const manageUrl = `${process.env.APP_BASE_URL}/schedules/${schedule.id}`;
+        const manageUrl = `${process.env.APP_BASE_URL}/schedules/${schedule.id}`;
+        const subject = scheduleSubjectMap[type];
 
-	// 고객용
-	const customerHtml = await render(
-		<CustomerScheduleEmail
-			type={type}
+        // 고객용
+        const customerHtml = await render(
+                <CustomerScheduleEmail
+                        type={type}
 			agent={agent}
 			schedule={schedule}
 			manageUrl={manageUrl}
-		/>
-	);
+                />
+        );
 
-	await resend.emails.send({
-		from: EMAIL_FROM,
-		to: companyEmail,
-		subject: scheduleSubjectMap[type],
-		html: customerHtml,
-	});
+        if (companyEmail) {
+                await resend.emails.send({
+                        from: EMAIL_FROM,
+                        to: companyEmail,
+                        subject,
+                        html: customerHtml,
+                });
+        }
 
-	// 관리자용
-	if (ADMIN_EMAILS.length > 0) {
-		const adminHtml = await render(
-			<AdminScheduleEmail
+        // 관리자용
+        if (ADMIN_EMAILS.length > 0) {
+                const adminHtml = await render(
+                        <AdminScheduleEmail
 				type={type}
 				agent={agent}
 				schedule={schedule}
 				manageUrl={manageUrl}
 			/>
-		);
+                );
 
-		await resend.emails.send({
-			from: EMAIL_FROM,
-			to: ADMIN_EMAILS,
-			subject: scheduleSubjectMap[type],
-			html: adminHtml,
-		});
-	}
+                await resend.emails.send({
+                        from: EMAIL_FROM,
+                        to: ADMIN_EMAILS,
+                        subject,
+                        html: adminHtml,
+                });
+        }
+
+        await sendScheduleKakaoNotifications({
+                type,
+                subject,
+                schedule,
+                agent,
+                manageUrl,
+                recipients: companyKakaoPhones,
+        });
 }
