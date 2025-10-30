@@ -46,11 +46,13 @@ function AdminUsersPage() {
 					name: row.name,
 					email: row.email ?? '',
 					phone: row.phone ?? '',
-					address: row.address ?? '',
-					floorImagePath: row.floor_image_path ?? '',
-					kakaoPhones: row.kakao_phones
-				}))
-			);
+                                        address: row.address ?? '',
+                                        floorImagePath: row.floor_image_path ?? '',
+                                        kakaoPhones: Array.isArray(row.kakao_phones)
+                                                ? row.kakao_phones
+                                                : [],
+                                }))
+                        );
 			setTotalRows(data.count ?? 0);
 		}
 	};

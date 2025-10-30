@@ -3,32 +3,45 @@
 import { Card2 } from '@/src/components/Card2';
 import { GNB } from '@/src/components/GNB';
 import { InputBox } from '@/src/components/InputBox';
+import { Button } from '@/src/components/buttons/Button';
+import { IconButton } from '@/src/components/IconButton';
+import { Plus } from '@/src/components/icons/Plus';
+import { Trashcan } from '@/src/components/icons/Trashcan';
+import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
-import { ICompany } from '@/src/stores/userStore';
-import { loadCompanyDetails } from '@/src/utils/supabase/company';
+import { ICompany, useUserStore } from '@/src/stores/userStore';
+import {
+        loadCompanyDetails,
+        updateCompanyKakaoPhones,
+} from '@/src/utils/supabase/company';
 import { useEffect, useState } from 'react';
 import { IHepaFilter, vocFilterSpec } from '../admin/companies/edit/[id]';
 
 export default function ProfilePage() {
 	// 회사 기본 정보
 	const [name, setName] = useState('');
-	const [phone, setPhone] = useState('');
-	const [email, setEmail] = useState('');
-	const [address, setAddress] = useState('');
-	const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
+        const [phone, setPhone] = useState('');
+        const [email, setEmail] = useState('');
+        const [address, setAddress] = useState('');
+        const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
+        const [kakaoPhones, setKakaoPhones] = useState<string[]>(['']);
 
-	// 서비스 상태 (모달로 추가/삭제)
-	const [aqm, setAqm] = useState<boolean>(false);
-	const [hepa, setHepa] = useState<boolean>(false);
-	const [voc, setVoc] = useState<boolean>(false);
+        // 서비스 상태 (모달로 추가/삭제)
+        const [aqm, setAqm] = useState<boolean>(false);
+        const [hepa, setHepa] = useState<boolean>(false);
+        const [voc, setVoc] = useState<boolean>(false);
 	const [vocQuantity, setVocQuantity] = useState<number>(0);
 
 	// HEPA 필터 목록 (기본 1개)
-	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
-		{ filterType: 'hepa', width: 0, height: 0, depth: 0, quantity: 1 },
-	]);
+        const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
+                { filterType: 'hepa', width: 0, height: 0, depth: 0, quantity: 1 },
+        ]);
 
-	const { company, setCompany } = useSelectedCompanyStore();
+        const { company, setCompany } = useSelectedCompanyStore();
+        const user = useUserStore((state) => state.user);
+        const setUser = useUserStore((state) => state.setUser);
+        const [toastMessage, setToastMessage] = useState<IToastMessage>();
+        const [saving, setSaving] = useState(false);
 
 	useEffect(() => {
 		if (!company) return;
@@ -41,16 +54,17 @@ export default function ProfilePage() {
 		};
 	}, [company]);
 
-	const getSetCompanyInfo = async (company: ICompany, cancelled: boolean) => {
-		setName(company.name);
-		setPhone(company.phone);
-		setEmail(company.email);
-		setAddress(company.address);
+        const getSetCompanyInfo = async (company: ICompany, cancelled: boolean) => {
+                setName(company.name);
+                setPhone(company.phone);
+                setEmail(company.email);
+                setAddress(company.address);
+                setKakaoPhones(company.kakaoPhones.length ? company.kakaoPhones : ['']);
 
-		try {
-			const details = await loadCompanyDetails(
-				company.id,
-				company.floorImagePath
+                try {
+                        const details = await loadCompanyDetails(
+                                company.id,
+                                company.floorImagePath
 			);
 			if (cancelled) return;
 
@@ -62,8 +76,57 @@ export default function ProfilePage() {
 			setHepaFilters(details.hepaFilters);
 		} catch (e) {
 			console.error('load company details error', e);
-		}
-	};
+                }
+        };
+
+        const addKakaoPhone = () => {
+                setKakaoPhones((prev) => [...prev, '']);
+        };
+
+        const updateKakaoPhone = (idx: number, value: string) => {
+                setKakaoPhones((prev) => prev.map((phone, i) => (i === idx ? value : phone)));
+        };
+
+        const removeKakaoPhone = (idx: number) => {
+                setKakaoPhones((prev) => {
+                        if (prev.length === 1) return [''];
+                        return prev.filter((_, i) => i !== idx);
+                });
+        };
+
+        const handleSaveKakaoPhones = async () => {
+                if (!company) return;
+
+                try {
+                        setSaving(true);
+                        const sanitized = await updateCompanyKakaoPhones(
+                                company.id,
+                                kakaoPhones
+                        );
+                        const updatedCompany = {
+                                ...company,
+                                kakaoPhones: sanitized,
+                        };
+                        setCompany(updatedCompany);
+                        if (user) {
+                                setUser({ ...user, company: updatedCompany });
+                        }
+                        setKakaoPhones(sanitized.length ? sanitized : ['']);
+                        setToastMessage({
+                                status: 'confirm',
+                                message: '카카오 알림 수신 번호가 저장되었습니다.',
+                        });
+                } catch (e: any) {
+                        console.error('update kakao phones error', e);
+                        setToastMessage({
+                                status: 'error',
+                                message:
+                                        e?.message || '카카오 알림 수신 번호 저장 중 오류가 발생했습니다.',
+                        });
+                } finally {
+                        setSaving(false);
+                }
+        };
 
 	return (
 		<div className='flex flex-col bg-Gray-100 min-h-screen'>
@@ -155,10 +218,63 @@ export default function ProfilePage() {
 							</div>
 						</div>
 					</div>
-				</Card2>
+                                </Card2>
 
-				{/* 관리 서비스 */}
-				<Card2>
+                                <Card2>
+                                        <div className='flex flex-col gap-4'>
+                                                <div className='flex flex-col md:flex-row md:items-center md:justify-between gap-3'>
+                                                        <p className='text-Gray-900 body-md-medium'>
+                                                                카카오 알림 수신 번호
+                                                        </p>
+                                                        <Button
+                                                                className='w-fit'
+                                                                onClick={handleSaveKakaoPhones}
+                                                                disabled={saving}>
+                                                                {saving ? '저장 중…' : '저장하기'}
+                                                        </Button>
+                                                </div>
+
+                                                <div className='flex flex-col gap-3'>
+                                                        {kakaoPhones.map((value, idx) => (
+                                                                <div
+                                                                        key={`profile-kakao-phone-${idx}`}
+                                                                        className='flex items-center gap-3'>
+                                                                        <InputBox
+                                                                                label={`전화번호 ${idx + 1}`}
+                                                                                inputAttr={{
+                                                                                        placeholder: '010-0000-0000',
+                                                                                        value,
+                                                                                        onChange: (e: any) =>
+                                                                                                updateKakaoPhone(
+                                                                                                        idx,
+                                                                                                        e.target.value
+                                                                                                ),
+                                                                                }}
+                                                                                style={{ flex: 1 }}
+                                                                        />
+                                                                        <IconButton
+                                                                                icon={<Trashcan />}
+                                                                                disabled={
+                                                                                        kakaoPhones.length === 1
+                                                                                }
+                                                                                onClick={() =>
+                                                                                        removeKakaoPhone(idx)
+                                                                                }
+                                                                        />
+                                                                </div>
+                                                        ))}
+                                                        <Button
+                                                                variant='alternative'
+                                                                className='w-fit'
+                                                                onClick={addKakaoPhone}>
+                                                                <Plus /> 번호 추가
+                                                        </Button>
+                                                </div>
+                                        </div>
+                                </Card2>
+
+                                {/* 관리 서비스 */}
+                                <Card2>
 					<div className='flex flex-col gap-4'>
 						<div className='flex justify-between items-center'>
 							<p className='text-Gray-900 body-md-medium'>
@@ -285,8 +401,16 @@ export default function ProfilePage() {
 							)}
 						</div>
 					</div>
-				</Card2>
-			</div>
-		</div>
-	);
+                                </Card2>
+                        </div>
+
+                        {toastMessage && (
+                                <ToastMessage
+                                        status={toastMessage.status}
+                                        message={toastMessage.message}
+                                        setToastMessage={setToastMessage}
+                                />
+                        )}
+                </div>
+        );
 }

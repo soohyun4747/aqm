@@ -25,26 +25,28 @@ export async function POST(req: Request) {
 	// 1) 요청 파싱 (JSON 또는 multipart/form-data 둘 다 지원)
 	// ────────────────────────────────────────────────────────────────
 	const contentType = req.headers.get('content-type') || '';
-	let payload: {
-		name: string;
-		phone: string;
-		email: string;
-		address: string;
-		aqm: boolean;
-		hepa: boolean;
-		voc: boolean;
-		vocQuantity: null | number;
-		hepaFilters: HepaFilterDTO[];
-	} = {
-		name: '',
-		phone: '',
-		email: '',
-		address: '',
-		aqm: false,
-		hepa: false,
-		voc: false,
-		vocQuantity: null,
-		hepaFilters: [],
+        let payload: {
+                name: string;
+                phone: string;
+                email: string;
+                address: string;
+                kakaoPhones: string[];
+                aqm: boolean;
+                hepa: boolean;
+                voc: boolean;
+                vocQuantity: null | number;
+                hepaFilters: HepaFilterDTO[];
+        } = {
+                name: '',
+                phone: '',
+                email: '',
+                address: '',
+                kakaoPhones: [],
+                aqm: false,
+                hepa: false,
+                voc: false,
+                vocQuantity: null,
+                hepaFilters: [],
 	};
 	let floorPlanFile: File | null = null;
 
@@ -54,12 +56,14 @@ export async function POST(req: Request) {
 
 			// 문자열/숫자/불리언 필드
 			payload.name = (form.get('name') as string) ?? '';
-			payload.phone = (form.get('phone') as string) ?? '';
-			payload.email = (form.get('email') as string) ?? '';
-			payload.address = (form.get('address') as string) ?? '';
+                        payload.phone = (form.get('phone') as string) ?? '';
+                        payload.email = (form.get('email') as string) ?? '';
+                        payload.address = (form.get('address') as string) ?? '';
+                        const kakaoPhonesStr = (form.get('kakaoPhones') as string) || '[]';
+                        payload.kakaoPhones = JSON.parse(kakaoPhonesStr) as string[];
 
-			// boolean 문자열을 boolean으로
-			payload.aqm = toBool(form.get('aqm'));
+                        // boolean 문자열을 boolean으로
+                        payload.aqm = toBool(form.get('aqm'));
 			payload.hepa = toBool(form.get('hepa'));
 			payload.voc = toBool(form.get('voc'));
 
@@ -77,28 +81,31 @@ export async function POST(req: Request) {
 			payload = await req.json();
 			floorPlanFile = null; // JSON 경로에서는 파일 미지원(원하면 Base64 등으로 확장)
 		}
-	} catch (error: unknown) {
-		if (error instanceof Error) {
-			console.error(error.message);
-			return NextResponse.json({ error: error.message }, { status: 400 });
-		}
+        } catch (error: unknown) {
+                if (error instanceof Error) {
+                        console.error(error.message);
+                        return NextResponse.json({ error: error.message }, { status: 400 });
+                }
 		console.error(error);
 		return NextResponse.json(
 			{ error: '알 수 없는 오류가 발생했습니다.' },
 			{ status: 400 }
 		);
-	}
+        }
 
-	const {
-		name,
-		phone,
-		email,
-		address,
-		aqm,
-		hepa,
-		hepaFilters = [],
-		voc,
-		vocQuantity,
+        payload.kakaoPhones = sanitizePhones(payload.kakaoPhones);
+
+        const {
+                name,
+                phone,
+                email,
+                address,
+                kakaoPhones,
+                aqm,
+                hepa,
+                hepaFilters = [],
+                voc,
+                vocQuantity,
 	} = payload;
 
 	// ────────────────────────────────────────────────────────────────
@@ -108,15 +115,19 @@ export async function POST(req: Request) {
 	let floorImagePath: string | null = null;
 
 	try {
-		const { data: companyRow, error: cErr } = await admin
-			.from('companies')
-			.insert({
-				name,
-				phone: phone || null,
-				email: email || null,
-				address: address || null,
-				// floor_image_path는 업로드 후 update
-			})
+                const { data: companyRow, error: cErr } = await admin
+                        .from('companies')
+                        .insert({
+                                name,
+                                phone: phone || null,
+                                email: email || null,
+                                address: address || null,
+                                kakao_phones: (() => {
+                                        const sanitized = sanitizePhones(kakaoPhones);
+                                        return sanitized.length ? sanitized : null;
+                                })(),
+                                // floor_image_path는 업로드 후 update
+                        })
 			.select('id')
 			.single();
 
@@ -337,10 +348,17 @@ export async function POST(req: Request) {
 // ──────────────────────────────────────────────────────────────────
 // Helpers
 // ──────────────────────────────────────────────────────────────────
+function sanitizePhones(phones: unknown): string[] {
+        if (!Array.isArray(phones)) return [];
+        return phones
+                .map((phone) => String(phone).trim())
+                .filter((phone) => phone.length > 0);
+}
+
 function toBool(v: FormDataEntryValue | null): boolean {
-	if (v === null) return false;
-	const s = String(v).toLowerCase();
-	return s === 'true' || s === '1' || s === 'on' || s === 'yes';
+        if (v === null) return false;
+        const s = String(v).toLowerCase();
+        return s === 'true' || s === '1' || s === 'on' || s === 'yes';
 }
 function toNumber(v: FormDataEntryValue | null): number | null {
 	if (v === null || v === '') return null;
