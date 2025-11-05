@@ -4,6 +4,44 @@ import { monthRangeTimestamptz } from '../date';
 import { ServiceType } from './companyServices';
 import { UserType } from '@/src/stores/userStore';
 
+type NotifiableScheduleStatus = 'requested' | 'confirmed' | 'cancelled';
+
+const NOTIFIABLE_SCHEDULE_STATUSES: ReadonlyArray<NotifiableScheduleStatus> = [
+        'requested',
+        'confirmed',
+        'cancelled',
+];
+
+function isNotifiableStatus(status: ScheduleStatusType): status is NotifiableScheduleStatus {
+        return (NOTIFIABLE_SCHEDULE_STATUSES as ReadonlyArray<string>).includes(status);
+}
+
+async function notifyScheduleChange(
+        type: NotifiableScheduleStatus,
+        agent: 'company' | 'admin',
+        scheduleId: string
+) {
+        const body = JSON.stringify({
+                type,
+                agent,
+                scheduleId,
+        });
+
+        const headers = { 'Content-Type': 'application/json' };
+
+        await fetch('/api/emails', {
+                method: 'POST',
+                headers,
+                body,
+        }).catch(console.error);
+
+        await fetch('/api/alimtalk', {
+                method: 'POST',
+                headers,
+                body,
+        }).catch(console.error);
+}
+
 export interface ISchedule {
 	id?: string;
 	scheduledAt: Date;
@@ -114,15 +152,9 @@ export async function createSchedule(schedule: ISchedule, agent: 'company' | 'ad
 
 		// ✅ 이벤트명은 생성/수정/취소 중 하나여야 합니다.
 		// 생성 시:
-		await fetch('/api/emails', {
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify({
-				type: schedule.status,
-				scheduleId: data.id,
-				agent: 'admin'
-			}),
-		}).catch(console.error); // 메일 실패해도 생성은 성공 처리
+                if (isNotifiableStatus(schedule.status)) {
+                        await notifyScheduleChange(schedule.status, agent, data.id);
+                }
 
 		return { data }; // ✅ 성공값 반환 잊지 않기
 	} catch (error) {
@@ -161,15 +193,9 @@ export async function updateSchedule(
 		throw error;
 	}
 
-	await fetch('/api/emails', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			type: schedule.status,
-			agent: agent,
-			scheduleId: data.id,
-		}),
-	}).catch(console.error);
+        if (isNotifiableStatus(schedule.status)) {
+                await notifyScheduleChange(schedule.status, agent, data.id);
+        }
 
 	// 반환 시 다시 camelCase로 매핑
 	return {
@@ -200,15 +226,7 @@ export async function cancelSchedule(
 		throw error;
 	}
 
-	await fetch('/api/emails', {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify({
-			type: 'cancelled',
-			agent: agent,
-			scheduleId: id,
-		}),
-	}).catch(console.error);
+        await notifyScheduleChange('cancelled', agent, id);
 
 	return true;
 }
