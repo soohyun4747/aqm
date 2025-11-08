@@ -2,13 +2,14 @@ import '@/src/styles/globals.css';
 import { AppProps } from 'next/app';
 import { useEffect } from 'react';
 import { screenTypes, useScreenTypeStore } from '../stores/screenTypeStore';
-import { ICompany, useUserStore } from '../stores/userStore';
+import { IAdminContact, ICompany, useUserStore } from '../stores/userStore';
 import { fetchProfileWithId } from '../utils/supabase/profile';
 import { fetchCompanyWithCompanyId } from '../utils/supabase/company';
 import { useRouter, usePathname } from 'next/navigation';
 import { fetchSession } from '../utils/supabase/session';
 import { useSelectedCompanyStore } from '../stores/selectedCompanyStore';
 import LoadingOverlay from '../components/LoadingOverlay';
+import { fetchAdminContactByUserId } from '../utils/supabase/adminContacts';
 
 function App({ Component, pageProps }: AppProps) {
 	const setScreenType = useScreenTypeStore((state) => state.setScreenType);
@@ -55,22 +56,37 @@ function App({ Component, pageProps }: AppProps) {
 					}
 
 					let company: ICompany | undefined;
-					if (profile.role === 'company' && profile.company_id) {
-						company = await fetchCompanyWithCompanyId(
-							profile.company_id
-						);
-					}
+                                        if (profile.role === 'company' && profile.company_id) {
+                                                company = await fetchCompanyWithCompanyId(
+                                                        profile.company_id
+                                                );
+                                        }
 
-					if (!ignore) {
-						setUser({
-							id: authUser.id,
-							userType: profile.role,
-							company,
-						});
+                                        let adminContact: IAdminContact | undefined;
+                                        if (profile.role === 'admin') {
+                                                try {
+                                                        adminContact = await fetchAdminContactByUserId(
+                                                                authUser.id
+                                                        );
+                                                } catch (error) {
+                                                        console.error(
+                                                                'Failed to fetch admin contact info:',
+                                                                error
+                                                        );
+                                                }
+                                        }
 
-						if (company) {
-							setCompany(company);
-						}
+                                        if (!ignore) {
+                                                setUser({
+                                                        id: authUser.id,
+                                                        userType: profile.role,
+                                                        company,
+                                                        adminContact,
+                                                });
+
+                                                if (company) {
+                                                        setCompany(company);
+                                                }
 
 						// ✅ role과 pathname 기준으로 라우팅 분기
 						if (

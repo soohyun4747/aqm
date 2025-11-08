@@ -11,9 +11,10 @@ import { userTypes, useUserStore } from '@/src/stores/userStore';
 import { logout } from '../utils/supabase/login';
 
 const adminPathTitles: { [key: string]: string } = {
-	'/admin/calendar': '캘린더',
-	'/admin/companies': '고객목록',
-	'/admin/managementRecords': '관리기록',
+        '/admin/calendar': '캘린더',
+        '/admin/companies': '고객목록',
+        '/admin/managementRecords': '관리기록',
+        '/admin/profile': '프로필',
 };
 
 const companyPathTitles: { [key: string]: string } = {
@@ -22,7 +23,7 @@ const companyPathTitles: { [key: string]: string } = {
 };
 
 const menuId = 'menu';
-const adminEmail = 'cnc@admin.com';
+const ADMIN_EMAIL_FALLBACK = 'admin@aqm.com';
 
 export function GNB() {
 	const [menuOpen, setMenuOpen] = useState(false);
@@ -56,8 +57,21 @@ export function GNB() {
 		}
 	};
 
-	return (
-		<>
+        const profileEmail =
+                user?.userType === 'admin'
+                        ? user?.adminContact?.emails?.[0] ?? ADMIN_EMAIL_FALLBACK
+                        : user?.company?.email ?? '';
+
+        const handleProfileClick = () => {
+                if (user?.userType === 'company') {
+                        router.push('/profile');
+                } else if (user?.userType === 'admin') {
+                        router.push('/admin/profile');
+                }
+        };
+
+        return (
+                <>
 			{screenType === screenTypes.pc ? (
 				<div className='px-6 py-3 bg-white border-b border-Gray-200 flex items-center justify-between no-print'>
 					<div className='flex items-center gap-8'>
@@ -86,18 +100,10 @@ export function GNB() {
 					</div>
 					<div className='flex items-center gap-4'>
 						{/* <NotificationBell /> */}
-						<ProfileInitial
-							email={
-								user?.userType === 'admin'
-									? adminEmail
-									: (user?.company?.email ?? '')
-							}
-							onClick={() => {
-								if (user?.userType === 'company') {
-									router.push('/profile');
-								}
-							}}
-						/>
+                                                <ProfileInitial
+                                                        email={profileEmail}
+                                                        onClick={handleProfileClick}
+                                                />
 						<div className='w-[1px] h-[32px] bg-Gray-200' />
 						<p
 							onClick={logout}
@@ -122,18 +128,10 @@ export function GNB() {
 								icon={<Menu id={menuId} />}
 								onClick={() => setMenuOpen(true)}
 							/>
-							<ProfileInitial
-								email={
-									user?.userType === 'admin'
-										? adminEmail
-										: (user?.company?.email ?? '')
-								}
-								onClick={() => {
-									if (user?.userType === 'company') {
-										router.push('/profile');
-									}
-								}}
-							/>
+                                                        <ProfileInitial
+                                                                email={profileEmail}
+                                                                onClick={handleProfileClick}
+                                                        />
 						</div>
 					</div>
 					{menuOpen && (

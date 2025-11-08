@@ -7,11 +7,12 @@ import { InputBox } from '@/src/components/InputBox';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-import { ICompany, useUserStore } from '@/src/stores/userStore';
+import { IAdminContact, ICompany, useUserStore } from '@/src/stores/userStore';
 import { fetchLogin } from '@/src/utils/supabase/login';
 import { fetchProfileWithId } from '@/src/utils/supabase/profile';
 import { fetchCompanyWithCompanyId } from '@/src/utils/supabase/company';
 import { useSelectedCompanyStore } from '../stores/selectedCompanyStore';
+import { fetchAdminContactByUserId } from '../utils/supabase/adminContacts';
 
 export default function LoginPage() {
 	const router = useRouter();
@@ -44,18 +45,33 @@ export default function LoginPage() {
 				if (profile) {
 					// 3) company 레코드(회사 계정일 때만)
 					let company: undefined | ICompany = undefined;
-					if (profile.role === 'company' && profile.company_id) {
-						company = await fetchCompanyWithCompanyId(
-							profile.company_id
-						);
-					}
+                                        if (profile.role === 'company' && profile.company_id) {
+                                                company = await fetchCompanyWithCompanyId(
+                                                        profile.company_id
+                                                );
+                                        }
 
-					// 4) user 정보 저장
-					setUser({
-						id: authUser.id,
-						userType: profile.role, // 'admin' | 'company'
-						company, // admin이면 null
-					});
+                                        let adminContact: IAdminContact | undefined;
+                                        if (profile.role === 'admin') {
+                                                try {
+                                                        adminContact = await fetchAdminContactByUserId(
+                                                                authUser.id
+                                                        );
+                                                } catch (error) {
+                                                        console.error(
+                                                                'Failed to fetch admin contact info:',
+                                                                error
+                                                        );
+                                                }
+                                        }
+
+                                        // 4) user 정보 저장
+                                        setUser({
+                                                id: authUser.id,
+                                                userType: profile.role, // 'admin' | 'company'
+                                                company, // admin이면 null
+                                                adminContact,
+                                        });
 
 					// 5) 이동
 					if (profile.role === 'admin') {

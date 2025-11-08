@@ -12,10 +12,16 @@ interface UserStore {
 	setUser: (value: IUser | undefined) => void;
 }
 
+export interface IAdminContact {
+        emails: string[];
+        phones: string[];
+}
+
 export interface IUser {
-	id: string;
-	userType: UserType;
-	company: ICompany | undefined;
+        id: string;
+        userType: UserType;
+        company: ICompany | undefined;
+        adminContact?: IAdminContact;
 }
 
 export interface ICompany {

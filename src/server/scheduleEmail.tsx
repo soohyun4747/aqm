@@ -1,4 +1,4 @@
-import { resend, EMAIL_FROM, ADMIN_EMAILS } from '@/lib/resend';
+import { resend, EMAIL_FROM } from '@/lib/resend';
 import CustomerScheduleEmail, {
 } from '@/src/emails/CustomerScheduleEmail';
 import AdminScheduleEmail from '@/src/emails/AdminScheduleEmail';
@@ -6,6 +6,7 @@ import { render } from '@react-email/components';
 import { ServiceType } from '../utils/supabase/companyServices';
 import { ScheduleStatusType } from '../utils/supabase/schedule';
 import { UserType } from '../stores/userStore';
+import { fetchAdminNotificationContacts } from './adminContacts';
 
 export type ScheduleMailType =
 	| 'requested'
@@ -66,22 +67,30 @@ export async function sendScheduleEmails(args: {
 		html: customerHtml,
 	});
 
-	// 관리자용
-	if (ADMIN_EMAILS.length > 0) {
-		const adminHtml = await render(
-			<AdminScheduleEmail
-				type={type}
-				agent={agent}
-				schedule={schedule}
-				manageUrl={manageUrl}
-			/>
-		);
+        let adminEmails: string[] = [];
+        try {
+                const contacts = await fetchAdminNotificationContacts();
+                adminEmails = contacts.emails;
+        } catch (error) {
+                console.error('Failed to load admin email contacts', error);
+        }
 
-		await resend.emails.send({
-			from: EMAIL_FROM,
-			to: ADMIN_EMAILS,
-			subject: scheduleSubjectMap[type],
-			html: adminHtml,
-		});
-	}
+        // 관리자용
+        if (adminEmails.length > 0) {
+                const adminHtml = await render(
+                        <AdminScheduleEmail
+                                type={type}
+                                agent={agent}
+                                schedule={schedule}
+                                manageUrl={manageUrl}
+                        />
+                );
+
+                await resend.emails.send({
+                        from: EMAIL_FROM,
+                        to: adminEmails,
+                        subject: scheduleSubjectMap[type],
+                        html: adminHtml,
+                });
+        }
 }
