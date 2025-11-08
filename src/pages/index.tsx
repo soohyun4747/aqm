@@ -36,7 +36,7 @@ export default function LoginPage() {
 				password,
 				rememberMeChecked,
 				setErr
-			);
+			);			
 
 			if (authUser) {
 				// 2) 프로필 조회 (role, company_id)

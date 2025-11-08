@@ -8,6 +8,8 @@ export async function fetchProfileWithId(
 	try {
 		const supabase = supabaseClient();
 
+		const { data: auth } = await supabase.auth.getUser();
+
 		const { data: profile, error: pErr } = await supabase
 			.from('profiles')
 			.select('role, company_id')
