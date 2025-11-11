@@ -89,7 +89,7 @@ export const fetchCompanies = async (page: number, search: string) => {
 			supabase
 				.from('companies')
 				.select(
-					'id, name, email, phone, address, floor_image_path, kakao_phones',
+					'id, name, email, phone, address, floor_image_path, kakao_phones, created_at',
 					{
 						count: 'exact',
 					}

@@ -302,9 +302,9 @@ export default function AdminUsersEditPage() {
 						<div className='flex flex-col gap-4'>
 							<div className='flex items-center gap-4'>
 								<InputBox
-									label='회사명'
+									label='병원명'
 									inputAttr={{
-										placeholder: '회사 이름 입력',
+										placeholder: '병원 이름 입력',
 										value: name,
 										onChange: (e: any) =>
 											setName(e.target.value),

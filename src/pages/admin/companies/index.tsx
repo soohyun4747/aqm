@@ -8,6 +8,7 @@ import { useLoadingStore } from '@/src/stores/loadingStore';
 import { useScreenTypeStore } from '@/src/stores/screenTypeStore';
 import { useSelectedCompanyStore } from '@/src/stores/selectedCompanyStore';
 import { ICompany } from '@/src/stores/userStore';
+import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import { deleteCompany, fetchCompanies } from '@/src/utils/supabase/company';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
@@ -46,13 +47,15 @@ function AdminUsersPage() {
 					name: row.name,
 					email: row.email ?? '',
 					phone: row.phone ?? '',
-                                        address: row.address ?? '',
-                                        floorImagePath: row.floor_image_path ?? '',
-                                        kakaoPhones: Array.isArray(row.kakao_phones)
-                                                ? row.kakao_phones
-                                                : [],
-                                }))
-                        );
+					address: row.address ?? '',
+					floorImagePath: row.floor_image_path ?? '',
+					kakaoPhones: Array.isArray(row.kakao_phones)
+						? row.kakao_phones
+						: [],
+					createdAt: new Date(row.created_at).toLocaleDateString(),
+				}))
+			);
+
 			setTotalRows(data.count ?? 0);
 		}
 	};
@@ -101,6 +104,7 @@ function AdminUsersPage() {
 								{ field: 'email', headerName: '이메일' },
 								{ field: 'phone', headerName: '전화번호' },
 								{ field: 'address', headerName: '주소' },
+								{ field: 'createdAt', headerName: '등록일' },
 								{
 									field: 'action',
 									headerName: '',
