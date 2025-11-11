@@ -23,6 +23,12 @@ import {
 	updateCompany,
 } from '@/src/utils/supabase/company';
 import { ServiceType } from '@/src/utils/supabase/companyServices';
+import {
+        VocFilterType,
+        buildVocFilterOptions,
+        defaultVocFilterType,
+        getVocFilterSpec,
+} from '@/src/constants/vocFilters';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -34,8 +40,6 @@ export interface IHepaFilter {
 	depth: number;
 	quantity: number;
 }
-
-export const vocFilterSpec = { width: 200, height: 100, depth: 50 };
 
 export const HepaFilters = {
 	hepa: 'hepa',
@@ -62,9 +66,12 @@ export default function AdminUsersEditPage() {
 
 	// 서비스 상태 (모달로 추가/삭제)
 	const [aqm, setAqm] = useState<boolean>(false);
-	const [hepa, setHepa] = useState<boolean>(false);
-	const [voc, setVoc] = useState<boolean>(false);
-	const [vocQuantity, setVocQuantity] = useState<number>(0);
+        const [hepa, setHepa] = useState<boolean>(false);
+        const [voc, setVoc] = useState<boolean>(false);
+        const [vocFilterType, setVocFilterType] = useState<VocFilterType>(
+                defaultVocFilterType
+        );
+        const [vocQuantity, setVocQuantity] = useState<number>(0);
 
 	// HEPA 필터 목록 (기본 1개)
 	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
@@ -115,12 +122,15 @@ export default function AdminUsersEditPage() {
                                 company.floorImagePath
                         );
 
-			setFloorPlanFile(details.floorPlanFile);
-			setAqm(details.aqm);
-			setHepa(details.hepa);
-			setVoc(details.voc);
-			setVocQuantity(details.vocQuantity);
-			setHepaFilters(details.hepaFilters);
+                        setFloorPlanFile(details.floorPlanFile);
+                        setAqm(details.aqm);
+                        setHepa(details.hepa);
+                        setVoc(details.voc);
+                        setVocFilterType(
+                                details.vocFilterType ?? defaultVocFilterType
+                        );
+                        setVocQuantity(details.vocQuantity);
+                        setHepaFilters(details.hepaFilters);
 		} catch (e) {
 			console.error('load company details error', e);
 		}
@@ -136,10 +146,11 @@ export default function AdminUsersEditPage() {
 		if (serviceType === 'hepa') {
 			setHepa(true);
 		}
-		if (serviceType === 'voc') {
-			setVoc(true);
-			if (vocQuantity === 0) setVocQuantity(1);
-		}
+                if (serviceType === 'voc') {
+                        setVoc(true);
+                        setVocFilterType((prev) => prev || defaultVocFilterType);
+                        if (vocQuantity === 0) setVocQuantity(1);
+                }
 		// 'as'는 UI 항목이 없어서 여기선 패스. 필요 시 관리 서비스 카드 추가해서 처리
 	};
 
@@ -157,10 +168,11 @@ export default function AdminUsersEditPage() {
 				},
 			]); // 초기화
 		}
-		if (type === 'voc') {
-			setVoc(false);
-			setVocQuantity(0);
-		}
+                if (type === 'voc') {
+                        setVoc(false);
+                        setVocFilterType(defaultVocFilterType);
+                        setVocQuantity(0);
+                }
 	};
 
 	const addHepaProperty = () => {
@@ -222,8 +234,9 @@ export default function AdminUsersEditPage() {
                                         hepa,
                                         hepaFilters,
                                         voc,
+                                        vocFilterType,
                                         vocQuantity
-				);
+                                );
 
 				setToastMessage({
 					status: 'confirm',
@@ -244,10 +257,10 @@ export default function AdminUsersEditPage() {
 		}
 	};
 
-	const handleUpdate = async () => {
-		if (company) {
-			try {
-				setSaving(true);
+        const handleUpdate = async () => {
+                if (company) {
+                        try {
+                                setSaving(true);
                                 await updateCompany(
                                         company,
                                         floorPlanFile,
@@ -258,10 +271,11 @@ export default function AdminUsersEditPage() {
                                         kakaoPhones,
                                         aqm,
                                         voc,
+                                        vocFilterType,
                                         vocQuantity,
                                         hepa,
                                         hepaFilters
-				);
+                                );
 				setToastMessage({
 					status: 'confirm',
 					message: '수정되었습니다',
@@ -275,11 +289,13 @@ export default function AdminUsersEditPage() {
 			} finally {
 				setSaving(false);
 			}
-		}
-	};
+                }
+        };
 
-	// 업로드 가능한 파일 타입(이미지)
-	const ACCEPT_TYPES = ['.png', '.jpeg', '.jpg', '.webp', '.svg+xml'];
+        // 업로드 가능한 파일 타입(이미지)
+        const ACCEPT_TYPES = ['.png', '.jpeg', '.jpg', '.webp', '.svg+xml'];
+        const vocSpec = getVocFilterSpec(vocFilterType);
+        const vocFilterOptions = buildVocFilterOptions();
 
 	return (
 		<div>
@@ -637,48 +653,60 @@ export default function AdminUsersEditPage() {
 												}
 											/>
 										</div>
-										<div className='flex md:flex-row flex-col md:items-center gap-3'>
-											<InputBox
-												style={{ flex: 1 }}
-												label='가로(mm)'
-												inputAttr={{
-													value: vocFilterSpec.width,
-													readOnly: true,
-												}}
-											/>
-											<InputBox
-												style={{ flex: 1 }}
-												label='세로(mm)'
-												inputAttr={{
-													value: vocFilterSpec.height,
-													readOnly: true,
-												}}
-											/>
-											<InputBox
-												style={{ flex: 1 }}
-												label='두께(mm)'
-												inputAttr={{
-													value: vocFilterSpec.depth,
-													readOnly: true,
-												}}
-											/>
-											<InputBox
-												style={{ flex: 1 }}
-												label='개수'
-												inputAttr={{
-													placeholder: '0',
-													value: vocQuantity || '',
-													onChange: (e: any) =>
-														setVocQuantity(
-															Number(
-																e.target.value
-															) || 0
-														),
-												}}
-											/>
-										</div>
-									</div>
-								)}
+                                                                                <div className='flex md:flex-row flex-col md:items-center gap-3'>
+                                                                                        <Dropdown
+                                                                                                id='vocFilterType'
+                                                                                                label='필터 종류'
+                                                                                                options={vocFilterOptions}
+                                                                                                value={vocFilterType}
+                                                                                                onChange={(value) =>
+                                                                                                        setVocFilterType(
+                                                                                                                value as VocFilterType
+                                                                                                        )
+                                                                                                }
+                                                                                                style={{ flex: 1 }}
+                                                                                        />
+                                                                                        <InputBox
+                                                                                                style={{ flex: 1 }}
+                                                                                                label='가로(mm)'
+                                                                                                inputAttr={{
+                                                                                                        value: vocSpec.width,
+                                                                                                        readOnly: true,
+                                                                                                }}
+                                                                                        />
+                                                                                        <InputBox
+                                                                                                style={{ flex: 1 }}
+                                                                                                label='세로(mm)'
+                                                                                                inputAttr={{
+                                                                                                        value: vocSpec.height,
+                                                                                                        readOnly: true,
+                                                                                                }}
+                                                                                        />
+                                                                                        <InputBox
+                                                                                                style={{ flex: 1 }}
+                                                                                                label='두께(mm)'
+                                                                                                inputAttr={{
+                                                                                                        value: vocSpec.depth,
+                                                                                                        readOnly: true,
+                                                                                                }}
+                                                                                        />
+                                                                                        <InputBox
+                                                                                                style={{ flex: 1 }}
+                                                                                                label='개수'
+                                                                                                inputAttr={{
+                                                                                                        placeholder: '0',
+                                                                                                        value: vocQuantity || '',
+                                                                                                        onChange: (e: any) =>
+                                                                                                                setVocQuantity(
+                                                                                                                        Number(
+                                                                                                                                e.target.value
+                                                                                                                        ) || 0
+                                                                                                                ),
+                                                                                                }}
+                                                                                        />
+                                                                                </div>
+                                                                        </div>
+                                                                )}
 
 								{/* 처음엔 빈 박스 → 모달로 서비스 추가 */}
 								{!aqm && !hepa && !voc && (

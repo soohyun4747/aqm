@@ -15,7 +15,13 @@ import {
         updateCompanyKakaoPhones,
 } from '@/src/utils/supabase/company';
 import { useEffect, useState } from 'react';
-import { IHepaFilter, vocFilterSpec } from '../admin/companies/edit/[id]';
+import { IHepaFilter } from '../admin/companies/edit/[id]';
+import {
+        VocFilterLabels,
+        VocFilterType,
+        defaultVocFilterType,
+        getVocFilterSpec,
+} from '@/src/constants/vocFilters';
 
 export default function ProfilePage() {
 	// 회사 기본 정보
@@ -30,7 +36,10 @@ export default function ProfilePage() {
         const [aqm, setAqm] = useState<boolean>(false);
         const [hepa, setHepa] = useState<boolean>(false);
         const [voc, setVoc] = useState<boolean>(false);
-	const [vocQuantity, setVocQuantity] = useState<number>(0);
+        const [vocFilterType, setVocFilterType] = useState<VocFilterType>(
+                defaultVocFilterType
+        );
+        const [vocQuantity, setVocQuantity] = useState<number>(0);
 
 	// HEPA 필터 목록 (기본 1개)
         const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
@@ -42,6 +51,8 @@ export default function ProfilePage() {
         const setUser = useUserStore((state) => state.setUser);
         const [toastMessage, setToastMessage] = useState<IToastMessage>();
         const [saving, setSaving] = useState(false);
+        const vocSpec = getVocFilterSpec(vocFilterType);
+        const vocFilterLabel = VocFilterLabels[vocFilterType];
 
 	useEffect(() => {
 		if (!company) return;
@@ -69,11 +80,14 @@ export default function ProfilePage() {
 			if (cancelled) return;
 
 			setFloorPlanFile(details.floorPlanFile);
-			setAqm(details.aqm);
-			setHepa(details.hepa);
-			setVoc(details.voc);
-			setVocQuantity(details.vocQuantity);
-			setHepaFilters(details.hepaFilters);
+                        setAqm(details.aqm);
+                        setHepa(details.hepa);
+                        setVoc(details.voc);
+                        setVocFilterType(
+                                details.vocFilterType ?? defaultVocFilterType
+                        );
+                        setVocQuantity(details.vocQuantity);
+                        setHepaFilters(details.hepaFilters);
 		} catch (e) {
 			console.error('load company details error', e);
                 }
@@ -355,42 +369,51 @@ export default function ProfilePage() {
 							)}
 
 							{/* VOC */}
-							{voc && (
-								<div className='bg-Gray-100 rounded-[8px] flex flex-col self-stretch p-4 gap-3'>
-									<div className='flex items-center justify-between'>
-										<p>VOC 필터 교체 (6개월)</p>
-									</div>
-									<div className='flex md:flex-row flex-col md:items-center gap-3'>
-										<InputBox
-											style={{ flex: 1 }}
-											label='가로(mm)'
-											inputAttr={{
-												value: vocFilterSpec.width,
-												readOnly: true,
-												disabled: true,
-											}}
-										/>
-										<InputBox
-											style={{ flex: 1 }}
-											label='세로(mm)'
-											inputAttr={{
-												value: vocFilterSpec.height,
-												readOnly: true,
-												disabled: true,
-											}}
-										/>
-										<InputBox
-											style={{ flex: 1 }}
-											label='두께(mm)'
-											inputAttr={{
-												value: vocFilterSpec.depth,
-												readOnly: true,
-												disabled: true,
-											}}
-										/>
-										<InputBox
-											style={{ flex: 1 }}
-											label='개수'
+                                                        {voc && (
+                                                                <div className='bg-Gray-100 rounded-[8px] flex flex-col self-stretch p-4 gap-3'>
+                                                                        <div className='flex items-center justify-between'>
+                                                                                <p>VOC 필터 교체 (6개월)</p>
+                                                                        </div>
+                                                                        <div className='flex md:flex-row flex-col md:items-center gap-3'>
+                                                                                <InputBox
+                                                                                        style={{ flex: 1 }}
+                                                                                        label='필터 종류'
+                                                                                        inputAttr={{
+                                                                                                value: vocFilterLabel,
+                                                                                                readOnly: true,
+                                                                                                disabled: true,
+                                                                                        }}
+                                                                                />
+                                                                                <InputBox
+                                                                                        style={{ flex: 1 }}
+                                                                                        label='가로(mm)'
+                                                                                        inputAttr={{
+                                                                                                value: vocSpec.width,
+                                                                                                readOnly: true,
+                                                                                                disabled: true,
+                                                                                        }}
+                                                                                />
+                                                                                <InputBox
+                                                                                        style={{ flex: 1 }}
+                                                                                        label='세로(mm)'
+                                                                                        inputAttr={{
+                                                                                                value: vocSpec.height,
+                                                                                                readOnly: true,
+                                                                                                disabled: true,
+                                                                                        }}
+                                                                                />
+                                                                                <InputBox
+                                                                                        style={{ flex: 1 }}
+                                                                                        label='두께(mm)'
+                                                                                        inputAttr={{
+                                                                                                value: vocSpec.depth,
+                                                                                                readOnly: true,
+                                                                                                disabled: true,
+                                                                                        }}
+                                                                                />
+                                                                                <InputBox
+                                                                                        style={{ flex: 1 }}
+                                                                                        label='개수'
 											inputAttr={{
 												placeholder: '0',
 												value: vocQuantity || '',

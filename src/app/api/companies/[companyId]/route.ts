@@ -90,12 +90,16 @@ export async function DELETE(req: Request, { params }: any) {
 		// ⚠️ Supabase Storage는 "폴더" 자체를 지울 필요가 없습니다(접두어 개념).
 
 		// 3️⃣ 관련 데이터 삭제 (순서 중요)
-		await supabase.from('profiles').delete().eq('company_id', companyId);
-		await supabase
-			.from('company_services')
-			.delete()
-			.eq('company_id', companyId);
-		await supabase
+                await supabase.from('profiles').delete().eq('company_id', companyId);
+                await supabase
+                        .from('voc_filters')
+                        .delete()
+                        .eq('company_id', companyId);
+                await supabase
+                        .from('company_services')
+                        .delete()
+                        .eq('company_id', companyId);
+                await supabase
 			.from('hepa_filters')
 			.delete()
 			.eq('company_id', companyId);

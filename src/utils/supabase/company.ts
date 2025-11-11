@@ -2,6 +2,7 @@ import { supabaseClient } from '@/lib/supabase/client';
 import { PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
 import { Option } from '@/src/components/Dropdown';
 import { IHepaFilter } from '@/src/pages/admin/companies/edit/[id]';
+import { VocFilterType, defaultVocFilterType } from '@/src/constants/vocFilters';
 import { fileNameFromPath } from '../file';
 import { ICompany } from '@/src/stores/userStore';
 import { sanitizeFileName } from '../string';
@@ -160,15 +161,34 @@ export const loadCompanyDetails = async (
 	}
 
 	// (2) 서비스 목록 조회
-	const { data: services, error: sErr } = await supabase
-		.from('company_services')
-		.select('id, service_type, quantity')
-		.eq('company_id', companyId);
-	if (sErr) throw sErr;
+        const { data: services, error: sErr } = await supabase
+                .from('company_services')
+                .select('id, service_type')
+                .eq('company_id', companyId);
+        if (sErr) throw sErr;
 
-	const hasAqm = (services ?? []).some((s) => s.service_type === 'aqm');
-	const hasHepa = (services ?? []).some((s) => s.service_type === 'hepa');
-	const vocRow = (services ?? []).find((s) => s.service_type === 'voc');
+        const hasAqm = (services ?? []).some((s) => s.service_type === 'aqm');
+        const hasHepa = (services ?? []).some((s) => s.service_type === 'hepa');
+        const vocService = (services ?? []).find((s) => s.service_type === 'voc');
+
+        let vocFilterType: VocFilterType | undefined;
+        let vocFilterQuantity = 0;
+        if (vocService) {
+                const { data: vocFilters, error: vocErr } = await supabase
+                        .from('voc_filters')
+                        .select('filter_type, quantity')
+                        .eq('company_id', companyId)
+                        .eq('company_service_id', vocService.id)
+                        .limit(1)
+                        .maybeSingle();
+
+                if (vocErr) throw vocErr;
+
+                if (vocFilters) {
+                        vocFilterType = vocFilters.filter_type as VocFilterType;
+                        vocFilterQuantity = vocFilters.quantity ?? 0;
+                }
+        }
 
 	// (3) HEPA 필터 목록 조회
 	let hepaFilters: IHepaFilter[] = [
@@ -193,14 +213,15 @@ export const loadCompanyDetails = async (
 		}
 	}
 
-	return {
-		floorPlanFile,
-		aqm: hasAqm,
-		hepa: hasHepa,
-		voc: !!vocRow,
-		vocQuantity: vocRow?.quantity ?? 0,
-		hepaFilters,
-	};
+        return {
+                floorPlanFile,
+                aqm: hasAqm,
+                hepa: hasHepa,
+                voc: !!vocService,
+                vocFilterType,
+                vocQuantity: vocFilterQuantity,
+                hepaFilters,
+        };
 };
 
 export const saveNewCompany = async (
@@ -214,6 +235,7 @@ export const saveNewCompany = async (
         hepa: boolean,
         hepaFilters: IHepaFilter[],
         voc: boolean,
+        vocFilterType: VocFilterType | undefined,
         vocQuantity: number
 ) => {
         const fd = new FormData();
@@ -227,6 +249,7 @@ export const saveNewCompany = async (
         fd.append('aqm', String(aqm));
         fd.append('hepa', String(hepa));
         fd.append('voc', String(voc));
+        fd.append('vocFilterType', vocFilterType ?? '');
         fd.append('vocQuantity', String(vocQuantity ?? ''));
         fd.append('hepaFilters', JSON.stringify(hepaFilters));
 
@@ -250,6 +273,7 @@ export const updateCompany = async (
         kakaoPhones: string[],
         aqm: boolean,
         voc: boolean,
+        vocFilterType: VocFilterType | undefined,
         vocQuantity: number,
         hepa: boolean,
         hepaFilters: IHepaFilter[]
@@ -302,11 +326,14 @@ export const updateCompany = async (
 		.eq('company_id', company.id);
 	if (sErr) throw sErr;
 
-	const existing = {
-		aqm: services?.some((s) => s.service_type === 'aqm') ?? false,
-		voc: services?.some((s) => s.service_type === 'voc') ?? false,
-		hepa: services?.some((s) => s.service_type === 'hepa') ?? false,
-	};
+        const existing = {
+                aqm: services?.some((s) => s.service_type === 'aqm') ?? false,
+                voc: services?.some((s) => s.service_type === 'voc') ?? false,
+                hepa: services?.some((s) => s.service_type === 'hepa') ?? false,
+        };
+        const vocServiceRow = services?.find((s) => s.service_type === 'voc');
+        const nextVocFilterType = vocFilterType ?? defaultVocFilterType;
+        const nextVocQuantity = Number(vocQuantity) || 1;
 
 	// (4) 서비스 상태 비교 → 삽입/삭제
 	// AQM
@@ -324,24 +351,68 @@ export const updateCompany = async (
 	}
 
 	// VOC
-	if (!existing.voc && voc) {
-		await supabase.from('company_services').insert({
-			company_id: company.id,
-			service_type: 'voc',
-			default_quantity: vocQuantity || null,
-		});
-	} else if (existing.voc && voc) {
-		await supabase
-			.from('company_services')
-			.update({ default_quantity: vocQuantity || null })
-			.eq('company_id', company.id)
-			.eq('service_type', 'voc');
-	} else if (existing.voc && !voc) {
-		await supabase
-			.from('company_services')
-			.delete()
-			.eq('company_id', company.id)
-			.eq('service_type', 'voc');
+        if (!existing.voc && voc) {
+                const { data: newVocService, error: vocInsertErr } = await supabase
+                        .from('company_services')
+                        .insert({
+                                company_id: company.id,
+                                service_type: 'voc',
+                        })
+                        .select('id')
+                        .single();
+                if (vocInsertErr) throw vocInsertErr;
+
+                const { error: vocFilterInsertErr } = await supabase
+                        .from('voc_filters')
+                        .insert({
+                                company_id: company.id,
+                                company_service_id: newVocService.id,
+                                filter_type: nextVocFilterType,
+                                quantity: nextVocQuantity,
+                        });
+                if (vocFilterInsertErr) throw vocFilterInsertErr;
+        } else if (existing.voc && voc && vocServiceRow) {
+                const { data: vocFilterRow, error: vocFilterErr } = await supabase
+                        .from('voc_filters')
+                        .select('id')
+                        .eq('company_service_id', vocServiceRow.id)
+                        .limit(1)
+                        .maybeSingle();
+
+                if (vocFilterErr) throw vocFilterErr;
+
+                if (vocFilterRow?.id) {
+                        const { error: updateVocFilterErr } = await supabase
+                                .from('voc_filters')
+                                .update({
+                                        filter_type: nextVocFilterType,
+                                        quantity: nextVocQuantity,
+                                })
+                                .eq('id', vocFilterRow.id);
+                        if (updateVocFilterErr) throw updateVocFilterErr;
+                } else {
+                        const { error: insertVocFilterErr } = await supabase
+                                .from('voc_filters')
+                                .insert({
+                                        company_id: company.id,
+                                        company_service_id: vocServiceRow.id,
+                                        filter_type: nextVocFilterType,
+                                        quantity: nextVocQuantity,
+                                });
+                        if (insertVocFilterErr) throw insertVocFilterErr;
+                }
+        } else if (existing.voc && !voc) {
+                if (vocServiceRow) {
+                        await supabase
+                                .from('voc_filters')
+                                .delete()
+                                .eq('company_service_id', vocServiceRow.id);
+                }
+                await supabase
+                        .from('company_services')
+                        .delete()
+                        .eq('company_id', company.id)
+                        .eq('service_type', 'voc');
 	}
 
 	// HEPA

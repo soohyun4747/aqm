@@ -5,19 +5,26 @@ import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import { useEffect, useState } from 'react';
 import { fetchVocResultsByRecordId } from '@/src/utils/supabase/vocResults';
-import { vocFilterSpec } from '@/src/pages/admin/companies/edit/[id]';
 import { Calendar } from '@/src/components/icons/Calendar';
-import { fetchCompanyServicesByCompanyId } from '@/src/utils/supabase/companyServices';
+import { fetchVocFiltersByCompanyId } from '@/src/utils/supabase/vocFilters';
 import { IVOCResult } from '@/src/pages/admin/managementRecords/edit/voc/[id]';
 import { usePathname } from 'next/navigation';
 import {
-	fetchManagementRecordById,
-	IManagementRecordRow,
+        fetchManagementRecordById,
+        IManagementRecordRow,
 } from '@/src/utils/supabase/managementRecord';
+import {
+        VocFilterLabels,
+        VocFilterType,
+        defaultVocFilterType,
+        getVocFilterSpec,
+} from '@/src/constants/vocFilters';
 
 function CompanyManagementRecordsEditVocPage() {
-	const [vocResults, setVocResults] = useState<IVOCResult[]>([]);
-	const [vocQuantity, setVocQuantity] = useState<number>();
+        const [vocResults, setVocResults] = useState<IVOCResult[]>([]);
+        const [vocFilterType, setVocFilterType] =
+                useState<VocFilterType>(defaultVocFilterType);
+        const [vocQuantity, setVocQuantity] = useState<number>(0);
 	const [managementRecord, setManagementRecord] =
 		useState<IManagementRecordRow>();
 
@@ -37,9 +44,9 @@ function CompanyManagementRecordsEditVocPage() {
 		try {
 			const recordInfo = await fetchManagementRecordById(recordId);
 			if (recordInfo) {
-				setManagementRecord(recordInfo);
-				getSetVocResults(recordInfo.id);
-				getSetVocQuantity(recordInfo.company_id);
+                                setManagementRecord(recordInfo);
+                                getSetVocResults(recordInfo.id);
+                                getSetVocFilter(recordInfo.company_id);
 			}
 		} catch (error) {
 			console.error(error);
@@ -47,14 +54,15 @@ function CompanyManagementRecordsEditVocPage() {
 		}
 	};
 
-	const getSetVocQuantity = async (companyId: string) => {
-		const vocServiceData = await fetchCompanyServicesByCompanyId(
-			companyId,
-			'voc'
-		);
+        const getSetVocFilter = async (companyId: string) => {
+                const vocFilters = await fetchVocFiltersByCompanyId(companyId);
+                const filter = vocFilters?.[0];
+                const type = (filter?.filter_type as VocFilterType) ?? defaultVocFilterType;
+                const quantity = filter?.quantity ?? 0;
 
-		setVocQuantity(vocServiceData[0]?.quantity);
-	};
+                setVocFilterType(type);
+                setVocQuantity(quantity);
+        };
 
 	const getSetVocResults = async (recordId: string) => {
 		try {
@@ -77,27 +85,29 @@ function CompanyManagementRecordsEditVocPage() {
 		}
 	};
 
-	const columns: TableHeader[] = [
-		{
-			field: 'filter_type',
-			headerName: '필터 종류',
-			render: () => 'VOC 필터',
-		},
-		{
-			field: 'width',
-			headerName: '가로',
-			render: () => vocFilterSpec.width,
-		},
-		{
-			field: 'height',
-			headerName: '세로',
-			render: () => vocFilterSpec.height,
-		},
-		{
-			field: 'depth',
-			headerName: '두께',
-			render: () => vocFilterSpec.depth,
-		},
+        const vocSpec = getVocFilterSpec(vocFilterType);
+
+        const columns: TableHeader[] = [
+                {
+                        field: 'filter_type',
+                        headerName: '필터 종류',
+                        render: () => VocFilterLabels[vocFilterType],
+                },
+                {
+                        field: 'width',
+                        headerName: '가로',
+                        render: () => vocSpec.width,
+                },
+                {
+                        field: 'height',
+                        headerName: '세로',
+                        render: () => vocSpec.height,
+                },
+                {
+                        field: 'depth',
+                        headerName: '두께',
+                        render: () => vocSpec.depth,
+                },
 		{
 			field: 'quantity',
 			headerName: '개수',

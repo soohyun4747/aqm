@@ -23,9 +23,11 @@ export async function fetchCompanyServicesByCompanyId(
 ) {
 	const supabase = supabaseClient();
 
-	let query = supabase
-		.from('company_services')
-		.select('id, company_id, service_type, quantity')
+        let query = supabase
+                .from('company_services')
+                .select(
+                        'id, company_id, service_type, voc_filters ( id, filter_type, quantity )'
+                )
 		.eq('company_id', companyId)
 		.order('service_type', { ascending: true });
 

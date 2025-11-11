@@ -4,6 +4,7 @@ import { makePassword, sendAccountEmail } from '@/src/server/accountEmail';
 import { ICompany } from '@/src/stores/userStore';
 import { sanitizeFileName } from '@/src/utils/string';
 import { NextResponse } from 'next/server';
+import { defaultVocFilterType } from '@/src/constants/vocFilters';
 
 export const runtime = 'nodejs'; // 파일 업로드 Buffer 사용을 위해 node 런타임
 // export const dynamic = 'force-dynamic'; // (선택) 캐시 끄기
@@ -33,10 +34,11 @@ export async function POST(req: Request) {
                 kakaoPhones: string[];
                 aqm: boolean;
                 hepa: boolean;
-                voc: boolean;
-                vocQuantity: null | number;
-                hepaFilters: HepaFilterDTO[];
-        } = {
+        voc: boolean;
+        vocQuantity: null | number;
+        vocFilterType: string;
+        hepaFilters: HepaFilterDTO[];
+} = {
                 name: '',
                 phone: '',
                 email: '',
@@ -44,10 +46,11 @@ export async function POST(req: Request) {
                 kakaoPhones: [],
                 aqm: false,
                 hepa: false,
-                voc: false,
-                vocQuantity: null,
-                hepaFilters: [],
-	};
+        voc: false,
+        vocQuantity: null,
+        vocFilterType: '',
+        hepaFilters: [],
+};
 	let floorPlanFile: File | null = null;
 
 	try {
@@ -64,11 +67,14 @@ export async function POST(req: Request) {
 
                         // boolean 문자열을 boolean으로
                         payload.aqm = toBool(form.get('aqm'));
-			payload.hepa = toBool(form.get('hepa'));
-			payload.voc = toBool(form.get('voc'));
+                        payload.hepa = toBool(form.get('hepa'));
+                        payload.voc = toBool(form.get('voc'));
 
-			// 숫자
-			payload.vocQuantity = toNumber(form.get('vocQuantity'));
+                        // 숫자
+                        payload.vocQuantity = toNumber(form.get('vocQuantity'));
+                        payload.vocFilterType = String(
+                                form.get('vocFilterType') ?? ''
+                        ).trim();
 
 			// HEPA 필터들 (JSON 문자열로 받는 방식)
 			const hepaFiltersStr = (form.get('hepaFilters') as string) || '[]';
@@ -106,7 +112,8 @@ export async function POST(req: Request) {
                 hepaFilters = [],
                 voc,
                 vocQuantity,
-	} = payload;
+                vocFilterType,
+        } = payload;
 
 	// ────────────────────────────────────────────────────────────────
 	// 2) 회사 레코드 생성
@@ -233,14 +240,25 @@ export async function POST(req: Request) {
 			}
 		}
 
-		if (voc) {
-			const { error } = await admin.from('company_services').insert({
-				company_id: companyId,
-				service_type: 'voc',
-				quantity: Number(vocQuantity) || null,
-			});
-			if (error) throw error;
-		}
+                if (voc) {
+                        const { data: vocService, error: vocServiceErr } = await admin
+                                .from('company_services')
+                                .insert({
+                                        company_id: companyId,
+                                        service_type: 'voc',
+                                })
+                                .select('id')
+                                .single();
+                        if (vocServiceErr) throw vocServiceErr;
+
+                        const { error: vocFilterErr } = await admin.from('voc_filters').insert({
+                                company_id: companyId,
+                                company_service_id: vocService.id,
+                                filter_type: vocFilterType || defaultVocFilterType,
+                                quantity: Number(vocQuantity) || 1,
+                        });
+                        if (vocFilterErr) throw vocFilterErr;
+                }
 	} catch (error: unknown) {
 		await rollbackAll(admin, companyId, floorImagePath);
 		if (error instanceof Error) {
@@ -389,10 +407,13 @@ async function rollbackAll(
 		} catch (_) {}
 	}
 
-	// 2) 부가 테이블 삭제
-	try {
-		await admin.from('hepa_filters').delete().eq('company_id', companyId);
-	} catch (_) {}
+        // 2) 부가 테이블 삭제
+        try {
+                await admin.from('voc_filters').delete().eq('company_id', companyId);
+        } catch (_) {}
+        try {
+                await admin.from('hepa_filters').delete().eq('company_id', companyId);
+        } catch (_) {}
 	try {
 		await admin
 			.from('company_services')
