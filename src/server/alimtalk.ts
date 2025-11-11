@@ -2,8 +2,8 @@ import { randomUUID, createHmac, randomBytes } from 'crypto';
 
 import { formatDateTimeString } from '@/src/utils/date';
 import {
-        serviceNames,
-        ServiceType,
+	serviceNames,
+	ServiceType,
 } from '@/src/utils/supabase/companyServices';
 import { ScheduleStatusType } from '@/src/utils/supabase/schedule';
 import { fetchAdminNotificationContacts } from './adminContacts';
@@ -51,31 +51,31 @@ function buildAuthorizationHeader(apiKey: string, apiSecret: string) {
 }
 
 function sanitizePhones(phones: string[]): string[] {
-        const seen = new Set<string>();
-        const sanitized: string[] = [];
+	const seen = new Set<string>();
+	const sanitized: string[] = [];
 
-        for (const raw of phones) {
-                const normalized = (raw ?? '').replace(/[^0-9+]/g, '');
-                if (!normalized) continue;
-                if (seen.has(normalized)) continue;
+	for (const raw of phones) {
+		const normalized = (raw ?? '').replace(/[^0-9+]/g, '');
+		if (!normalized) continue;
+		if (seen.has(normalized)) continue;
 
-                seen.add(normalized);
-                sanitized.push(normalized);
-        }
+		seen.add(normalized);
+		sanitized.push(normalized);
+	}
 
-        return sanitized;
+	return sanitized;
 }
 
 export async function sendScheduleAlimtalk({
-        type,
-        schedule,
-        kakaoPhones,
+	type,
+	schedule,
+	kakaoPhones,
 }: SendScheduleAlimtalkArgs) {
-        const senderKey = process.env.SOLAPI_KAKAO_PFID;
-        if (!senderKey) {
-                console.warn(
-                        '[solapi] SOLAPI_KAKAO_PFID is not configured. Skip sending.'
-                );
+	const senderKey = process.env.SOLAPI_KAKAO_PFID;
+	if (!senderKey) {
+		console.warn(
+			'[solapi] SOLAPI_KAKAO_PFID is not configured. Skip sending.'
+		);
 		return;
 	}
 
@@ -85,19 +85,27 @@ export async function sendScheduleAlimtalk({
 		return;
 	}
 
-        let adminPhones: string[] = [];
-        try {
-                const contacts = await fetchAdminNotificationContacts();
-                adminPhones = contacts.phones;
-        } catch (error) {
-                console.error('Failed to load admin phone contacts', error);
-        }
+	let adminPhones: string[] = [];
+	try {
+		const contacts = await fetchAdminNotificationContacts();
+		adminPhones = contacts.phones;
+	} catch (error) {
+		console.error('Failed to load admin phone contacts', error);
+	}
 
-        const sanitizedPhones = sanitizePhones([...(kakaoPhones ?? []), ...adminPhones]);
-        if (sanitizedPhones.length === 0) {
-                console.warn('[solapi] No Kakao phone numbers provided.');
-                return;
-        }
+	console.log({ adminPhones, kakaoPhones });
+
+	const sanitizedPhones = sanitizePhones([
+		...(kakaoPhones ?? []),
+		...adminPhones,
+	]);
+
+	console.log({ sanitizedPhones });
+
+	if (sanitizedPhones.length === 0) {
+		console.warn('[solapi] No Kakao phone numbers provided.');
+		return;
+	}
 
 	const apiKey = process.env.SOLAPI_API_KEY;
 	const apiSecret = process.env.SOLAPI_API_SECRET;

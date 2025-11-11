@@ -65,6 +65,8 @@ export function filterRequired(items: RequiredItem[], now = new Date()) {
 }
 
 export const formatOverdueLabel = (daysOverdue: number) => {
+	console.log({ daysOverdue });
+
 	// 안전 처리: 음수가 들어와도 0 이상으로
 	const total = Math.max(0, Math.floor(daysOverdue));
 
@@ -78,7 +80,7 @@ export const formatOverdueLabel = (daysOverdue: number) => {
 	if (years > 0) parts.push(`${years}년`);
 	if (months > 0) parts.push(`${months}개월`);
 	// 모두 0일 때도 "0일"이 보이도록 처리
-	if (days > 0 || parts.length === 0) parts.push(`${days}일`);
+	//if (days > 0 || parts.length === 0) parts.push(`${days}일`);
 
 	return `${parts.join(' ')} 경과`;
 };

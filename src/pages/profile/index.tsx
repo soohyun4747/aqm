@@ -238,7 +238,7 @@ export default function ProfilePage() {
                                                         {kakaoPhones.map((value, idx) => (
                                                                 <div
                                                                         key={`profile-kakao-phone-${idx}`}
-                                                                        className='flex items-center gap-3'>
+                                                                        className='flex items-end gap-3'>
                                                                         <InputBox
                                                                                 label={`전화번호 ${idx + 1}`}
                                                                                 inputAttr={{
@@ -260,6 +260,7 @@ export default function ProfilePage() {
                                                                                 onClick={() =>
                                                                                         removeKakaoPhone(idx)
                                                                                 }
+																				style={{paddingBottom: 9}}
                                                                         />
                                                                 </div>
                                                         ))}

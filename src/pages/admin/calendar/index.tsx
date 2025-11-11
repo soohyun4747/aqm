@@ -114,6 +114,9 @@ function AdminCalendarPage() {
 			const now = new Date();
 			const items = buildRequiredItems(latest, now);
 			const targets = filterRequired(items, now);
+ 
+			console.log(items);
+			
 
 			const mapped = targets
 				.sort((a, b) => a.dueDate.getTime() - b.dueDate.getTime()) // 기한 임박순
