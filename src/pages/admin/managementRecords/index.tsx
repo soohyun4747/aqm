@@ -151,7 +151,7 @@ function AdminManagementRecordsPage() {
 								},
 								{
 									field: 'createdAt',
-									headerName: '등록일',
+									headerName: '작성일',
 									render: (value) =>
 										toLocaleStringWithoutSec(
 											new Date(value)

@@ -12,7 +12,7 @@ export async function fetchVocResultsByRecordId(recordId: string) {
 
 	const { data, error } = await supabase
 		.from('voc_results')
-		.select('id, company_id, management_record_id, confirm')
+		.select('id, company_id, management_record_id, filter_id, confirm')
 		.eq('management_record_id', recordId);
 
 	if (error) throw error;

@@ -227,6 +227,7 @@ function AdminManagementRecordsEditHepaPage() {
 								<DatePicker
 									date={date}
 									onChange={(date) => setDate(date)}
+									label='시행일'
 								/>
 								<DropdownSearchable
 									isMandatory

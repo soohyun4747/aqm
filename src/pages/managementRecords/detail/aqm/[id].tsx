@@ -165,7 +165,7 @@ function ManagementRecordDetailAqmPage() {
 									</div>
 									<div className='flex flex-col'>
 										<p className='text-Gray-900 body-lg-medium'>
-											등록일
+											작성일
 										</p>
 										<div className='flex items-center gap-2'>
 											<Calendar

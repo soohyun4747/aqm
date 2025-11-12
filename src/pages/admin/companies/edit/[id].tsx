@@ -24,10 +24,9 @@ import {
 } from '@/src/utils/supabase/company';
 import { ServiceType } from '@/src/utils/supabase/companyServices';
 import {
-        VocFilterType,
-        buildVocFilterOptions,
-        defaultVocFilterType,
-        getVocFilterSpec,
+	VocFilterType,
+	buildVocFilterOptions,
+	defaultVocFilterType,
 } from '@/src/constants/vocFilters';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -59,19 +58,18 @@ export default function AdminUsersEditPage() {
 	// 회사 기본 정보
 	const [name, setName] = useState('');
 	const [phone, setPhone] = useState('');
-        const [email, setEmail] = useState('');
-        const [address, setAddress] = useState('');
-        const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
-        const [kakaoPhones, setKakaoPhones] = useState<string[]>(['']);
+	const [email, setEmail] = useState('');
+	const [address, setAddress] = useState('');
+	const [floorPlanFile, setFloorPlanFile] = useState<File | null>(null);
+	const [kakaoPhones, setKakaoPhones] = useState<string[]>(['']);
 
 	// 서비스 상태 (모달로 추가/삭제)
 	const [aqm, setAqm] = useState<boolean>(false);
-        const [hepa, setHepa] = useState<boolean>(false);
-        const [voc, setVoc] = useState<boolean>(false);
-        const [vocFilterType, setVocFilterType] = useState<VocFilterType>(
-                defaultVocFilterType
-        );
-        const [vocQuantity, setVocQuantity] = useState<number>(0);
+	const [hepa, setHepa] = useState<boolean>(false);
+	const [voc, setVoc] = useState<boolean>(false);
+	const [vocFilterType, setVocFilterType] =
+		useState<VocFilterType>(defaultVocFilterType);
+	const [vocQuantity, setVocQuantity] = useState<number>(0);
 
 	// HEPA 필터 목록 (기본 1개)
 	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
@@ -107,30 +105,26 @@ export default function AdminUsersEditPage() {
 			const company = await fetchCompanyInfobyId(companyId);
 			setCompany(company);
 
-                        setName(company.name);
-                        setPhone(company.phone);
-                        setEmail(company.email);
-                        setAddress(company.address);
-                        setKakaoPhones(
-                                company.kakaoPhones.length
-                                        ? company.kakaoPhones
-                                        : ['']
-                        );
+			setName(company.name);
+			setPhone(company.phone);
+			setEmail(company.email);
+			setAddress(company.address);
+			setKakaoPhones(
+				company.kakaoPhones.length ? company.kakaoPhones : ['']
+			);
 
-                        const details = await loadCompanyDetails(
-                                company.id,
-                                company.floorImagePath
-                        );
+			const details = await loadCompanyDetails(
+				company.id,
+				company.floorImagePath
+			);
 
-                        setFloorPlanFile(details.floorPlanFile);
-                        setAqm(details.aqm);
-                        setHepa(details.hepa);
-                        setVoc(details.voc);
-                        setVocFilterType(
-                                details.vocFilterType ?? defaultVocFilterType
-                        );
-                        setVocQuantity(details.vocQuantity);
-                        setHepaFilters(details.hepaFilters);
+			setFloorPlanFile(details.floorPlanFile);
+			setAqm(details.aqm);
+			setHepa(details.hepa);
+			setVoc(details.voc);
+			setVocFilterType(details.vocFilterType ?? defaultVocFilterType);
+			setVocQuantity(details.vocQuantity);
+			setHepaFilters(details.hepaFilters);
 		} catch (e) {
 			console.error('load company details error', e);
 		}
@@ -146,11 +140,11 @@ export default function AdminUsersEditPage() {
 		if (serviceType === 'hepa') {
 			setHepa(true);
 		}
-                if (serviceType === 'voc') {
-                        setVoc(true);
-                        setVocFilterType((prev) => prev || defaultVocFilterType);
-                        if (vocQuantity === 0) setVocQuantity(1);
-                }
+		if (serviceType === 'voc') {
+			setVoc(true);
+			setVocFilterType((prev) => prev || defaultVocFilterType);
+			if (vocQuantity === 0) setVocQuantity(1);
+		}
 		// 'as'는 UI 항목이 없어서 여기선 패스. 필요 시 관리 서비스 카드 추가해서 처리
 	};
 
@@ -168,11 +162,11 @@ export default function AdminUsersEditPage() {
 				},
 			]); // 초기화
 		}
-                if (type === 'voc') {
-                        setVoc(false);
-                        setVocFilterType(defaultVocFilterType);
-                        setVocQuantity(0);
-                }
+		if (type === 'voc') {
+			setVoc(false);
+			setVocFilterType(defaultVocFilterType);
+			setVocQuantity(0);
+		}
 	};
 
 	const addHepaProperty = () => {
@@ -188,24 +182,26 @@ export default function AdminUsersEditPage() {
 		);
 	};
 
-        const removeHepaFilter = (idx: number) => {
-                setHepaFilters((prev) => prev.filter((_, i) => i !== idx));
-        };
+	const removeHepaFilter = (idx: number) => {
+		setHepaFilters((prev) => prev.filter((_, i) => i !== idx));
+	};
 
-        const addKakaoPhone = () => {
-                setKakaoPhones((prev) => [...prev, '']);
-        };
+	const addKakaoPhone = () => {
+		setKakaoPhones((prev) => [...prev, '']);
+	};
 
-        const updateKakaoPhone = (idx: number, value: string) => {
-                setKakaoPhones((prev) => prev.map((phone, i) => (i === idx ? value : phone)));
-        };
+	const updateKakaoPhone = (idx: number, value: string) => {
+		setKakaoPhones((prev) =>
+			prev.map((phone, i) => (i === idx ? value : phone))
+		);
+	};
 
-        const removeKakaoPhone = (idx: number) => {
-                setKakaoPhones((prev) => {
-                        if (prev.length === 1) return [''];
-                        return prev.filter((_, i) => i !== idx);
-                });
-        };
+	const removeKakaoPhone = (idx: number) => {
+		setKakaoPhones((prev) => {
+			if (prev.length === 1) return [''];
+			return prev.filter((_, i) => i !== idx);
+		});
+	};
 
 	const isMandatoryInfoFilled = () => {
 		if (name && phone && email && address) {
@@ -223,20 +219,20 @@ export default function AdminUsersEditPage() {
 		if (isMandatoryInfoFilled()) {
 			try {
 				setSaving(true);
-                                await saveNewCompany(
-                                        floorPlanFile,
-                                        name,
-                                        phone,
-                                        email,
-                                        address,
-                                        kakaoPhones,
-                                        aqm,
-                                        hepa,
-                                        hepaFilters,
-                                        voc,
-                                        vocFilterType,
-                                        vocQuantity
-                                );
+				await saveNewCompany(
+					floorPlanFile,
+					name,
+					phone,
+					email,
+					address,
+					kakaoPhones,
+					aqm,
+					hepa,
+					hepaFilters,
+					voc,
+					vocFilterType,
+					vocQuantity
+				);
 
 				setToastMessage({
 					status: 'confirm',
@@ -257,25 +253,25 @@ export default function AdminUsersEditPage() {
 		}
 	};
 
-        const handleUpdate = async () => {
-                if (company) {
-                        try {
-                                setSaving(true);
-                                await updateCompany(
-                                        company,
-                                        floorPlanFile,
-                                        name,
-                                        phone,
-                                        email,
-                                        address,
-                                        kakaoPhones,
-                                        aqm,
-                                        voc,
-                                        vocFilterType,
-                                        vocQuantity,
-                                        hepa,
-                                        hepaFilters
-                                );
+	const handleUpdate = async () => {
+		if (company) {
+			try {
+				setSaving(true);
+				await updateCompany(
+					company,
+					floorPlanFile,
+					name,
+					phone,
+					email,
+					address,
+					kakaoPhones,
+					aqm,
+					voc,
+					vocFilterType,
+					vocQuantity,
+					hepa,
+					hepaFilters
+				);
 				setToastMessage({
 					status: 'confirm',
 					message: '수정되었습니다',
@@ -289,13 +285,12 @@ export default function AdminUsersEditPage() {
 			} finally {
 				setSaving(false);
 			}
-                }
-        };
+		}
+	};
 
-        // 업로드 가능한 파일 타입(이미지)
-        const ACCEPT_TYPES = ['.png', '.jpeg', '.jpg', '.webp', '.svg+xml'];
-        const vocSpec = getVocFilterSpec(vocFilterType);
-        const vocFilterOptions = buildVocFilterOptions();
+	// 업로드 가능한 파일 타입(이미지)
+	const ACCEPT_TYPES = ['.png', '.jpeg', '.jpg', '.webp', '.svg+xml'];
+	const vocFilterOptions = buildVocFilterOptions();
 
 	return (
 		<div>
@@ -340,11 +335,11 @@ export default function AdminUsersEditPage() {
 									style={{ flex: 1 }}
 								/>
 							</div>
-                                                        <div className='flex items-center gap-4'>
-                                                                <InputBox
-                                                                        label='이메일'
-                                                                        inputAttr={{
-                                                                                placeholder: 'contact@company.com',
+							<div className='flex items-center gap-4'>
+								<InputBox
+									label='이메일'
+									inputAttr={{
+										placeholder: 'contact@company.com',
 										value: email,
 										onChange: (e: any) =>
 											setEmail(e.target.value),
@@ -361,62 +356,56 @@ export default function AdminUsersEditPage() {
 											setAddress(e.target.value),
 									}}
 									isMandatory
-                                                                        style={{ flex: 1 }}
-                                                                />
-                                                        </div>
+									style={{ flex: 1 }}
+								/>
+							</div>
 
-                                                        <div className='flex flex-col gap-2'>
-                                                                <p className='text-Gray-900 body-md-medium'>
-                                                                        카카오 알림 수신 번호
-                                                                </p>
-                                                                <div className='flex flex-col gap-3'>
-                                                                        {kakaoPhones.map((value, idx) => (
-                                                                                <div
-                                                                                        key={`kakao-phone-${idx}`}
-                                                                                        className='flex items-center gap-3'>
-                                                                                        <InputBox
-                                                                                                label={`전화번호 ${idx + 1}`}
-                                                                                                inputAttr={{
-                                                                                                        placeholder:
-                                                                                                                '010-0000-0000',
-                                                                                                        value,
-                                                                                                        onChange: (
-                                                                                                                e: any
-                                                                                                        ) =>
-                                                                                                                updateKakaoPhone(
-                                                                                                                        idx,
-                                                                                                                        e.target
-                                                                                                                                .value
-                                                                                                                ),
-                                                                                                }}
-                                                                                                style={{ flex: 1 }}
-                                                                                        />
-                                                                                        <IconButton
-                                                                                                icon={<Trashcan />}
-                                                                                                disabled={
-                                                                                                        kakaoPhones.length ===
-                                                                                                        1
-                                                                                                }
-                                                                                                onClick={() =>
-                                                                                                        removeKakaoPhone(
-                                                                                                                idx
-                                                                                                        )
-                                                                                                }
-                                                                                        />
-                                                                                </div>
-                                                                        ))}
-                                                                        <Button
-                                                                                variant='alternative'
-                                                                                onClick={addKakaoPhone}>
-                                                                                <Plus /> 번호 추가
-                                                                        </Button>
-                                                                </div>
-                                                        </div>
+							<div className='flex flex-col gap-2'>
+								<p className='text-Gray-900 body-md-medium'>
+									카카오 알림 수신 번호
+								</p>
+								<div className='flex flex-col gap-3'>
+									{kakaoPhones.map((value, idx) => (
+										<div
+											key={`kakao-phone-${idx}`}
+											className='flex items-center gap-3'>
+											<InputBox
+												label={`전화번호 ${idx + 1}`}
+												inputAttr={{
+													placeholder:
+														'010-0000-0000',
+													value,
+													onChange: (e: any) =>
+														updateKakaoPhone(
+															idx,
+															e.target.value
+														),
+												}}
+												style={{ flex: 1 }}
+											/>
+											<IconButton
+												icon={<Trashcan />}
+												disabled={
+													kakaoPhones.length === 1
+												}
+												onClick={() =>
+													removeKakaoPhone(idx)
+												}
+											/>
+										</div>
+									))}
+									<Button
+										variant='alternative'
+										onClick={addKakaoPhone}>
+										<Plus /> 번호 추가
+									</Button>
+								</div>
+							</div>
 
-                                                        <div className='flex flex-col gap-2'>
-                                                                <p className='text-Gray-900 body-md-medium'>
-                                                                        평면도
-                                                                </p>
+							<div className='flex flex-col gap-2'>
+								<p className='text-Gray-900 body-md-medium'>
+									평면도
+								</p>
 								<FileUploadDrop
 									file={floorPlanFile}
 									availableTypes={ACCEPT_TYPES}
@@ -653,60 +642,36 @@ export default function AdminUsersEditPage() {
 												}
 											/>
 										</div>
-                                                                                <div className='flex md:flex-row flex-col md:items-center gap-3'>
-                                                                                        <Dropdown
-                                                                                                id='vocFilterType'
-                                                                                                label='필터 종류'
-                                                                                                options={vocFilterOptions}
-                                                                                                value={vocFilterType}
-                                                                                                onChange={(value) =>
-                                                                                                        setVocFilterType(
-                                                                                                                value as VocFilterType
-                                                                                                        )
-                                                                                                }
-                                                                                                style={{ flex: 1 }}
-                                                                                        />
-                                                                                        <InputBox
-                                                                                                style={{ flex: 1 }}
-                                                                                                label='가로(mm)'
-                                                                                                inputAttr={{
-                                                                                                        value: vocSpec.width,
-                                                                                                        readOnly: true,
-                                                                                                }}
-                                                                                        />
-                                                                                        <InputBox
-                                                                                                style={{ flex: 1 }}
-                                                                                                label='세로(mm)'
-                                                                                                inputAttr={{
-                                                                                                        value: vocSpec.height,
-                                                                                                        readOnly: true,
-                                                                                                }}
-                                                                                        />
-                                                                                        <InputBox
-                                                                                                style={{ flex: 1 }}
-                                                                                                label='두께(mm)'
-                                                                                                inputAttr={{
-                                                                                                        value: vocSpec.depth,
-                                                                                                        readOnly: true,
-                                                                                                }}
-                                                                                        />
-                                                                                        <InputBox
-                                                                                                style={{ flex: 1 }}
-                                                                                                label='개수'
-                                                                                                inputAttr={{
-                                                                                                        placeholder: '0',
-                                                                                                        value: vocQuantity || '',
-                                                                                                        onChange: (e: any) =>
-                                                                                                                setVocQuantity(
-                                                                                                                        Number(
-                                                                                                                                e.target.value
-                                                                                                                        ) || 0
-                                                                                                                ),
-                                                                                                }}
-                                                                                        />
-                                                                                </div>
-                                                                        </div>
-                                                                )}
+										<div className='flex md:flex-row flex-col md:items-center gap-3'>
+											<Dropdown
+												id='vocFilterType'
+												label='필터 종류'
+												options={vocFilterOptions}
+												value={vocFilterType}
+												onChange={(value) =>
+													setVocFilterType(
+														value as VocFilterType
+													)
+												}
+												style={{ minWidth: 180 }}
+											/>
+											<InputBox
+												style={{ minWidth: 180 }}
+												label='개수'
+												inputAttr={{
+													placeholder: '0',
+													value: vocQuantity || '',
+													onChange: (e: any) =>
+														setVocQuantity(
+															Number(
+																e.target.value
+															) || 0
+														),
+												}}
+											/>
+										</div>
+									</div>
+								)}
 
 								{/* 처음엔 빈 박스 → 모달로 서비스 추가 */}
 								{!aqm && !hepa && !voc && (

@@ -20,10 +20,6 @@ export const vocFilterSpecs: Record<
 
 export const defaultVocFilterType: VocFilterType = VocFilterTypes.embryoShield;
 
-export function getVocFilterSpec(type?: VocFilterType) {
-        return vocFilterSpecs[type ?? defaultVocFilterType];
-}
-
 export function buildVocFilterOptions() {
         return Object.entries(VocFilterLabels).map(([value, label]) => ({
                 value,

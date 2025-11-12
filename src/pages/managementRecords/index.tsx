@@ -125,7 +125,7 @@ function CompanyManagementRecordsPage() {
 								{ field: 'managerName', headerName: '담당자' },
 								{
 									field: 'createdAt',
-									headerName: '등록일',
+									headerName: '작성일',
 									render: (value) =>
 										toLocaleStringWithoutSec(
 											new Date(value)

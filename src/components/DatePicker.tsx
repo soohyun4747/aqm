@@ -5,6 +5,7 @@ import { formatDate } from '@/src/utils/date';
 
 interface DatePickerProps {
   date: Date;
+  label?: string;
   onChange: (date: Date) => void;
   isDateDisabled?: (d: Date) => boolean;
   onInvalidSelect?: (d: Date) => void;
@@ -56,7 +57,7 @@ export function DatePicker(props: DatePickerProps) {
 
   return (
     <div className="flex flex-col gap-2 flex-1 self-stretch">
-      <p className="text-Gray-900 body-md-medium">날짜</p>
+      <p className="text-Gray-900 body-md-medium">{props.label ?? '날짜'}</p>
       <div
         onClick={handleClick}
         className="flex items-center gap-[10px] border border-Gray-300 rounded-[8px] bg-Gray-50 px-4 py-3 relative"

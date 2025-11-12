@@ -8,43 +8,37 @@ import { InputBox } from '@/src/components/InputBox';
 import { SavingOverlay } from '@/src/components/SavingOverlay';
 import { TextAreaBox } from '@/src/components/TextAreaBox';
 import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
-import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
 import { today } from '@/src/utils/date';
 import { useEffect, useState } from 'react';
 import { Checkbox } from '@/src/components/Checkbox';
-import {
-        createManagementRecord,
-} from '@/src/utils/supabase/managementRecord';
+import { createManagementRecord } from '@/src/utils/supabase/managementRecord';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { useRouter } from 'next/router';
 import {
-        createVocResults,
-        fetchVocResultsByRecordId,
-        IVOCResultRow,
-        updateVocResults,
+	createVocResults,
+	IVOCResultRow,
 } from '@/src/utils/supabase/vocResults';
 import { fetchVocFiltersByCompanyId } from '@/src/utils/supabase/vocFilters';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
-import { usePathname } from 'next/navigation';
-import {
-        VocFilterLabels,
-        VocFilterType,
-        defaultVocFilterType,
-        getVocFilterSpec,
-} from '@/src/constants/vocFilters';
+import { VocFilterLabels, VocFilterType } from '@/src/constants/vocFilters';
 
-export interface IVOCResult {
+export interface IVocResult {
 	id?: string;
 	companyId: string;
 	managementRecordId?: string;
+	filterId: string;
 	confirm: boolean;
 }
 
+export interface IVocFilter {
+	id?: string;
+	filterType: VocFilterType;
+	quantity: number;
+}
+
 function AdminManagementRecordsEditVocPage() {
-        const [vocResults, setVocResults] = useState<IVOCResult[]>([]);
-        const [vocFilterType, setVocFilterType] =
-                useState<VocFilterType>(defaultVocFilterType);
-        const [vocQuantity, setVocQuantity] = useState<number>(0);
+	const [vocResults, setVocResults] = useState<IVocResult[]>([]);
+	const [vocFilters, setVocFilters] = useState<IVocFilter[]>([]);
 
 	const [date, setDate] = useState<Date>(today);
 	const [companyId, setCompanyId] = useState('');
@@ -64,40 +58,30 @@ function AdminManagementRecordsEditVocPage() {
 	const onSelectCompany = (companyId: string) => {
 		setCompanyId(companyId);
 		if (companyId) {
-			getSetInitVocResults(companyId);
+			getSetVocFiltersandInitResults(companyId);
 		} else {
 			setVocResults([]);
 		}
 	};
+
+	console.log({ vocResults });
 
 	const getSetCompanyOptions = async () => {
 		const options = await fetchCompanyOptions();
 		setCompanyOptions(options);
 	};
 
-        const getSetVocFilter = async (companyId: string) => {
-                const vocFilters = await fetchVocFiltersByCompanyId(companyId);
-                const filter = vocFilters?.[0];
-                const type = (filter?.filter_type as VocFilterType) ?? defaultVocFilterType;
-                const quantity = filter?.quantity ?? 0;
-
-                setVocFilterType(type);
-                setVocQuantity(quantity);
-
-                return { type, quantity };
-        };
-
-	const getSetInitVocResults = async (companyId: string) => {
+	const getSetVocFiltersandInitResults = async (companyId: string) => {
 		try {
-                        const { quantity } = await getSetVocFilter(companyId);
-                        const count = Math.max(1, Number(quantity) || 0);
-                        setVocResults(
-                                Array.from({ length: count }, (_, idx) => ({
-                                        id: `new-${idx}`,
-                                        companyId,
-                                        confirm: false,
-                                }))
-                        );
+			const data = await fetchVocFiltersByCompanyId(companyId);
+			setVocFilters((data as unknown as IVocFilter[]) ?? []);
+			setVocResults(
+				data.map((filter) => ({
+					companyId: companyId,
+					filterId: filter.id,
+					confirm: false,
+				}))
+			);
 		} catch (error) {
 			setToastMessage({
 				status: 'error',
@@ -106,14 +90,15 @@ function AdminManagementRecordsEditVocPage() {
 		}
 	};
 
-	const onClickFilterConfirm = (row: IVOCResult) => {
+	const onClickFilterConfirm = (row: IVocResult) => {
 		setVocResults((prev) => {
 			if (prev) {
-				const result = prev.find((res) => res.id === row.id);
+				const result = prev.find((res) => res.filterId === row.id);
 				if (result) {
 					result.confirm = !result.confirm;
 					return JSON.parse(JSON.stringify(prev));
 				}
+				return prev;
 			}
 		});
 	};
@@ -158,6 +143,7 @@ function AdminManagementRecordsEditVocPage() {
 			const vocResultsWithIds: IVOCResultRow[] = vocResults.map((r) => ({
 				company_id: companyId,
 				management_record_id: managementRecordId,
+				filter_id: r.filterId,
 				confirm: r.confirm,
 			}));
 
@@ -178,33 +164,15 @@ function AdminManagementRecordsEditVocPage() {
 		}
 	};
 
-        const vocSpec = getVocFilterSpec(vocFilterType);
-
-        const columns: TableHeader[] = [
-                {
-                        field: 'filter_type',
-                        headerName: '필터 종류',
-                        render: () => VocFilterLabels[vocFilterType],
-                },
-                {
-                        field: 'width',
-                        headerName: '가로',
-                        render: () => vocSpec.width,
-                },
-                {
-                        field: 'height',
-                        headerName: '세로',
-                        render: () => vocSpec.height,
-                },
-                {
-                        field: 'depth',
-                        headerName: '두께',
-                        render: () => vocSpec.depth,
-                },
-                {
-                        field: 'quantity',
-                        headerName: '개수',
-			render: () => vocQuantity,
+	const columns: TableHeader[] = [
+		{
+			field: 'filter_type',
+			headerName: '필터 종류',
+			render: (value: VocFilterType) => VocFilterLabels[value],
+		},
+		{
+			field: 'quantity',
+			headerName: '개수',
 		},
 		{
 			field: '',
@@ -215,7 +183,8 @@ function AdminManagementRecordsEditVocPage() {
 						label={''}
 						onClick={() => onClickFilterConfirm(row)}
 						checked={
-							vocResults.find((res) => res.id === row.id)?.confirm
+							vocResults?.find((res) => res.filterId === row.id)
+								?.confirm
 						}
 					/>
 				);
@@ -245,6 +214,7 @@ function AdminManagementRecordsEditVocPage() {
 								<DatePicker
 									date={date}
 									onChange={(date) => setDate(date)}
+									label='시행일'
 								/>
 								<DropdownSearchable
 									isMandatory
@@ -297,7 +267,7 @@ function AdminManagementRecordsEditVocPage() {
 								<div className='w-full overflow-x-auto'>
 									<Table
 										columns={columns}
-										rows={vocResults}
+										rows={vocFilters}
 									/>
 								</div>
 							</div>
