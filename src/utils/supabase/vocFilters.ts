@@ -28,10 +28,9 @@ export async function fetchVocFilterByCompanyServiceId(serviceId: string) {
         const { data, error } = await supabase
                 .from('voc_filters')
                 .select('id, company_id, company_service_id, filter_type, quantity')
-                .eq('company_service_id', serviceId)
-                .maybeSingle();
+                .eq('company_service_id', serviceId);
 
         if (error) throw error;
 
-        return data as IVocFilterRow | null;
+        return (data ?? []) as IVocFilterRow[];
 }

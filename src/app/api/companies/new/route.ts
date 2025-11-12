@@ -4,17 +4,22 @@ import { makePassword, sendAccountEmail } from '@/src/server/accountEmail';
 import { ICompany } from '@/src/stores/userStore';
 import { sanitizeFileName } from '@/src/utils/string';
 import { NextResponse } from 'next/server';
-import { defaultVocFilterType } from '@/src/constants/vocFilters';
+import { VocFilterType, defaultVocFilterType } from '@/src/constants/vocFilters';
 
 export const runtime = 'nodejs'; // 파일 업로드 Buffer 사용을 위해 node 런타임
 // export const dynamic = 'force-dynamic'; // (선택) 캐시 끄기
 
 type HepaFilterDTO = {
-	filterType: 'hepa' | 'pre' | 'preFrame';
-	width: number | string;
-	height: number | string;
-	depth: number | string;
-	quantity: number | string;
+        filterType: 'hepa' | 'pre' | 'preFrame';
+        width: number | string;
+        height: number | string;
+        depth: number | string;
+        quantity: number | string;
+};
+
+type VocFilterDTO = {
+        filterType: VocFilterType | string;
+        quantity: number | string;
 };
 
 const FLOORPLANS_BUCKET = process.env.FLOORPLANS_BUCKET || 'floor-plans';
@@ -37,6 +42,7 @@ export async function POST(req: Request) {
         voc: boolean;
         vocQuantity: null | number;
         vocFilterType: string;
+        vocFilters: VocFilterDTO[];
         hepaFilters: HepaFilterDTO[];
 } = {
                 name: '',
@@ -49,6 +55,7 @@ export async function POST(req: Request) {
         voc: false,
         vocQuantity: null,
         vocFilterType: '',
+        vocFilters: [],
         hepaFilters: [],
 };
 	let floorPlanFile: File | null = null;
@@ -77,8 +84,11 @@ export async function POST(req: Request) {
                         ).trim();
 
 			// HEPA 필터들 (JSON 문자열로 받는 방식)
-			const hepaFiltersStr = (form.get('hepaFilters') as string) || '[]';
-			payload.hepaFilters = JSON.parse(hepaFiltersStr) as HepaFilterDTO[];
+                        const hepaFiltersStr = (form.get('hepaFilters') as string) || '[]';
+                        payload.hepaFilters = JSON.parse(hepaFiltersStr) as HepaFilterDTO[];
+
+                        const vocFiltersStr = (form.get('vocFilters') as string) || '[]';
+                        payload.vocFilters = JSON.parse(vocFiltersStr) as VocFilterDTO[];
 
 			// 파일 (선택)
 			const file = form.get('floorPlanFile');
@@ -113,6 +123,7 @@ export async function POST(req: Request) {
                 voc,
                 vocQuantity,
                 vocFilterType,
+                vocFilters = [],
         } = payload;
 
 	// ────────────────────────────────────────────────────────────────
@@ -251,13 +262,36 @@ export async function POST(req: Request) {
                                 .single();
                         if (vocServiceErr) throw vocServiceErr;
 
-                        const { error: vocFilterErr } = await admin.from('voc_filters').insert({
-                                company_id: companyId,
-                                company_service_id: vocService.id,
-                                filter_type: vocFilterType || defaultVocFilterType,
-                                quantity: Number(vocQuantity) || 1,
-                        });
-                        if (vocFilterErr) throw vocFilterErr;
+                        const normalizedVocFilters = (Array.isArray(vocFilters)
+                                ? vocFilters
+                                : []
+                        ).filter((filter) => !!filter);
+
+                        const payloadFilters = (
+                                normalizedVocFilters.length
+                                        ? normalizedVocFilters
+                                        : [
+                                                  {
+                                                          filterType:
+                                                                  (vocFilterType as VocFilterType) ||
+                                                                  defaultVocFilterType,
+                                                          quantity: vocQuantity ?? 1,
+                                                  },
+                                          ]
+                        ).map((filter) => ({
+                                company_id: companyId!,
+                                company_service_id: vocService.id as string,
+                                filter_type:
+                                        (filter.filterType || defaultVocFilterType) as VocFilterType,
+                                quantity: Number(filter.quantity) || 1,
+                        }));
+
+                        if (payloadFilters.length) {
+                                const { error: vocFilterErr } = await admin
+                                        .from('voc_filters')
+                                        .insert(payloadFilters);
+                                if (vocFilterErr) throw vocFilterErr;
+                        }
                 }
 	} catch (error: unknown) {
 		await rollbackAll(admin, companyId, floorImagePath);

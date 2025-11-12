@@ -24,26 +24,32 @@ import {
 } from '@/src/utils/supabase/company';
 import { ServiceType } from '@/src/utils/supabase/companyServices';
 import {
-	VocFilterType,
-	buildVocFilterOptions,
-	defaultVocFilterType,
+        VocFilterType,
+        buildVocFilterOptions,
+        defaultVocFilterType,
 } from '@/src/constants/vocFilters';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export interface IHepaFilter {
-	id?: string;
-	filterType: HepaFilterType;
-	width: number;
-	height: number;
-	depth: number;
-	quantity: number;
+        id?: string;
+        filterType: HepaFilterType;
+        width: number;
+        height: number;
+        depth: number;
+        quantity: number;
+}
+
+export interface IVocFilter {
+        id?: string;
+        filterType: VocFilterType;
+        quantity: number;
 }
 
 export const HepaFilters = {
-	hepa: 'hepa',
-	pre: 'pre',
-	preFrame: 'preFrame',
+        hepa: 'hepa',
+        pre: 'pre',
+        preFrame: 'preFrame',
 } as const;
 
 export const HepaFilterNames = {
@@ -66,10 +72,10 @@ export default function AdminUsersEditPage() {
 	// 서비스 상태 (모달로 추가/삭제)
 	const [aqm, setAqm] = useState<boolean>(false);
 	const [hepa, setHepa] = useState<boolean>(false);
-	const [voc, setVoc] = useState<boolean>(false);
-	const [vocFilterType, setVocFilterType] =
-		useState<VocFilterType>(defaultVocFilterType);
-	const [vocQuantity, setVocQuantity] = useState<number>(0);
+        const [voc, setVoc] = useState<boolean>(false);
+        const [vocFilters, setVocFilters] = useState<IVocFilter[]>([
+                { filterType: defaultVocFilterType, quantity: 1 },
+        ]);
 
 	// HEPA 필터 목록 (기본 1개)
 	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
@@ -119,16 +125,24 @@ export default function AdminUsersEditPage() {
 			);
 
 			setFloorPlanFile(details.floorPlanFile);
-			setAqm(details.aqm);
-			setHepa(details.hepa);
-			setVoc(details.voc);
-			setVocFilterType(details.vocFilterType ?? defaultVocFilterType);
-			setVocQuantity(details.vocQuantity);
-			setHepaFilters(details.hepaFilters);
-		} catch (e) {
-			console.error('load company details error', e);
-		}
-	};
+                        setAqm(details.aqm);
+                        setHepa(details.hepa);
+                        setVoc(details.voc);
+                        setVocFilters(
+                                details.vocFilters.length
+                                        ? details.vocFilters
+                                        : [
+                                                  {
+                                                          filterType: defaultVocFilterType,
+                                                          quantity: 1,
+                                                  },
+                                          ]
+                        );
+                        setHepaFilters(details.hepaFilters);
+                } catch (e) {
+                        console.error('load company details error', e);
+                }
+        };
 
 	// ─────────────────────────────────────────────
 	// 서비스 추가/삭제/필터 조작
@@ -140,11 +154,19 @@ export default function AdminUsersEditPage() {
 		if (serviceType === 'hepa') {
 			setHepa(true);
 		}
-		if (serviceType === 'voc') {
-			setVoc(true);
-			setVocFilterType((prev) => prev || defaultVocFilterType);
-			if (vocQuantity === 0) setVocQuantity(1);
-		}
+                if (serviceType === 'voc') {
+                        setVoc(true);
+                        setVocFilters((prev) =>
+                                prev.length
+                                        ? prev
+                                        : [
+                                                  {
+                                                          filterType: defaultVocFilterType,
+                                                          quantity: 1,
+                                                  },
+                                          ]
+                        );
+                }
 		// 'as'는 UI 항목이 없어서 여기선 패스. 필요 시 관리 서비스 카드 추가해서 처리
 	};
 
@@ -162,15 +184,19 @@ export default function AdminUsersEditPage() {
 				},
 			]); // 초기화
 		}
-		if (type === 'voc') {
-			setVoc(false);
-			setVocFilterType(defaultVocFilterType);
-			setVocQuantity(0);
-		}
-	};
+                if (type === 'voc') {
+                        setVoc(false);
+                        setVocFilters([
+                                {
+                                        filterType: defaultVocFilterType,
+                                        quantity: 1,
+                                },
+                        ]);
+                }
+        };
 
-	const addHepaProperty = () => {
-		setHepaFilters((prev) => [
+        const addHepaProperty = () => {
+                setHepaFilters((prev) => [
 			...prev,
 			{ filterType: 'hepa', width: 0, height: 0, depth: 0, quantity: 1 },
 		]);
@@ -182,9 +208,26 @@ export default function AdminUsersEditPage() {
 		);
 	};
 
-	const removeHepaFilter = (idx: number) => {
-		setHepaFilters((prev) => prev.filter((_, i) => i !== idx));
-	};
+        const removeHepaFilter = (idx: number) => {
+                setHepaFilters((prev) => prev.filter((_, i) => i !== idx));
+        };
+
+        const addVocProperty = () => {
+                setVocFilters((prev) => [
+                        ...prev,
+                        { filterType: defaultVocFilterType, quantity: 1 },
+                ]);
+        };
+
+        const updateVocFilter = (idx: number, patch: Partial<IVocFilter>) => {
+                setVocFilters((prev) =>
+                        prev.map((filter, i) => (i === idx ? { ...filter, ...patch } : filter))
+                );
+        };
+
+        const removeVocFilter = (idx: number) => {
+                setVocFilters((prev) => prev.filter((_, i) => i !== idx));
+        };
 
 	const addKakaoPhone = () => {
 		setKakaoPhones((prev) => [...prev, '']);
@@ -219,20 +262,19 @@ export default function AdminUsersEditPage() {
 		if (isMandatoryInfoFilled()) {
 			try {
 				setSaving(true);
-				await saveNewCompany(
-					floorPlanFile,
-					name,
-					phone,
-					email,
-					address,
-					kakaoPhones,
-					aqm,
-					hepa,
-					hepaFilters,
-					voc,
-					vocFilterType,
-					vocQuantity
-				);
+                                await saveNewCompany(
+                                        floorPlanFile,
+                                        name,
+                                        phone,
+                                        email,
+                                        address,
+                                        kakaoPhones,
+                                        aqm,
+                                        hepa,
+                                        hepaFilters,
+                                        voc,
+                                        vocFilters
+                                );
 
 				setToastMessage({
 					status: 'confirm',
@@ -257,21 +299,20 @@ export default function AdminUsersEditPage() {
 		if (company) {
 			try {
 				setSaving(true);
-				await updateCompany(
-					company,
-					floorPlanFile,
-					name,
-					phone,
-					email,
-					address,
-					kakaoPhones,
-					aqm,
-					voc,
-					vocFilterType,
-					vocQuantity,
-					hepa,
-					hepaFilters
-				);
+                                await updateCompany(
+                                        company,
+                                        floorPlanFile,
+                                        name,
+                                        phone,
+                                        email,
+                                        address,
+                                        kakaoPhones,
+                                        aqm,
+                                        voc,
+                                        vocFilters,
+                                        hepa,
+                                        hepaFilters
+                                );
 				setToastMessage({
 					status: 'confirm',
 					message: '수정되었습니다',
@@ -631,47 +672,103 @@ export default function AdminUsersEditPage() {
 								)}
 
 								{/* VOC */}
-								{voc && (
-									<div className='bg-Gray-100 rounded-[8px] flex flex-col self-stretch p-4 gap-3'>
-										<div className='flex items-center justify-between'>
-											<p>VOC 필터 교체 (6개월)</p>
-											<IconButton
-												icon={<Trashcan />}
-												onClick={() =>
-													removeService('voc')
-												}
-											/>
-										</div>
-										<div className='flex md:flex-row flex-col md:items-center gap-3'>
-											<Dropdown
-												id='vocFilterType'
-												label='필터 종류'
-												options={vocFilterOptions}
-												value={vocFilterType}
-												onChange={(value) =>
-													setVocFilterType(
-														value as VocFilterType
-													)
-												}
-												style={{ minWidth: 180 }}
-											/>
-											<InputBox
-												style={{ minWidth: 180 }}
-												label='개수'
-												inputAttr={{
-													placeholder: '0',
-													value: vocQuantity || '',
-													onChange: (e: any) =>
-														setVocQuantity(
-															Number(
-																e.target.value
-															) || 0
-														),
-												}}
-											/>
-										</div>
-									</div>
-								)}
+                                                                {voc && (
+                                                                        <div className='bg-Gray-100 rounded-[8px] flex flex-col self-stretch p-4 gap-3'>
+                                                                                <div className='flex items-center justify-between'>
+                                                                                        <p>VOC 필터 교체 (6개월)</p>
+                                                                                        <IconButton
+                                                                                                icon={<Trashcan />}
+                                                                                                onClick={() =>
+                                                                                                        removeService('voc')
+                                                                                                }
+                                                                                        />
+                                                                                </div>
+                                                                                {vocFilters.map((filter, idx) => (
+                                                                                        <div
+                                                                                                key={filter.id ?? idx}
+                                                                                                className='flex md:flex-row flex-col md:items-center gap-3'>
+                                                                                                <Dropdown
+                                                                                                        id={`voc-filter-type-${idx}`}
+                                                                                                        label='필터 종류'
+                                                                                                        options={vocFilterOptions}
+                                                                                                        value={filter.filterType}
+                                                                                                        onChange={(value) =>
+                                                                                                                updateVocFilter(
+                                                                                                                        idx,
+                                                                                                                        {
+                                                                                                                                filterType:
+                                                                                                                                        value as VocFilterType,
+                                                                                                                        }
+                                                                                                                )
+                                                                                                        }
+                                                                                                        style={{ minWidth: 180 }}
+                                                                                                />
+                                                                                                <InputBox
+                                                                                                        style={{ minWidth: 180 }}
+                                                                                                        label='개수'
+                                                                                                        inputAttr={{
+                                                                                                                placeholder: '0',
+                                                                                                                value:
+                                                                                                                        filter.quantity || '',
+                                                                                                                onChange: (e: any) =>
+                                                                                                                        updateVocFilter(
+                                                                                                                                idx,
+                                                                                                                                {
+                                                                                                                                        quantity:
+                                                                                                                                                Number(
+                                                                                                                                                        e
+                                                                                                                                                                .target
+                                                                                                                                                                .value
+                                                                                                                                                ) || 0,
+                                                                                                                                }
+                                                                                                                        ),
+                                                                                                        }}
+                                                                                                />
+                                                                                                {screenType === 'pc' &&
+                                                                                                        vocFilters.length > 1 && (
+                                                                                                                <IconButton
+                                                                                                                        icon={
+                                                                                                                                <Close
+                                                                                                                                        size={14}
+                                                                                                                                        fill='#6B7280'
+                                                                                                                                />
+                                                                                                                        }
+                                                                                                                        onClick={() =>
+                                                                                                                                removeVocFilter(
+                                                                                                                                        idx
+                                                                                                                                )
+                                                                                                                        }
+                                                                                                                        style={{
+                                                                                                                                alignSelf: 'end',
+                                                                                                                                paddingBottom: 10,
+                                                                                                                        }}
+                                                                                                                />
+                                                                                                        )}
+                                                                                                {screenType === 'mobile' &&
+                                                                                                        vocFilters.length > 1 && (
+                                                                                                                <Button
+                                                                                                                        variant='danger'
+                                                                                                                        onClick={() =>
+                                                                                                                                removeVocFilter(
+                                                                                                                                        idx
+                                                                                                                                )
+                                                                                                                        }>
+                                                                                                                        삭제
+                                                                                                                </Button>
+                                                                                                        )}
+                                                                                        </div>
+                                                                                ))}
+
+                                                                                <div
+                                                                                        className='flex items-center cursor-pointer self-end'
+                                                                                        onClick={addVocProperty}>
+                                                                                        <Plus fill='#1A56DB' size={12} />
+                                                                                        <p className='text-Primary-700 body-md-medium ml-1'>
+                                                                                                Add Property
+                                                                                        </p>
+                                                                                </div>
+                                                                        </div>
+                                                                )}
 
 								{/* 처음엔 빈 박스 → 모달로 서비스 추가 */}
 								{!aqm && !hepa && !voc && (

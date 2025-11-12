@@ -15,12 +15,8 @@ import {
 	updateCompanyKakaoPhones,
 } from '@/src/utils/supabase/company';
 import { useEffect, useState } from 'react';
-import { IHepaFilter } from '../admin/companies/edit/[id]';
-import {
-	VocFilterLabels,
-	VocFilterType,
-	defaultVocFilterType,
-} from '@/src/constants/vocFilters';
+import { IHepaFilter, IVocFilter } from '../admin/companies/edit/[id]';
+import { VocFilterLabels, defaultVocFilterType } from '@/src/constants/vocFilters';
 
 export default function ProfilePage() {
 	// 회사 기본 정보
@@ -34,10 +30,10 @@ export default function ProfilePage() {
 	// 서비스 상태 (모달로 추가/삭제)
 	const [aqm, setAqm] = useState<boolean>(false);
 	const [hepa, setHepa] = useState<boolean>(false);
-	const [voc, setVoc] = useState<boolean>(false);
-	const [vocFilterType, setVocFilterType] =
-		useState<VocFilterType>(defaultVocFilterType);
-	const [vocQuantity, setVocQuantity] = useState<number>(0);
+        const [voc, setVoc] = useState<boolean>(false);
+        const [vocFilters, setVocFilters] = useState<IVocFilter[]>([
+                { filterType: defaultVocFilterType, quantity: 1 },
+        ]);
 
 	// HEPA 필터 목록 (기본 1개)
 	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([
@@ -49,7 +45,6 @@ export default function ProfilePage() {
 	const setUser = useUserStore((state) => state.setUser);
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 	const [saving, setSaving] = useState(false);
-	const vocFilterLabel = VocFilterLabels[vocFilterType];
 
 	useEffect(() => {
 		if (!company) return;
@@ -79,9 +74,17 @@ export default function ProfilePage() {
 			setFloorPlanFile(details.floorPlanFile);
 			setAqm(details.aqm);
 			setHepa(details.hepa);
-			setVoc(details.voc);
-			setVocFilterType(details.vocFilterType ?? defaultVocFilterType);
-			setVocQuantity(details.vocQuantity);
+                        setVoc(details.voc);
+                        setVocFilters(
+                                details.vocFilters.length
+                                        ? details.vocFilters
+                                        : [
+                                                  {
+                                                          filterType: defaultVocFilterType,
+                                                          quantity: 1,
+                                                  },
+                                          ]
+                        );
 			setHepaFilters(details.hepaFilters);
 		} catch (e) {
 			console.error('load company details error', e);
@@ -363,33 +366,42 @@ export default function ProfilePage() {
 							)}
 
 							{/* VOC */}
-							{voc && (
-								<div className='bg-Gray-100 rounded-[8px] flex flex-col self-stretch p-4 gap-3'>
-									<div className='flex items-center justify-between'>
-										<p>VOC 필터 교체 (6개월)</p>
-									</div>
-									<div className='flex md:flex-row flex-col md:items-center gap-3'>
-										<InputBox
-											style={{ minWidth: 180 }}
-											label='필터 종류'
-											inputAttr={{
-												value: vocFilterLabel,
-												readOnly: true,
-												disabled: true,
-											}}
-										/>
-										<InputBox
-											style={{ minWidth: 180 }}
-											label='개수'
-											inputAttr={{
-												placeholder: '0',
-												value: vocQuantity || '',
-												disabled: true,
-											}}
-										/>
-									</div>
-								</div>
-							)}
+                                                        {voc && (
+                                                                <div className='bg-Gray-100 rounded-[8px] flex flex-col self-stretch p-4 gap-3'>
+                                                                        <div className='flex items-center justify-between'>
+                                                                                <p>VOC 필터 교체 (6개월)</p>
+                                                                        </div>
+                                                                        {vocFilters.map((filter, idx) => (
+                                                                                <div
+                                                                                        key={filter.id ?? idx}
+                                                                                        className='flex md:flex-row flex-col md:items-center gap-3'>
+                                                                                        <InputBox
+                                                                                                style={{ minWidth: 180 }}
+                                                                                                label='필터 종류'
+                                                                                                inputAttr={{
+                                                                                                        value:
+                                                                                                                VocFilterLabels[
+                                                                                                                        filter
+                                                                                                                                .filterType
+                                                                                                                ],
+                                                                                                        readOnly: true,
+                                                                                                        disabled: true,
+                                                                                                }}
+                                                                                        />
+                                                                                        <InputBox
+                                                                                                style={{ minWidth: 180 }}
+                                                                                                label='개수'
+                                                                                                inputAttr={{
+                                                                                                        placeholder: '0',
+                                                                                                        value:
+                                                                                                                filter.quantity || '',
+                                                                                                        disabled: true,
+                                                                                                }}
+                                                                                        />
+                                                                                </div>
+                                                                        ))}
+                                                                </div>
+                                                        )}
 						</div>
 					</div>
 				</Card2>
