@@ -16,14 +16,14 @@ export const defaultSEOConfig: DefaultSeoProps = {
                         'AQM Square로 AQM 검사와 필터 교체 관리 서비스를 받으세요',
                 siteName: 'AQM Square',
                 type: 'website',
-                images: [
-                        {
-                                url: defaultImage,
-                                width: 700,
-                                height: 154.8,
-                                alt: 'AQM 로고',
-                        },
-                ],
+                // images: [
+                //         {
+                //                 url: defaultImage,
+                //                 width: 700,
+                //                 height: 154.8,
+                //                 alt: 'AQM 로고',
+                //         },
+                // ],
         },
         additionalMetaTags: [
                 {
