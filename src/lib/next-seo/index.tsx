@@ -34,12 +34,6 @@ export interface OpenGraph {
         images?: OpenGraphImage[];
 }
 
-export interface TwitterCard {
-        handle?: string;
-        site?: string;
-        cardType?: string;
-}
-
 export interface NextSeoProps {
         title?: string;
         defaultTitle?: string;
@@ -47,7 +41,6 @@ export interface NextSeoProps {
         canonical?: string;
         noindex?: boolean;
         openGraph?: OpenGraph;
-        twitter?: TwitterCard;
         additionalMetaTags?: AdditionalMetaTag[];
         additionalLinkTags?: AdditionalLinkTag[];
 }
@@ -61,7 +54,6 @@ const Seo = ({
         canonical,
         noindex,
         openGraph,
-        twitter,
         additionalMetaTags,
         additionalLinkTags,
 }: NextSeoProps) => {
@@ -137,19 +129,6 @@ const Seo = ({
                                         />
                                 ) : null
                         ))}
-                        {twitter?.cardType && (
-                                <meta
-                                        key='twitter:card'
-                                        name='twitter:card'
-                                        content={twitter.cardType}
-                                />
-                        )}
-                        {twitter?.handle && (
-                                <meta key='twitter:creator' name='twitter:creator' content={twitter.handle} />
-                        )}
-                        {twitter?.site && (
-                                <meta key='twitter:site' name='twitter:site' content={twitter.site} />
-                        )}
                         {computedTitle && (
                                 <meta key='twitter:title' name='twitter:title' content={computedTitle} />
                         )}

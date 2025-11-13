@@ -1,10 +1,14 @@
-<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AQM icon">
-  <defs>
-    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#111827"/>
-      <stop offset="100%" stop-color="#1E3A8A"/>
-    </linearGradient>
-  </defs>
-  <rect width="256" height="256" rx="48" fill="url(#gradient)"/>
-  <path d="M64 178L95 78h24l31 100h-22l-6-22H92l-6 22H64zm36-42h26l-12-44h-2l-12 44zm91.5 42c-20.5 0-33.5-12.5-33.5-33V78h21v63c0 10 4.5 16 13 16s13-6 13-16V78h21v67c0 20.5-13 33-34.5 33z" fill="#F9FAFB"/>
+<svg width="73" height="81" viewBox="0 0 73 81" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_2446_4974)">
+<path d="M20.9549 45.1371V33.9223L35.7566 41.3977L58.5903 22.9965L36.4876 10.2355L10.5426 25.2149V55.5127L36.4876 70.4921L62.4327 55.5127V43.4878L72.7671 35.1811V58.4894L70.1494 63.0234L39.0157 80.9985H33.6498L2.57446 63.0571L0 58.598V22.3572L2.53697 17.963L33.6498 0H38.9351L72.7671 19.5329V25.2149L39.5703 51.4562L33.6498 51.7977L20.9549 45.1371Z" fill="url(#paint0_linear_2446_4974)"/>
+</g>
+<defs>
+<linearGradient id="paint0_linear_2446_4974" x1="-1.1254e-06" y1="43.1204" x2="72.7671" y2="43.1204" gradientUnits="userSpaceOnUse">
+<stop offset="0.423077" stop-color="#1C57DB"/>
+<stop offset="1" stop-color="#6997FF"/>
+</linearGradient>
+<clipPath id="clip0_2446_4974">
+<rect width="72.7671" height="80.9985" fill="white"/>
+</clipPath>
+</defs>
 </svg>

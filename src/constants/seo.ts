@@ -1,34 +1,29 @@
 import type { DefaultSeoProps } from 'next-seo';
 
-export const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://aqm.example.com';
+export const SITE_URL = process.env.APP_BASE_URL ?? 'https://cncaqm.com';
 
-const defaultImage = `${SITE_URL}/login-bg.png`;
+const defaultImage = `${SITE_URL}/logo.svg`;
 
 export const defaultSEOConfig: DefaultSeoProps = {
-        title: 'AQM | 일정과 품질을 한 곳에서',
+        title: 'AQM Square | AQM 검사 및 필터 교체 관리 웹',
         description:
-                'AQM으로 현장 스케줄과 품질 점검을 한 곳에서 관리하고 팀과 실시간으로 공유하세요.',
+                'AQM Square로 병원 AQM 검사와 필터 교체 관리 서비스를 받으세요',
         canonical: SITE_URL,
         openGraph: {
                 url: SITE_URL,
-                title: 'AQM | 일정과 품질을 한 곳에서',
+                title: 'AQM Square | AQM 검사 및 필터 교체 관리 웹',
                 description:
-                        'AQM 대시보드에서 실시간 캘린더, 점검 기록, 담당자 정보를 빠르게 확인하세요.',
-                siteName: 'AQM',
+                        'AQM Square로 병원 AQM 검사와 필터 교체 관리 서비스를 받으세요',
+                siteName: 'AQM Square',
                 type: 'website',
                 images: [
                         {
                                 url: defaultImage,
                                 width: 1200,
                                 height: 630,
-                                alt: 'AQM 로그인 화면 미리보기',
+                                alt: 'AQM 로고',
                         },
                 ],
-        },
-        twitter: {
-                handle: '@aqm_official',
-                site: '@aqm_official',
-                cardType: 'summary_large_image',
         },
         additionalMetaTags: [
                 {
