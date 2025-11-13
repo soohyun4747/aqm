@@ -2,7 +2,10 @@ import { supabaseClient } from '@/lib/supabase/client';
 import { PAGE_SIZE } from '@/src/components/datagrid/DataGrid';
 import { Option } from '@/src/components/Dropdown';
 import { IHepaFilter, IVocFilter } from '@/src/pages/admin/companies/edit/[id]';
-import { VocFilterType, defaultVocFilterType } from '@/src/constants/vocFilters';
+import {
+	VocFilterType,
+	defaultVocFilterType,
+} from '@/src/constants/vocFilters';
 import { fileNameFromPath } from '../file';
 import { ICompany } from '@/src/stores/userStore';
 import { sanitizeFileName } from '../string';
@@ -12,7 +15,7 @@ import { removeFile } from './storage';
 const floorPlans_BUCKET = 'floor-plans';
 
 const sanitizePhones = (phones: string[] = []) =>
-        phones.map((phone) => phone.trim()).filter((phone) => phone.length > 0);
+	phones.map((phone) => phone.trim()).filter((phone) => phone.length > 0);
 
 export async function fetchCompanyWithCompanyId(companyId: string) {
 	try {
@@ -29,17 +32,17 @@ export async function fetchCompanyWithCompanyId(companyId: string) {
 		if (cErr) {
 			console.error('회사 데이터 로딩 실패:', cErr.message);
 		} else if (c) {
-                        const company: ICompany = {
-                                id: c.id,
-                                name: c.name,
-                                phone: c.phone ?? '',
-                                email: c.email ?? '',
-                                address: c.address ?? '',
-                                floorImagePath: c.floor_image_path ?? undefined,
-                                kakaoPhones: Array.isArray(c.kakao_phones)
-                                        ? c.kakao_phones
-                                        : [],
-                        };
+			const company: ICompany = {
+				id: c.id,
+				name: c.name,
+				phone: c.phone ?? '',
+				email: c.email ?? '',
+				address: c.address ?? '',
+				floorImagePath: c.floor_image_path ?? undefined,
+				kakaoPhones: Array.isArray(c.kakao_phones)
+					? c.kakao_phones
+					: [],
+			};
 
 			return company;
 		}
@@ -161,37 +164,38 @@ export const loadCompanyDetails = async (
 	}
 
 	// (2) 서비스 목록 조회
-        const { data: services, error: sErr } = await supabase
-                .from('company_services')
-                .select('id, service_type')
-                .eq('company_id', companyId);
-        if (sErr) throw sErr;
+	const { data: services, error: sErr } = await supabase
+		.from('company_services')
+		.select('id, service_type')
+		.eq('company_id', companyId);
+	if (sErr) throw sErr;
 
-        const hasAqm = (services ?? []).some((s) => s.service_type === 'aqm');
-        const hasHepa = (services ?? []).some((s) => s.service_type === 'hepa');
-        const vocService = (services ?? []).find((s) => s.service_type === 'voc');
+	const hasAqm = (services ?? []).some((s) => s.service_type === 'aqm');
+	const hasHepa = (services ?? []).some((s) => s.service_type === 'hepa');
+	const vocService = (services ?? []).find((s) => s.service_type === 'voc');
 
-        let vocFilters: IVocFilter[] = [
-                { filterType: defaultVocFilterType, quantity: 1 },
-        ];
-        if (vocService) {
-                const { data: vocFilterRows, error: vocErr } = await supabase
-                        .from('voc_filters')
-                        .select('id, filter_type, quantity')
-                        .eq('company_id', companyId)
-                        .eq('company_service_id', vocService.id)
-                        .order('id', { ascending: true });
+	let vocFilters: IVocFilter[] = [
+		{ filterType: defaultVocFilterType, quantity: 1 },
+	];
+	if (vocService) {
+		const { data: vocFilterRows, error: vocErr } = await supabase
+			.from('voc_filters')
+			.select('id, filter_type, quantity')
+			.eq('company_id', companyId)
+			.eq('company_service_id', vocService.id)
+			.order('id', { ascending: true });
 
-                if (vocErr) throw vocErr;
+		if (vocErr) throw vocErr;
 
-                if (vocFilterRows?.length) {
-                        vocFilters = vocFilterRows.map((filter: any) => ({
-                                id: filter.id,
-                                filterType: (filter.filter_type ?? defaultVocFilterType) as VocFilterType,
-                                quantity: Number(filter.quantity) || 0,
-                        }));
-                }
-        }
+		if (vocFilterRows?.length) {
+			vocFilters = vocFilterRows.map((filter: any) => ({
+				id: filter.id,
+				filterType: (filter.filter_type ??
+					defaultVocFilterType) as VocFilterType,
+				quantity: Number(filter.quantity) || 0,
+			}));
+		}
+	}
 
 	// (3) HEPA 필터 목록 조회
 	let hepaFilters: IHepaFilter[] = [
@@ -207,7 +211,7 @@ export const loadCompanyDetails = async (
 
 		if (filters?.length) {
 			hepaFilters = filters.map((f: any) => ({
-				filterType: f.filter_type === 'hepa' ? 'hepa' : 'pre', // 필요 시 preFrame 구분 로직 추가
+				filterType: f.filter_type,
 				width: Number(f.width) || 0,
 				height: Number(f.height) || 0,
 				depth: Number(f.depth) || 0,
@@ -216,44 +220,44 @@ export const loadCompanyDetails = async (
 		}
 	}
 
-        return {
-                floorPlanFile,
-                aqm: hasAqm,
-                hepa: hasHepa,
-                voc: !!vocService,
-                vocFilterType: vocFilters[0]?.filterType,
-                vocQuantity: vocFilters[0]?.quantity ?? 0,
-                vocFilters,
-                hepaFilters,
-        };
+	return {
+		floorPlanFile,
+		aqm: hasAqm,
+		hepa: hasHepa,
+		voc: !!vocService,
+		vocFilterType: vocFilters[0]?.filterType,
+		vocQuantity: vocFilters[0]?.quantity ?? 0,
+		vocFilters,
+		hepaFilters,
+	};
 };
 
 export const saveNewCompany = async (
-        floorPlanFile: File | null,
-        name: string,
-        phone: string,
-        email: string,
-        address: string,
-        kakaoPhones: string[],
-        aqm: boolean,
-        hepa: boolean,
-        hepaFilters: IHepaFilter[],
-        voc: boolean,
-        vocFilters: IVocFilter[]
+	floorPlanFile: File | null,
+	name: string,
+	phone: string,
+	email: string,
+	address: string,
+	kakaoPhones: string[],
+	aqm: boolean,
+	hepa: boolean,
+	hepaFilters: IHepaFilter[],
+	voc: boolean,
+	vocFilters: IVocFilter[]
 ) => {
-        const fd = new FormData();
-        if (floorPlanFile) fd.append('floorPlanFile', floorPlanFile);
-        fd.append('name', name);
-        fd.append('phone', phone);
-        fd.append('email', email);
-        fd.append('address', address);
-        const sanitizedPhones = sanitizePhones(kakaoPhones);
-        fd.append('kakaoPhones', JSON.stringify(sanitizedPhones));
-        fd.append('aqm', String(aqm));
-        fd.append('hepa', String(hepa));
-        fd.append('voc', String(voc));
-        fd.append('vocFilters', JSON.stringify(vocFilters));
-        fd.append('hepaFilters', JSON.stringify(hepaFilters));
+	const fd = new FormData();
+	if (floorPlanFile) fd.append('floorPlanFile', floorPlanFile);
+	fd.append('name', name);
+	fd.append('phone', phone);
+	fd.append('email', email);
+	fd.append('address', address);
+	const sanitizedPhones = sanitizePhones(kakaoPhones);
+	fd.append('kakaoPhones', JSON.stringify(sanitizedPhones));
+	fd.append('aqm', String(aqm));
+	fd.append('hepa', String(hepa));
+	fd.append('voc', String(voc));
+	fd.append('vocFilters', JSON.stringify(vocFilters));
+	fd.append('hepaFilters', JSON.stringify(hepaFilters));
 
 	const res = await fetch('/api/companies/new', {
 		method: 'POST',
@@ -266,20 +270,20 @@ export const saveNewCompany = async (
 };
 
 export const updateCompany = async (
-        company: ICompany,
-        floorPlanFile: File | null,
-        name: string,
-        phone: string,
-        email: string,
-        address: string,
-        kakaoPhones: string[],
-        aqm: boolean,
-        voc: boolean,
-        vocFilters: IVocFilter[],
-        hepa: boolean,
-        hepaFilters: IHepaFilter[]
+	company: ICompany,
+	floorPlanFile: File | null,
+	name: string,
+	phone: string,
+	email: string,
+	address: string,
+	kakaoPhones: string[],
+	aqm: boolean,
+	voc: boolean,
+	vocFilters: IVocFilter[],
+	hepa: boolean,
+	hepaFilters: IHepaFilter[]
 ) => {
-        const supabase = supabaseClient();
+	const supabase = supabaseClient();
 
 	// (1) floor plan 업로드
 	let floorImagePath = null;
@@ -303,22 +307,22 @@ export const updateCompany = async (
 	}
 
 	// (2) 회사 정보 업데이트
-        const { error: updateErr } = await supabase
-                .from('companies')
-                .update({
-                        name,
-                        phone,
-                        email,
-                        address,
-                        kakao_phones: (() => {
-                                const sanitized = sanitizePhones(kakaoPhones);
-                                return sanitized.length ? sanitized : null;
-                        })(),
-                        floor_image_path: floorImagePath,
-                })
-                .eq('id', company.id);
+	const { error: updateErr } = await supabase
+		.from('companies')
+		.update({
+			name,
+			phone,
+			email,
+			address,
+			kakao_phones: (() => {
+				const sanitized = sanitizePhones(kakaoPhones);
+				return sanitized.length ? sanitized : null;
+			})(),
+			floor_image_path: floorImagePath,
+		})
+		.eq('id', company.id);
 
-        if (updateErr) throw updateErr;
+	if (updateErr) throw updateErr;
 
 	// (3) 기존 서비스 목록 가져오기
 	const { data: services, error: sErr } = await supabase
@@ -327,19 +331,20 @@ export const updateCompany = async (
 		.eq('company_id', company.id);
 	if (sErr) throw sErr;
 
-        const existing = {
-                aqm: services?.some((s) => s.service_type === 'aqm') ?? false,
-                voc: services?.some((s) => s.service_type === 'voc') ?? false,
-                hepa: services?.some((s) => s.service_type === 'hepa') ?? false,
-        };
-        const vocServiceRow = services?.find((s) => s.service_type === 'voc');
-        const sanitizedVocFilters = (vocFilters?.length
-                ? vocFilters
-                : [{ filterType: defaultVocFilterType, quantity: 1 }]
-        ).map((filter) => ({
-                filterType: filter.filterType ?? defaultVocFilterType,
-                quantity: Number(filter.quantity) || 1,
-        }));
+	const existing = {
+		aqm: services?.some((s) => s.service_type === 'aqm') ?? false,
+		voc: services?.some((s) => s.service_type === 'voc') ?? false,
+		hepa: services?.some((s) => s.service_type === 'hepa') ?? false,
+	};
+	const vocServiceRow = services?.find((s) => s.service_type === 'voc');
+	const sanitizedVocFilters = (
+		vocFilters?.length
+			? vocFilters
+			: [{ filterType: defaultVocFilterType, quantity: 1 }]
+	).map((filter) => ({
+		filterType: filter.filterType ?? defaultVocFilterType,
+		quantity: Number(filter.quantity) || 1,
+	}));
 
 	// (4) 서비스 상태 비교 → 삽입/삭제
 	// AQM
@@ -357,60 +362,60 @@ export const updateCompany = async (
 	}
 
 	// VOC
-        if (!existing.voc && voc) {
-                const { data: newVocService, error: vocInsertErr } = await supabase
-                        .from('company_services')
-                        .insert({
-                                company_id: company.id,
-                                service_type: 'voc',
-                        })
-                        .select('id')
-                        .single();
-                if (vocInsertErr) throw vocInsertErr;
+	if (!existing.voc && voc) {
+		const { data: newVocService, error: vocInsertErr } = await supabase
+			.from('company_services')
+			.insert({
+				company_id: company.id,
+				service_type: 'voc',
+			})
+			.select('id')
+			.single();
+		if (vocInsertErr) throw vocInsertErr;
 
-                if (sanitizedVocFilters.length) {
-                        const payload = sanitizedVocFilters.map((filter) => ({
-                                company_id: company.id,
-                                company_service_id: newVocService.id,
-                                filter_type: filter.filterType,
-                                quantity: filter.quantity,
-                        }));
-                        const { error: vocFilterInsertErr } = await supabase
-                                .from('voc_filters')
-                                .insert(payload);
-                        if (vocFilterInsertErr) throw vocFilterInsertErr;
-                }
-        } else if (existing.voc && voc && vocServiceRow) {
-                await supabase
-                        .from('voc_filters')
-                        .delete()
-                        .eq('company_id', company.id)
-                        .eq('company_service_id', vocServiceRow.id);
+		if (sanitizedVocFilters.length) {
+			const payload = sanitizedVocFilters.map((filter) => ({
+				company_id: company.id,
+				company_service_id: newVocService.id,
+				filter_type: filter.filterType,
+				quantity: filter.quantity,
+			}));
+			const { error: vocFilterInsertErr } = await supabase
+				.from('voc_filters')
+				.insert(payload);
+			if (vocFilterInsertErr) throw vocFilterInsertErr;
+		}
+	} else if (existing.voc && voc && vocServiceRow) {
+		await supabase
+			.from('voc_filters')
+			.delete()
+			.eq('company_id', company.id)
+			.eq('company_service_id', vocServiceRow.id);
 
-                if (sanitizedVocFilters.length) {
-                        const payload = sanitizedVocFilters.map((filter) => ({
-                                company_id: company.id,
-                                company_service_id: vocServiceRow.id,
-                                filter_type: filter.filterType,
-                                quantity: filter.quantity,
-                        }));
-                        const { error: insertVocFilterErr } = await supabase
-                                .from('voc_filters')
-                                .insert(payload);
-                        if (insertVocFilterErr) throw insertVocFilterErr;
-                }
-        } else if (existing.voc && !voc) {
-                if (vocServiceRow) {
-                        await supabase
-                                .from('voc_filters')
-                                .delete()
-                                .eq('company_service_id', vocServiceRow.id);
-                }
-                await supabase
-                        .from('company_services')
-                        .delete()
-                        .eq('company_id', company.id)
-                        .eq('service_type', 'voc');
+		if (sanitizedVocFilters.length) {
+			const payload = sanitizedVocFilters.map((filter) => ({
+				company_id: company.id,
+				company_service_id: vocServiceRow.id,
+				filter_type: filter.filterType,
+				quantity: filter.quantity,
+			}));
+			const { error: insertVocFilterErr } = await supabase
+				.from('voc_filters')
+				.insert(payload);
+			if (insertVocFilterErr) throw insertVocFilterErr;
+		}
+	} else if (existing.voc && !voc) {
+		if (vocServiceRow) {
+			await supabase
+				.from('voc_filters')
+				.delete()
+				.eq('company_service_id', vocServiceRow.id);
+		}
+		await supabase
+			.from('company_services')
+			.delete()
+			.eq('company_id', company.id)
+			.eq('service_type', 'voc');
 	}
 
 	// HEPA
@@ -431,7 +436,7 @@ export const updateCompany = async (
 			const payload = hepaFilters.map((f) => ({
 				company_id: company.id,
 				company_service_id: hepaServiceId,
-				filter_type: f.filterType === 'preFrame' ? 'pre' : f.filterType,
+				filter_type: f.filterType,
 				width: Number(f.width) || 0,
 				height: Number(f.height) || 0,
 				depth: Number(f.depth) || 0,
@@ -457,7 +462,7 @@ export const updateCompany = async (
 			const payload = hepaFilters.map((f) => ({
 				company_id: company.id,
 				company_service_id: hepaService.id,
-				filter_type: f.filterType === 'preFrame' ? 'pre' : f.filterType,
+				filter_type: f.filterType,
 				width: Number(f.width) || 0,
 				height: Number(f.height) || 0,
 				depth: Number(f.depth) || 0,
@@ -486,46 +491,44 @@ export async function deleteCompany(companyId: string) {
 }
 
 export async function fetchCompanyInfobyId(id: string): Promise<ICompany> {
-        const supabase = supabaseClient();
-        const { data, error } = await supabase
-                .from('companies')
-                .select(
-                        'id, name, email, phone, address, floor_image_path, kakao_phones'
-                )
-                .eq('id', id)
-                .single(); // id는 PK라서 하나만 반환
+	const supabase = supabaseClient();
+	const { data, error } = await supabase
+		.from('companies')
+		.select(
+			'id, name, email, phone, address, floor_image_path, kakao_phones'
+		)
+		.eq('id', id)
+		.single(); // id는 PK라서 하나만 반환
 
-        if (error) {
-                console.error('❌ fetchCompanyInfobyId error:', error.message);
-                throw error;
-        }
+	if (error) {
+		console.error('❌ fetchCompanyInfobyId error:', error.message);
+		throw error;
+	}
 
-        return {
-                id: data.id,
-                name: data.name ?? '',
-                email: data.email ?? '',
-                phone: data.phone ?? '',
-                address: data.address ?? '',
-                floorImagePath: data.floor_image_path ?? undefined,
-                kakaoPhones: Array.isArray(data.kakao_phones)
-                        ? data.kakao_phones
-                        : [],
-        };
+	return {
+		id: data.id,
+		name: data.name ?? '',
+		email: data.email ?? '',
+		phone: data.phone ?? '',
+		address: data.address ?? '',
+		floorImagePath: data.floor_image_path ?? undefined,
+		kakaoPhones: Array.isArray(data.kakao_phones) ? data.kakao_phones : [],
+	};
 }
 
 export const updateCompanyKakaoPhones = async (
-        companyId: string,
-        kakaoPhones: string[]
+	companyId: string,
+	kakaoPhones: string[]
 ) => {
-        const supabase = supabaseClient();
-        const sanitized = sanitizePhones(kakaoPhones);
+	const supabase = supabaseClient();
+	const sanitized = sanitizePhones(kakaoPhones);
 
-        const { error } = await supabase
-                .from('companies')
-                .update({ kakao_phones: sanitized.length ? sanitized : null })
-                .eq('id', companyId);
+	const { error } = await supabase
+		.from('companies')
+		.update({ kakao_phones: sanitized.length ? sanitized : null })
+		.eq('id', companyId);
 
-        if (error) throw error;
+	if (error) throw error;
 
-        return sanitized;
+	return sanitized;
 };
