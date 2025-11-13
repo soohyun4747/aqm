@@ -20,6 +20,7 @@ const adminPathTitles: { [key: string]: string } = {
 const companyPathTitles: { [key: string]: string } = {
 	'/calendar': '캘린더',
 	'/managementRecords': '관리기록',
+	'/profile': '프로필'
 };
 
 const menuId = 'menu';

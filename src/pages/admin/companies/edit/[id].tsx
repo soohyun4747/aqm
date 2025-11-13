@@ -249,7 +249,7 @@ export default function AdminUsersEditPage() {
 	};
 
 	const isMandatoryInfoFilled = () => {
-		if (name && phone && email && address) {
+		if (name && phone && email && address && kakaoPhones.length > 0) {
 			return true;
 		} else {
 			alert('필수 항목들을 모두 채워주세요.');
@@ -258,7 +258,7 @@ export default function AdminUsersEditPage() {
 	};
 
 	const handleUpdate = async () => {
-		if (company) {
+		if (company && isMandatoryInfoFilled()) {
 			try {
 				setSaving(true);
 				await updateCompany(
@@ -365,13 +365,14 @@ export default function AdminUsersEditPage() {
 
 							<div className='flex flex-col gap-2'>
 								<p className='text-Gray-900 body-md-medium'>
-									카카오 알림 수신 번호
+									카카오 알림 수신 번호{' '}
+									<span className='text-Red-600'>*</span>
 								</p>
 								<div className='flex flex-col gap-3'>
 									{kakaoPhones.map((value, idx) => (
 										<div
 											key={`kakao-phone-${idx}`}
-											className='flex items-center gap-3'>
+											className='flex items-end gap-3'>
 											<InputBox
 												label={`전화번호 ${idx + 1}`}
 												inputAttr={{
@@ -394,12 +395,14 @@ export default function AdminUsersEditPage() {
 												onClick={() =>
 													removeKakaoPhone(idx)
 												}
+												style={{ paddingBottom: 10 }}
 											/>
 										</div>
 									))}
 									<Button
 										variant='alternative'
-										onClick={addKakaoPhone}>
+										onClick={addKakaoPhone}
+										style={{ width: 'fit-content' }}>
 										<Plus /> 번호 추가
 									</Button>
 								</div>
