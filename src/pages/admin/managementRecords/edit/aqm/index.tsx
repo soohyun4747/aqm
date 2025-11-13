@@ -18,7 +18,10 @@ import { useRouter } from 'next/router';
 import { Services } from '@/src/utils/supabase/companyServices';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
 import { BarChart } from '@/src/components/BarChart';
-import { aqmDangerStandards, Series } from '@/src/pages/managementRecords/detail/aqm/[id]';
+import {
+	aqmDangerStandards,
+	Series,
+} from '@/src/pages/managementRecords/detail/aqm/[id]';
 import {
 	buildAqmData,
 	buildPmDataByPosition,
@@ -290,22 +293,24 @@ function AdminManagementRecordsEditAQMPage() {
 									onFileChange={(file) => setVocFile(file)}
 									availableTypes={['.csv', '.xlsx', '.xls']}
 								/>
-								<div className='flex flex-col gap-1'>
-									<p className='text-Primary-700 body-lg-medium'>
-										VOCs{' '}
-										<span className='text-Gray-400 body-lg-regular'>
-											(Volatile Organic Compounds)
-										</span>
-									</p>
-									<BarChart
-										safeStandard={'0-400'}
-										warningStandard={'401-500'}
-										dangerStandard={'>501'}
-										maxValue={600}
-										unit={'µg/m3'}
-										data={vocData}
-									/>
-								</div>
+								{vocData.length > 0 && (
+									<div className='flex flex-col gap-1'>
+										<p className='text-Primary-700 body-lg-medium'>
+											VOCs{' '}
+											<span className='text-Gray-400 body-lg-regular'>
+												(Volatile Organic Compounds)
+											</span>
+										</p>
+										<BarChart
+											safeStandard={'0-400'}
+											warningStandard={'401-500'}
+											dangerStandard={'>501'}
+											maxValue={600}
+											unit={'µg/m3'}
+											data={vocData}
+										/>
+									</div>
+								)}
 							</div>
 						</Card>
 						<Card>

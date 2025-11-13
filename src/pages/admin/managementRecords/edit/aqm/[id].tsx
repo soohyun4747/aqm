@@ -23,7 +23,10 @@ import {
 import { useRouter } from 'next/router';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
 import { usePathname } from 'next/navigation';
-import { aqmDangerStandards, Series } from '@/src/pages/managementRecords/detail/aqm/[id]';
+import {
+	aqmDangerStandards,
+	Series,
+} from '@/src/pages/managementRecords/detail/aqm/[id]';
 import {
 	buildAqmData,
 	buildPmDataByPosition,
@@ -31,6 +34,7 @@ import {
 	detectUnit,
 } from '@/src/utils/file';
 import { BarChart } from '@/src/components/BarChart';
+import { useLoadingStore } from '@/src/stores/loadingStore';
 
 export type MicrobioAnalysisType = 'pass' | 'fail';
 
@@ -69,6 +73,8 @@ function AdminManagementRecordsEditAQMPage() {
 	// 저장 로딩
 	const [saving, setSaving] = useState(false);
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
+
+	const { open: openLoading, close: closeLoading } = useLoadingStore();
 
 	const pathname = usePathname();
 	const recordId = pathname?.split('/').at(5);
@@ -135,6 +141,7 @@ function AdminManagementRecordsEditAQMPage() {
 	};
 
 	const loadAqmResult = async (managementRecord: IManagementRecordRow) => {
+		openLoading();
 		try {
 			const { record, result, files } = await loadAqmBundleAsFiles(
 				managementRecord.id
@@ -166,6 +173,7 @@ function AdminManagementRecordsEditAQMPage() {
 			console.error(e);
 			setToastMessage({ status: 'error', message: '데이터 로드 실패' });
 		}
+		closeLoading();
 	};
 
 	const getSetCompanyOptions = async () => {

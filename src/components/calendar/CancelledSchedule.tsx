@@ -22,15 +22,13 @@ export const CancelledSchedule = ({ schedule }: { schedule: ISchedule }) => {
 };
 
 const CancelledScheduleCompany = ({ schedule }: { schedule: ISchedule }) => {
-
 	return (
 		<>
-			<div
-				className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Gray-100 hover:cursor-pointer'>
+			<div className='md:px-2 md:py-1 flex items-center gap-2 rounded-[8px] md:bg-Gray-100 hover:cursor-pointer'>
 				<GrayCircle />
 				<p className='hidden md:block body-md-medium text-Gray-400'>
 					{formatToHHMM(schedule.scheduledAt)}{' '}
-					{serviceNames[schedule.serviceType]}
+					{serviceNames[schedule.serviceType]} {'(취소됨)'}
 				</p>
 			</div>
 		</>
