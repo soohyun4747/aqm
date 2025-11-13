@@ -28,6 +28,7 @@ export function InputBox(props: InputBoxProps) {
 					<input
 						{...props.inputAttr}
 						className='outline-0 body-md-regular w-full'
+						autoComplete='new-password'
 					/>
 				</div>
 				{props.onDelete && (
