@@ -1,0 +1,10 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AQM icon">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827"/>
+      <stop offset="100%" stop-color="#1E3A8A"/>
+    </linearGradient>
+  </defs>
+  <rect width="256" height="256" rx="48" fill="url(#gradient)"/>
+  <path d="M64 178L95 78h24l31 100h-22l-6-22H92l-6 22H64zm36-42h26l-12-44h-2l-12 44zm91.5 42c-20.5 0-33.5-12.5-33.5-33V78h21v63c0 10 4.5 16 13 16s13-6 13-16V78h21v67c0 20.5-13 33-34.5 33z" fill="#F9FAFB"/>
+</svg>

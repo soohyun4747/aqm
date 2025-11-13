@@ -1,6 +1,7 @@
 import '@/src/styles/globals.css';
 import { AppProps } from 'next/app';
 import { useEffect } from 'react';
+import { DefaultSeo } from 'next-seo';
 import { screenTypes, useScreenTypeStore } from '../stores/screenTypeStore';
 import { IAdminContact, ICompany, useUserStore } from '../stores/userStore';
 import { fetchProfileWithId } from '../utils/supabase/profile';
@@ -10,6 +11,7 @@ import { fetchSession } from '../utils/supabase/session';
 import { useSelectedCompanyStore } from '../stores/selectedCompanyStore';
 import LoadingOverlay from '../components/LoadingOverlay';
 import { fetchAdminContactByUserId } from '../utils/supabase/adminContacts';
+import { defaultSEOConfig } from '../constants/seo';
 
 function App({ Component, pageProps }: AppProps) {
 	const setScreenType = useScreenTypeStore((state) => state.setScreenType);
@@ -113,12 +115,15 @@ function App({ Component, pageProps }: AppProps) {
 		};
 	}, [setUser, router, pathname]);
 
-	return (
-		<div className='min-h-dvh bg-background text-foreground'>
-			<Component {...pageProps} />
-			<LoadingOverlay />
-		</div>
-	);
+        return (
+                <>
+                        <DefaultSeo {...defaultSEOConfig} />
+                        <div className='min-h-dvh bg-background text-foreground'>
+                                <Component {...pageProps} />
+                                <LoadingOverlay />
+                        </div>
+                </>
+        );
 }
 
 export default App;

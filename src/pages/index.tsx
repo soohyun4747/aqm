@@ -7,15 +7,18 @@ import { InputBox } from '@/src/components/InputBox';
 import Image from 'next/image';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import { NextSeo } from 'next-seo';
 import { IAdminContact, ICompany, useUserStore } from '@/src/stores/userStore';
 import { fetchLogin } from '@/src/utils/supabase/login';
 import { fetchProfileWithId } from '@/src/utils/supabase/profile';
 import { fetchCompanyWithCompanyId } from '@/src/utils/supabase/company';
 import { useSelectedCompanyStore } from '../stores/selectedCompanyStore';
 import { fetchAdminContactByUserId } from '../utils/supabase/adminContacts';
+import { SITE_URL } from '../constants/seo';
 
 export default function LoginPage() {
-	const router = useRouter();
+        const router = useRouter();
+        const loginPageUrl = `${SITE_URL}/`;
 
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
@@ -89,11 +92,23 @@ export default function LoginPage() {
 		}
 	};
 
-	return (
-		<div className='p-6 flex gap-6 min-h-screen max-h-screen items-center overflow-hidden relative'>
-			<div className='flex items-center justify-center h-full flex-1 flex-col gap-6'>
-				<Image
-					src={`/logo.svg`}
+        return (
+                <>
+                        <NextSeo
+                                title='AQM 로그인 | 지금 바로 업무 공간에 접속하세요'
+                                description='AQM 계정으로 로그인하고 일정, 기록, 담당자 정보를 한 번에 확인하세요.'
+                                canonical={loginPageUrl}
+                                openGraph={{
+                                        url: loginPageUrl,
+                                        title: 'AQM 로그인 | 지금 바로 업무 공간에 접속하세요',
+                                        description:
+                                                'AQM 계정으로 로그인하고 일정, 기록, 담당자 정보를 한 번에 확인하세요.',
+                                }}
+                        />
+                        <div className='p-6 flex gap-6 min-h-screen max-h-screen items-center overflow-hidden relative'>
+                                <div className='flex items-center justify-center h-full flex-1 flex-col gap-6'>
+                                        <Image
+                                                src={`/logo.svg`}
 					alt={'logo'}
 					height={36}
 					width={202.28}
@@ -155,13 +170,14 @@ export default function LoginPage() {
 				</Card>
 			</div>
 
-			<Image
-				src={'/login-bg.png'}
-				alt={'login-bg'}
-				height={900}
-				width={900}
-				className='md:relative md:h-[calc(100vh-48px)] md:w-[50%] md:opacity-100 absolute top-[-10%] left-0 z-[-1] opacity-50 h-[120%]'
-			/>
-		</div>
-	);
+                        <Image
+                                src={'/login-bg.png'}
+                                alt={'login-bg'}
+                                height={900}
+                                width={900}
+                                className='md:relative md:h-[calc(100vh-48px)] md:w-[50%] md:opacity-100 absolute top-[-10%] left-0 z-[-1] opacity-50 h-[120%]'
+                        />
+                        </div>
+                </>
+        );
 }
