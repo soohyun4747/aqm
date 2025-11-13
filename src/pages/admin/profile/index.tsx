@@ -25,11 +25,11 @@ export default function AdminProfilePage() {
 
 	const [emails, setEmails] = useState<string[]>(['']);
 	const [phones, setPhones] = useState<string[]>(['']);
-        const [saving, setSaving] = useState(false);
-        const [passwordSaving, setPasswordSaving] = useState(false);
-        const [newPassword, setNewPassword] = useState('');
-        const [confirmPassword, setConfirmPassword] = useState('');
-        const [toastMessage, setToastMessage] = useState<IToastMessage>();
+	const [saving, setSaving] = useState(false);
+	const [passwordSaving, setPasswordSaving] = useState(false);
+	const [newPassword, setNewPassword] = useState('');
+	const [confirmPassword, setConfirmPassword] = useState('');
+	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 
 	const isAdmin = user?.userType === 'admin';
 
@@ -123,8 +123,8 @@ export default function AdminProfilePage() {
 		[phones]
 	);
 
-        const handleSave = async () => {
-                if (!user || !isAdmin) return;
+	const handleSave = async () => {
+		if (!user || !isAdmin) return;
 
 		if (!hasValidEmail || !hasValidPhone) {
 			setToastMessage({
@@ -154,52 +154,51 @@ export default function AdminProfilePage() {
 			});
 		} finally {
 			setSaving(false);
-                }
-        };
+		}
+	};
 
-        const handleChangePassword = async () => {
-                if (!newPassword.trim()) {
-                        setToastMessage({
-                                status: 'error',
-                                message: '새 비밀번호를 입력해 주세요.',
-                        });
-                        return;
-                }
+	const handleChangePassword = async () => {
+		if (!newPassword.trim()) {
+			setToastMessage({
+				status: 'error',
+				message: '새 비밀번호를 입력해 주세요.',
+			});
+			return;
+		}
 
-                if (newPassword !== confirmPassword) {
-                        setToastMessage({
-                                status: 'error',
-                                message: '비밀번호와 확인 비밀번호가 일치하지 않습니다.',
-                        });
-                        return;
-                }
+		if (newPassword !== confirmPassword) {
+			setToastMessage({
+				status: 'error',
+				message: '비밀번호와 확인 비밀번호가 일치하지 않습니다.',
+			});
+			return;
+		}
 
-                try {
-                        setPasswordSaving(true);
-                        const supabase = supabaseClient();
-                        const { error } = await supabase.auth.updateUser({
-                                password: newPassword,
-                        });
-                        if (error) throw error;
+		try {
+			setPasswordSaving(true);
+			const supabase = supabaseClient();
+			const { error } = await supabase.auth.updateUser({
+				password: newPassword,
+			});
+			if (error) throw error;
 
-                        setNewPassword('');
-                        setConfirmPassword('');
-                        setToastMessage({
-                                status: 'confirm',
-                                message: '비밀번호가 변경되었습니다.',
-                        });
-                } catch (error: any) {
-                        console.error('change password error', error);
-                        setToastMessage({
-                                status: 'error',
-                                message:
-                                        error?.message ||
-                                        '비밀번호 변경 중 오류가 발생했습니다.',
-                        });
-                } finally {
-                        setPasswordSaving(false);
-                }
-        };
+			setNewPassword('');
+			setConfirmPassword('');
+			setToastMessage({
+				status: 'confirm',
+				message: '비밀번호가 변경되었습니다.',
+			});
+		} catch (error: any) {
+			console.error('change password error', error);
+			setToastMessage({
+				status: 'error',
+				message:
+					error?.message || '비밀번호 변경 중 오류가 발생했습니다.',
+			});
+		} finally {
+			setPasswordSaving(false);
+		}
+	};
 
 	return (
 		<div className='flex flex-col bg-Gray-100 min-h-screen'>
@@ -209,17 +208,18 @@ export default function AdminProfilePage() {
 			</div>
 
 			<div className='p-6 flex flex-col gap-[20px]'>
-                                <Card2>
-                                        <div className='flex flex-col gap-6'>
+				<Card2>
+					<div className='flex flex-col gap-6'>
 						<div className='flex flex-col gap-3'>
 							<div className='flex items-center justify-between'>
 								<p className='text-Gray-900 body-lg-medium'>
 									이메일 목록
 								</p>
-								{/* <IconButton
-									icon={<Plus />}
-									onClick={addEmailField}
-								/> */}
+								<Button
+									onClick={handleSave}
+									disabled={saving}>
+									{saving ? '저장 중…' : '저장'}
+								</Button>
 							</div>
 							<div className='flex flex-col gap-3'>
 								{emails.map((email, idx) => (
@@ -304,62 +304,51 @@ export default function AdminProfilePage() {
 							</Button>
 						</div>
 					</div>
-                                </Card2>
+				</Card2>
 
-                                <Card2>
-                                        <div className='flex flex-col gap-6'>
-                                                <p className='text-Gray-900 body-lg-medium'>비밀번호 변경</p>
+				<Card2>
+					<div className='flex flex-col gap-6'>
+						<div className='flex items-center justify-between'>
 
-                                                <div className='flex flex-col gap-4'>
-                                                        <InputBox
-                                                                label='새 비밀번호'
-                                                                inputAttr={{
-                                                                        value: newPassword,
-                                                                        onChange: (e) =>
-                                                                                setNewPassword(
-                                                                                        e.target.value
-                                                                                ),
-                                                                        type: 'password',
-                                                                        placeholder: '********',
-                                                                        autoComplete: 'new-password',
-                                                                }}
-                                                                isMandatory
-                                                        />
-                                                        <InputBox
-                                                                label='새 비밀번호 확인'
-                                                                inputAttr={{
-                                                                        value: confirmPassword,
-                                                                        onChange: (e) =>
-                                                                                setConfirmPassword(
-                                                                                        e.target.value
-                                                                                ),
-                                                                        type: 'password',
-                                                                        placeholder: '********',
-                                                                        autoComplete: 'new-password',
-                                                                }}
-                                                                isMandatory
-                                                        />
-                                                </div>
+						<p className='text-Gray-900 body-lg-medium'>
+							비밀번호 변경
+						</p>
+							<Button
 
-                                                <div className='flex justify-end'>
-                                                        <Button
-                                                                onClick={handleChangePassword}
-                                                                disabled={passwordSaving}>
-                                                                {passwordSaving
-                                                                        ? '변경 중…'
-                                                                        : '변경하기'}
-                                                        </Button>
-                                                </div>
-                                        </div>
-                                </Card2>
+								onClick={handleChangePassword}
+								disabled={passwordSaving}>
+								{passwordSaving ? '변경 중…' : '변경하기'}
+							</Button>
+						</div>
 
-                                <div className='flex justify-end'>
-                                        <Button
-						onClick={handleSave}
-						disabled={saving}>
-						{saving ? '저장 중…' : '저장'}
-					</Button>
-				</div>
+						<div className='flex flex-col gap-4'>
+							<InputBox
+								label='새 비밀번호'
+								inputAttr={{
+									value: newPassword,
+									onChange: (e) =>
+										setNewPassword(e.target.value),
+									type: 'password',
+									placeholder: '********',
+									autoComplete: 'new-password',
+								}}
+								isMandatory
+							/>
+							<InputBox
+								label='새 비밀번호 확인'
+								inputAttr={{
+									value: confirmPassword,
+									onChange: (e) =>
+										setConfirmPassword(e.target.value),
+									type: 'password',
+									placeholder: '********',
+									autoComplete: 'new-password',
+								}}
+								isMandatory
+							/>
+						</div>
+					</div>
+				</Card2>
 			</div>
 
 			{toastMessage && (
