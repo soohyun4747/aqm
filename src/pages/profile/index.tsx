@@ -15,7 +15,7 @@ import {
 	updateCompanyKakaoPhones,
 } from '@/src/utils/supabase/company';
 import { useEffect, useState } from 'react';
-import { IHepaFilter, IVocFilter } from '../admin/companies/edit/[id]';
+import { HepaFilterNames, IHepaFilter, IVocFilter } from '../admin/companies/edit/[id]';
 import { VocFilterLabels, defaultVocFilterType } from '@/src/constants/vocFilters';
 
 export default function ProfilePage() {
@@ -318,7 +318,7 @@ export default function ProfilePage() {
 											<InputBox
 												label={'필터 유형'}
 												inputAttr={{
-													value: filter.filterType,
+													value: HepaFilterNames[filter.filterType],
 													id: `filter-type-${idx}`,
 													disabled: true,
 												}}

@@ -1,19 +1,21 @@
 import { supabaseClient } from '@/lib/supabase/client';
 
 export interface IVOCResultRow {
-	id?: string;
-	company_id: string;
-	management_record_id: string;
-	confirm: boolean;
+id?: string;
+company_id: string;
+management_record_id: string;
+filter_type: string;
+quantity: number;
+confirm: boolean;
 }
 
 export async function fetchVocResultsByRecordId(recordId: string) {
 	const supabase = supabaseClient();
 
-	const { data, error } = await supabase
-		.from('voc_results')
-		.select('id, company_id, management_record_id, filter_id, confirm')
-		.eq('management_record_id', recordId);
+const { data, error } = await supabase
+.from('voc_results')
+.select('id, company_id, management_record_id, filter_type, quantity, confirm')
+.eq('management_record_id', recordId);
 
 	if (error) throw error;
 
@@ -40,12 +42,14 @@ export async function updateVocResults(rows: IVOCResultRow[]) {
 	for (let i = 0; i < targets.length; i += CHUNK) {
 		const chunk = targets.slice(i, i + CHUNK);
 
-		const tasks = chunk.map((r) => {
-			const updatePayload: any = {
-				confirm: r.confirm,
-				// 필요 시 아래 주석 해제 (스키마/정책상 안전한 경우에만)
-				// company_id: r.companyId,
-			};
+const tasks = chunk.map((r) => {
+const updatePayload: any = {
+confirm: r.confirm,
+filter_type: r.filter_type,
+quantity: r.quantity,
+// 필요 시 아래 주석 해제 (스키마/정책상 안전한 경우에만)
+// company_id: r.companyId,
+};
 			if (r.management_record_id) {
 				updatePayload.management_record_id = r.management_record_id;
 			}

@@ -5,13 +5,11 @@ import { IToastMessage, ToastMessage } from '@/src/components/ToastMessage';
 import { useManagementRecordStore } from '@/src/stores/managementRecordStore';
 import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import { useEffect, useState } from 'react';
-import { fetchHepaFiltersWithCompanyId } from '@/src/utils/supabase/hepaFilters';
 import { fetchHepaResultsByRecordId } from '@/src/utils/supabase/hepaResults';
 import { IHEPAResult } from '@/src/pages/admin/managementRecords/edit/hepa/[id]';
 import {
-	HepaFilterNames,
-	HepaFilterType,
-	IHepaFilter,
+HepaFilterNames,
+HepaFilterType,
 } from '@/src/pages/admin/companies/edit/[id]';
 import { Calendar } from '@/src/components/icons/Calendar';
 import { usePathname } from 'next/navigation';
@@ -21,8 +19,7 @@ import {
 } from '@/src/utils/supabase/managementRecord';
 
 function AdminManagementRecordsEditHepaPage() {
-	const [hepaResults, setHepaResults] = useState<IHEPAResult[]>([]);
-	const [hepaFilters, setHepaFilters] = useState<IHepaFilter[]>([]);
+const [hepaResults, setHepaResults] = useState<IHEPAResult[]>([]);
 
 	const [toastMessage, setToastMessage] = useState<IToastMessage>();
 	const [managementRecord, setManagementRecord] =
@@ -42,8 +39,7 @@ function AdminManagementRecordsEditHepaPage() {
 			const recordInfo = await fetchManagementRecordById(recordId);
 			if (recordInfo) {
 				setManagementRecord(recordInfo);
-				getSetHepaResults(recordId);
-				getSetHepaFilters(recordInfo.company_id);
+getSetHepaResults(recordId);
 			}
 		} catch (error) {
 			console.error(error);
@@ -51,19 +47,23 @@ function AdminManagementRecordsEditHepaPage() {
 		}
 	};
 
-	const getSetHepaResults = async (recordId: string) => {
-		try {
-			const data = await fetchHepaResultsByRecordId(recordId);
+const getSetHepaResults = async (recordId: string) => {
+try {
+const data = await fetchHepaResultsByRecordId(recordId);
 
-			const mapped: IHEPAResult[] =
-				(data ?? []).map((row) => ({
-					id: row.id,
-					companyId: row.company_id,
-					managementRecordId: row.management_record_id,
-					filterId: row.filter_id,
-					confirm: row.confirm,
-				})) ?? [];
-			setHepaResults(mapped);
+const mapped: IHEPAResult[] =
+(data ?? []).map((row) => ({
+id: row.id,
+companyId: row.company_id,
+managementRecordId: row.management_record_id,
+filterType: row.filter_type as HepaFilterType,
+width: row.width,
+height: row.height,
+depth: row.depth,
+quantity: row.quantity,
+confirm: row.confirm,
+})) ?? [];
+setHepaResults(mapped);
 		} catch (error) {
 			console.error(error);
 			setToastMessage({
@@ -73,49 +73,34 @@ function AdminManagementRecordsEditHepaPage() {
 		}
 	};
 
-	const getSetHepaFilters = async (companyId: string) => {
-		try {
-			const data = await fetchHepaFiltersWithCompanyId(companyId);
-			setHepaFilters((data as unknown as IHepaFilter[]) ?? []);
-		} catch (error) {
-			setToastMessage({
-				status: 'error',
-				message: '데이터를 불러오는데 실패하였습니다',
-			});
-		}
-	};
-
-	const columns: TableHeader[] = [
-		{
-			field: 'filter_type',
-			headerName: '필터 종류',
-			render: (value: HepaFilterType) => HepaFilterNames[value],
-		},
-		{
-			field: 'width',
-			headerName: '가로',
-		},
-		{
-			field: 'height',
-			headerName: '세로',
-		},
-		{
-			field: 'depth',
-			headerName: '두께',
-		},
-		{
-			field: 'quantity',
-			headerName: '개수',
-		},
-		{
-			field: '',
-			headerName: '교체 확인',
-			render: (value, row) =>
-				hepaResults?.find((res) => res.filterId === row.id)?.confirm
-					? '완료'
-					: '미완료',
-		},
-	];
+const columns: TableHeader[] = [
+{
+field: 'filterType',
+headerName: '필터 종류',
+render: (value: HepaFilterType) => HepaFilterNames[value],
+},
+{
+field: 'width',
+headerName: '가로',
+},
+{
+field: 'height',
+headerName: '세로',
+},
+{
+field: 'depth',
+headerName: '두께',
+},
+{
+field: 'quantity',
+headerName: '개수',
+},
+{
+field: '',
+headerName: '교체 확인',
+render: (value, row: IHEPAResult) => (row.confirm ? '완료' : '미완료'),
+},
+];
 
 	return (
 		<div>
@@ -204,10 +189,7 @@ function AdminManagementRecordsEditHepaPage() {
 									</p>
 								</div>
 								<div className='overflow-x-auto'>
-									<Table
-										columns={columns}
-										rows={hepaFilters}
-									/>
+<Table columns={columns} rows={hepaResults} />
 								</div>
 							</div>
 						</Card>

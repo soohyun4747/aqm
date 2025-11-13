@@ -23,11 +23,12 @@ import { DropdownSearchable } from '@/src/components/DropdownSearchable';
 import { VocFilterLabels, VocFilterType } from '@/src/constants/vocFilters';
 
 export interface IVocResult {
-	id?: string;
-	companyId: string;
-	managementRecordId?: string;
-	filterId: string;
-	confirm: boolean;
+id?: string;
+companyId: string;
+managementRecordId?: string;
+filterType: VocFilterType;
+quantity: number;
+confirm: boolean;
 }
 
 export interface IVocFilter {
@@ -37,8 +38,7 @@ export interface IVocFilter {
 }
 
 function AdminManagementRecordsEditVocPage() {
-	const [vocResults, setVocResults] = useState<IVocResult[]>([]);
-	const [vocFilters, setVocFilters] = useState<IVocFilter[]>([]);
+const [vocResults, setVocResults] = useState<IVocResult[]>([]);
 
 	const [date, setDate] = useState<Date>(today);
 	const [companyId, setCompanyId] = useState('');
@@ -64,44 +64,42 @@ function AdminManagementRecordsEditVocPage() {
 		}
 	};
 
-	console.log({ vocResults });
-
 	const getSetCompanyOptions = async () => {
 		const options = await fetchCompanyOptions();
 		setCompanyOptions(options);
 	};
 
-	const getSetVocFiltersandInitResults = async (companyId: string) => {
-		try {
-			const data = await fetchVocFiltersByCompanyId(companyId);
-			setVocFilters((data as unknown as IVocFilter[]) ?? []);
-			setVocResults(
-				data.map((filter) => ({
-					companyId: companyId,
-					filterId: filter.id,
-					confirm: false,
-				}))
-			);
-		} catch (error) {
-			setToastMessage({
-				status: 'error',
-				message: '데이터를 불러오는데 실패하였습니다',
-			});
-		}
-	};
+const getSetVocFiltersandInitResults = async (companyId: string) => {
+try {
+const data = await fetchVocFiltersByCompanyId(companyId);
+setVocResults(
+(data ?? []).map((filter) => ({
+companyId,
+filterType: filter.filter_type as VocFilterType,
+quantity: filter.quantity,
+confirm: false,
+}))
+);
+} catch (error) {
+setToastMessage({
+status: 'error',
+message: '데이터를 불러오는데 실패하였습니다',
+});
+}
+};
 
-	const onClickFilterConfirm = (row: IVocResult) => {
-		setVocResults((prev) => {
-			if (prev) {
-				const result = prev.find((res) => res.filterId === row.id);
-				if (result) {
-					result.confirm = !result.confirm;
-					return JSON.parse(JSON.stringify(prev));
-				}
-				return prev;
-			}
-		});
-	};
+const onClickFilterConfirm = (row: IVocResult) => {
+setVocResults((prev) =>
+prev.map((res) =>
+res === row
+? {
+...res,
+confirm: !res.confirm,
+}
+: res
+)
+);
+};
 
 	const onClickAllCheck = () => {
 		setVocResults((prev) => {
@@ -140,12 +138,13 @@ function AdminManagementRecordsEditVocPage() {
 			const managementRecordId = newManagementRecord.id;
 
 			// 2) voc_results 일괄 insert (현재 상태 전체 저장)
-			const vocResultsWithIds: IVOCResultRow[] = vocResults.map((r) => ({
-				company_id: companyId,
-				management_record_id: managementRecordId,
-				filter_id: r.filterId,
-				confirm: r.confirm,
-			}));
+const vocResultsWithIds: IVOCResultRow[] = vocResults.map((r) => ({
+company_id: companyId,
+management_record_id: managementRecordId,
+filter_type: r.filterType,
+quantity: r.quantity,
+confirm: r.confirm,
+}));
 
 			if (vocResultsWithIds.length > 0) {
 				await createVocResults(vocResultsWithIds);
@@ -164,33 +163,28 @@ function AdminManagementRecordsEditVocPage() {
 		}
 	};
 
-	const columns: TableHeader[] = [
-		{
-			field: 'filter_type',
-			headerName: '필터 종류',
-			render: (value: VocFilterType) => VocFilterLabels[value],
-		},
-		{
-			field: 'quantity',
-			headerName: '개수',
-		},
-		{
-			field: '',
-			headerName: '확인',
-			render: (value, row) => {
-				return (
-					<Checkbox
-						label={''}
-						onClick={() => onClickFilterConfirm(row)}
-						checked={
-							vocResults?.find((res) => res.filterId === row.id)
-								?.confirm
-						}
-					/>
-				);
-			},
-		},
-	];
+const columns: TableHeader[] = [
+{
+field: 'filterType',
+headerName: '필터 종류',
+render: (value: VocFilterType) => VocFilterLabels[value],
+},
+{
+field: 'quantity',
+headerName: '개수',
+},
+{
+field: '',
+headerName: '확인',
+render: (value, row) => (
+<Checkbox
+label={''}
+onClick={() => onClickFilterConfirm(row as IVocResult)}
+checked={(row as IVocResult).confirm}
+/>
+),
+},
+];
 
 	return (
 		<div>
@@ -265,10 +259,7 @@ function AdminManagementRecordsEditVocPage() {
 									</Button>
 								</div>
 								<div className='w-full overflow-x-auto'>
-									<Table
-										columns={columns}
-										rows={vocFilters}
-									/>
+<Table columns={columns} rows={vocResults} />
 								</div>
 							</div>
 						</Card>

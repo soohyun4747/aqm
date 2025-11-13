@@ -6,7 +6,6 @@ import { toLocaleStringWithoutSec } from '@/src/utils/date';
 import { useEffect, useState } from 'react';
 import { fetchVocResultsByRecordId } from '@/src/utils/supabase/vocResults';
 import { Calendar } from '@/src/components/icons/Calendar';
-import { fetchVocFiltersByCompanyId } from '@/src/utils/supabase/vocFilters';
 import { usePathname } from 'next/navigation';
 import {
 	fetchManagementRecordById,
@@ -17,14 +16,10 @@ import {
 	VocFilterType,
 	defaultVocFilterType,
 } from '@/src/constants/vocFilters';
-import {
-	IVocFilter,
-	IVocResult,
-} from '@/src/pages/admin/managementRecords/edit/voc';
+import { IVocResult } from '@/src/pages/admin/managementRecords/edit/voc';
 
 function CompanyManagementRecordsEditVocPage() {
-	const [vocFilters, setVocFilters] = useState<IVocFilter[]>([]);
-	const [vocResults, setVocResults] = useState<IVocResult[]>([]);
+const [vocResults, setVocResults] = useState<IVocResult[]>([]);
 	// const [vocFilterType, setVocFilterType] =
 	//         useState<VocFilterType>(defaultVocFilterType);
 	// const [vocQuantity, setVocQuantity] = useState<number>(0);
@@ -47,8 +42,7 @@ function CompanyManagementRecordsEditVocPage() {
 			const recordInfo = await fetchManagementRecordById(recordId);
 			if (recordInfo) {
 				setManagementRecord(recordInfo);
-				getSetVocResults(recordInfo.id);
-				getSetVocFilter(recordInfo.company_id);
+getSetVocResults(recordInfo.id);
 			}
 		} catch (error) {
 			console.error(error);
@@ -56,30 +50,19 @@ function CompanyManagementRecordsEditVocPage() {
 		}
 	};
 
-	const getSetVocFilter = async (companyId: string) => {
-		try {
-			const data = await fetchVocFiltersByCompanyId(companyId);
-			setVocFilters((data as unknown as IVocFilter[]) ?? []);
-		} catch (error) {
-			setToastMessage({
-				status: 'error',
-				message: '데이터를 불러오는데 실패하였습니다',
-			});
-		}
-	};
-
-	const getSetVocResults = async (recordId: string) => {
+const getSetVocResults = async (recordId: string) => {
 		try {
 			const data = await fetchVocResultsByRecordId(recordId);
 
-			const mapped: IVocResult[] =
-				(data ?? []).map((row) => ({
-					id: row.id,
-					companyId: row.company_id,
-					managementRecordId: row.management_record_id,
-					filterId: row.filter_id,
-					confirm: row.confirm,
-				})) ?? [];
+const mapped: IVocResult[] =
+(data ?? []).map((row) => ({
+id: row.id,
+companyId: row.company_id,
+managementRecordId: row.management_record_id,
+filterType: row.filter_type as VocFilterType,
+quantity: row.quantity,
+confirm: row.confirm,
+})) ?? [];
 			setVocResults(mapped);
 		} catch (error) {
 			console.error(error);
@@ -90,25 +73,22 @@ function CompanyManagementRecordsEditVocPage() {
 		}
 	};
 
-	const columns: TableHeader[] = [
-		{
-			field: 'filter_type',
-			headerName: '필터 종류',
-			render: (value: VocFilterType) => VocFilterLabels[value],
-		},
-		{
-			field: 'quantity',
-			headerName: '개수',
-		},
-		{
-			field: '',
-			headerName: '교체 확인',
-			render: (value, row) =>
-				vocResults.find((res) => res.filterId === row.id)?.confirm
-					? '완료'
-					: '미완료',
-		},
-	];
+const columns: TableHeader[] = [
+{
+field: 'filterType',
+headerName: '필터 종류',
+render: (value: VocFilterType) => VocFilterLabels[value],
+},
+{
+field: 'quantity',
+headerName: '개수',
+},
+{
+field: '',
+headerName: '교체 확인',
+render: (value, row: IVocResult) => (row.confirm ? '완료' : '미완료'),
+},
+];
 
 	return (
 		<div>
@@ -198,10 +178,7 @@ function CompanyManagementRecordsEditVocPage() {
 									</p>
 								</div>
 								<div className='overflow-x-auto'>
-									<Table
-										columns={columns}
-										rows={vocFilters}
-									/>
+<Table columns={columns} rows={vocResults} />
 								</div>
 							</div>
 						</Card>
