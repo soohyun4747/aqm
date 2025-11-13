@@ -1,13 +1,14 @@
 // app/api/companies/new/route.ts
 import { supabaseAdmin } from '@/lib/supabase/admin';
-import { makePassword, sendAccountEmail } from '@/src/server/accountEmail';
-import { ICompany } from '@/src/stores/userStore';
+import { sendAccountCreatedAlimtalk } from '@/src/server/alimtalk';
 import { sanitizeFileName } from '@/src/utils/string';
 import { NextResponse } from 'next/server';
 import {
-	VocFilterType,
-	defaultVocFilterType,
+        VocFilterType,
+        defaultVocFilterType,
 } from '@/src/constants/vocFilters';
+
+const TEMP_PASSWORD = '12345678';
 
 export const runtime = 'nodejs'; // 파일 업로드 Buffer 사용을 위해 node 런타임
 // export const dynamic = 'force-dynamic'; // (선택) 캐시 끄기
@@ -308,12 +309,11 @@ export async function POST(req: Request) {
 	}
 
 	// ────────────────────────────────────────────────────────────────
-	// 5) Auth 계정 생성
-	//    - password: 로컬파트 + phone 마지막 4자리 (내부생성)
-	//    - 실제 로그인은 recovery 링크로 유도(비번설정)
-	// ────────────────────────────────────────────────────────────────
-	let authUserId: string | null = null;
-	const tempPassword = makePassword(email, phone);
+        // 5) Auth 계정 생성
+        //    - password: 고정 12345678
+        // ────────────────────────────────────────────────────────────────
+        let authUserId: string | null = null;
+        const tempPassword = TEMP_PASSWORD;
 
 	try {
 		const { data: userCreate, error: userErr } =
@@ -352,44 +352,16 @@ export async function POST(req: Request) {
 		);
 	}
 
-	// ────────────────────────────────────────────────────────────────
-	// 6) 비밀번호 설정 링크 생성 + 메일 발송
-	// ────────────────────────────────────────────────────────────────
-	const appLoginUrl = `${process.env.APP_BASE_URL}`;
-	try {
-		const { data: linkData, error: linkErr } =
-			await admin.auth.admin.generateLink({
-				type: 'recovery', // 최초 비밀번호 설정 유도
-				email,
-				options: {
-					redirectTo: `${process.env.APP_BASE_URL}/resetPassword`,
-				},
-			});
-		if (linkErr) throw linkErr;
-
-		const resetUrl =
-			(linkData as any)?.action_link ||
-			(linkData as any)?.properties?.action_link;
-
-		if (email && resetUrl) {
-			await sendAccountEmail({
-				to: email,
-				companyName: name,
-				loginUrl: appLoginUrl,
-				resetUrl,
-			});
-		}
-	} catch (e: unknown) {
-		if (e instanceof Error) {
-			console.error(e.message);
-			return NextResponse.json({ error: e.message }, { status: 500 });
-		}
-		console.error(e);
-		return NextResponse.json(
-			{ error: '알 수 없는 오류가 발생했습니다.' },
-			{ status: 500 }
-		);
-	}
+        try {
+                await sendAccountCreatedAlimtalk({
+                        companyName: name,
+                        email: email ?? '',
+                        password: tempPassword,
+                        kakaoPhones: kakaoPhones ?? [],
+                });
+        } catch (error) {
+                console.error('Failed to send account creation Alimtalk:', error);
+        }
 
 	return NextResponse.json({
 		ok: true,

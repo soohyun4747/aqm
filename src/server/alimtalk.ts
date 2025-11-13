@@ -1,4 +1,4 @@
-import { randomUUID, createHmac, randomBytes } from 'crypto';
+import { createHmac, randomBytes } from 'crypto';
 
 import { formatDateTimeString } from '@/src/utils/date';
 import {
@@ -29,10 +29,12 @@ interface SendScheduleAlimtalkArgs {
 const SOLAPI_ENDPOINT = 'https://api.solapi.com/messages/v4/send-many/detail';
 
 const templateCodeMap: Record<AlimtalkTemplateType, string | undefined> = {
-	requested: process.env.SOLAPI_TEMPLATE_REQUESTED,
-	confirmed: process.env.SOLAPI_TEMPLATE_CONFIRMED,
-	cancelled: process.env.SOLAPI_TEMPLATE_CANCELLED,
+        requested: process.env.SOLAPI_TEMPLATE_REQUESTED,
+        confirmed: process.env.SOLAPI_TEMPLATE_CONFIRMED,
+        cancelled: process.env.SOLAPI_TEMPLATE_CANCELLED,
 };
+
+const accountTemplateCode = process.env.SOLAPI_TEMPLATE_ACCOUNT_CREATED;
 
 function buildAuthorizationHeader(apiKey: string, apiSecret: string) {
 	// ✅ ISO8601 UTC (예: 2019-07-01T00:41:48Z)
@@ -67,9 +69,9 @@ function sanitizePhones(phones: string[]): string[] {
 }
 
 export async function sendScheduleAlimtalk({
-	type,
-	schedule,
-	kakaoPhones,
+        type,
+        schedule,
+        kakaoPhones,
 }: SendScheduleAlimtalkArgs) {
 	const senderKey = process.env.SOLAPI_KAKAO_PFID;
 	if (!senderKey) {
@@ -151,5 +153,83 @@ export async function sendScheduleAlimtalk({
 		}
 	} catch (error) {
 		console.error('[solapi] Network error while sending Alimtalk:', error);
-	}
+        }
+}
+
+interface AccountAlimtalkArgs {
+        companyName: string;
+        email: string;
+        password: string;
+        kakaoPhones: string[];
+}
+
+export async function sendAccountCreatedAlimtalk({
+        companyName,
+        email,
+        password,
+        kakaoPhones,
+}: AccountAlimtalkArgs) {
+        const senderKey = process.env.SOLAPI_KAKAO_PFID;
+        if (!senderKey) {
+            console.warn(
+                    '[solapi] SOLAPI_KAKAO_PFID is not configured. Skip sending account notification.'
+            );
+            return;
+        }
+
+        if (!accountTemplateCode) {
+                console.warn('[solapi] SOLAPI_TEMPLATE_ACCOUNT_CREATED is not configured.');
+                return;
+        }
+
+        const sanitizedPhones = sanitizePhones(kakaoPhones ?? []);
+        if (!sanitizedPhones.length) {
+                console.warn('[solapi] No Kakao phone numbers provided for account notification.');
+                return;
+        }
+
+        const apiKey = process.env.SOLAPI_API_KEY;
+        const apiSecret = process.env.SOLAPI_API_SECRET;
+
+        if (!apiKey || !apiSecret) {
+                console.warn('[solapi] API credentials are not configured.');
+                return;
+        }
+
+        const authorization = buildAuthorizationHeader(apiKey, apiSecret);
+        const defaultSender = process.env.SOLAPI_DEFAULT_SENDER;
+
+        const messages = sanitizedPhones.map((to) => ({
+                to,
+                kakaoOptions: {
+                        pfId: senderKey,
+                        templateId: accountTemplateCode,
+                        variables: {
+                                '#{companyName}': companyName ?? '',
+                                '#{email}': email ?? '',
+                                '#{password}': password ?? '',
+                        },
+                },
+                ...(defaultSender ? { from: defaultSender } : {}),
+        }));
+
+        try {
+                const response = await fetch(SOLAPI_ENDPOINT, {
+                        method: 'POST',
+                        headers: {
+                                'Content-Type': 'application/json',
+                                Authorization: authorization,
+                        },
+                        body: JSON.stringify({ messages }),
+                });
+
+                if (!response.ok) {
+                        const errorText = await response.text();
+                        console.error(
+                                `[solapi] Failed to send account Alimtalk (status: ${response.status}): ${errorText}`
+                        );
+                }
+        } catch (error) {
+                console.error('[solapi] Network error while sending account Alimtalk:', error);
+        }
 }
