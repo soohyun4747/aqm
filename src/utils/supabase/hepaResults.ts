@@ -1,11 +1,15 @@
 import { supabaseClient } from '@/lib/supabase/client';
-import { IHEPAResult } from '@/src/pages/admin/managementRecords/edit/hepa/[id]';
 
 export interface IHEPAResultRow {
-	id?: string;
-	company_id: string;
-	filter_id: string;
-	confirm: boolean;
+id?: string;
+company_id: string;
+management_record_id: string;
+filter_type: string;
+width: number;
+height: number;
+depth: number;
+quantity: number;
+confirm: boolean;
 }
 
 export async function createHepaResults(rows: IHEPAResultRow[]) {
@@ -29,12 +33,14 @@ export async function updateHepaResultsViaRpc(rows: IHEPAResultRow[]) {
 }
 
 export async function fetchHepaResultsByRecordId(recordId: string) {
-	const supabase = supabaseClient();
+const supabase = supabaseClient();
 
-	const { data, error } = await supabase
-		.from('hepa_results')
-		.select('id, company_id, management_record_id, filter_id, confirm')
-		.eq('management_record_id', recordId);
+const { data, error } = await supabase
+.from('hepa_results')
+.select(
+'id, company_id, management_record_id, filter_type, width, height, depth, quantity, confirm'
+)
+.eq('management_record_id', recordId);
 
 	if (error) throw error;
 
