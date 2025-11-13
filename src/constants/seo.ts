@@ -2,25 +2,25 @@ import type { DefaultSeoProps } from 'next-seo';
 
 export const SITE_URL = process.env.APP_BASE_URL ?? 'https://cncaqm.com';
 
-const defaultImage = `${SITE_URL}/logo.svg`;
+const defaultImage = `${SITE_URL}/logo.png`;
 
 export const defaultSEOConfig: DefaultSeoProps = {
         title: 'AQM Square | AQM 검사 및 필터 교체 관리 웹',
         description:
-                'AQM Square로 병원 AQM 검사와 필터 교체 관리 서비스를 받으세요',
+                'AQM Square로 AQM 검사와 필터 교체 관리 서비스를 받으세요',
         canonical: SITE_URL,
         openGraph: {
                 url: SITE_URL,
                 title: 'AQM Square | AQM 검사 및 필터 교체 관리 웹',
                 description:
-                        'AQM Square로 병원 AQM 검사와 필터 교체 관리 서비스를 받으세요',
+                        'AQM Square로 AQM 검사와 필터 교체 관리 서비스를 받으세요',
                 siteName: 'AQM Square',
                 type: 'website',
                 images: [
                         {
                                 url: defaultImage,
-                                width: 1200,
-                                height: 630,
+                                width: 700,
+                                height: 154.8,
                                 alt: 'AQM 로고',
                         },
                 ],
