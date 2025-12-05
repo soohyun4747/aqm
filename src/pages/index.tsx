@@ -155,7 +155,7 @@ export default function LoginPage() {
 									}
 								/>
 								{err && (
-									<p className='text-red-500 body-sm-regular'>
+									<p className='text-Red-500 body-sm-regular'>
 										{err}
 									</p>
 								)}

@@ -27,7 +27,7 @@ export async function fetchManagementRecords(page: number, search?: string) {
 	let query = supabase
 		.from('management_records_view')
 		.select('*', { count: 'exact' })
-		.order('date', { ascending: false })
+		.order('created_at', { ascending: false })
 		.range(from, to);
 
 	if (search && search.trim() !== '') {

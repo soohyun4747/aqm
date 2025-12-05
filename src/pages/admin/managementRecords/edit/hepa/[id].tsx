@@ -14,12 +14,12 @@ import { HepaFilterNames, HepaFilterType } from '../../../companies/edit/[id]';
 import { Checkbox } from '@/src/components/Checkbox';
 import { fetchHepaFiltersWithCompanyId } from '@/src/utils/supabase/hepaFilters';
 import {
-fetchManagementRecordById,
-updateManagementRecord,
+	fetchManagementRecordById,
+	updateManagementRecord,
 } from '@/src/utils/supabase/managementRecord';
 import {
-fetchHepaResultsByRecordId,
-updateHepaResultsViaRpc,
+	fetchHepaResultsByRecordId,
+	updateHepaResultsViaRpc,
 } from '@/src/utils/supabase/hepaResults';
 import { fetchCompanyOptions } from '@/src/utils/supabase/company';
 import { useRouter } from 'next/router';
@@ -27,19 +27,19 @@ import { DropdownSearchable } from '@/src/components/DropdownSearchable';
 import { usePathname } from 'next/navigation';
 
 export interface IHEPAResult {
-id?: string;
-companyId: string;
-managementRecordId?: string;
-filterType: HepaFilterType;
-width: number;
-height: number;
-depth: number;
-quantity: number;
-confirm: boolean;
+	id?: string;
+	companyId: string;
+	managementRecordId?: string;
+	filterType: HepaFilterType;
+	width: number;
+	height: number;
+	depth: number;
+	quantity: number;
+	confirm: boolean;
 }
 
 function AdminManagementRecordsEditHepaPage() {
-const [hepaResults, setHepaResults] = useState<IHEPAResult[]>([]);
+	const [hepaResults, setHepaResults] = useState<IHEPAResult[]>([]);
 
 	const [date, setDate] = useState<Date>(today);
 	const [companyId, setCompanyId] = useState('');
@@ -73,9 +73,9 @@ const [hepaResults, setHepaResults] = useState<IHEPAResult[]>([]);
 				setCompanyId(recordInfo.company_id);
 				setManager(recordInfo.manager_name ?? '');
 
-setComment(recordInfo.comment ?? '');
+				setComment(recordInfo.comment ?? '');
 
-getSetHepaResults(recordInfo.id);
+				getSetHepaResults(recordInfo.id);
 			}
 		} catch (error) {
 			console.error(error);
@@ -83,32 +83,32 @@ getSetHepaResults(recordInfo.id);
 		}
 	};
 
-const onSelectCompany = (companyId: string) => {
-setCompanyId(companyId);
-if (companyId) {
-getSetHepaFiltersandInitResults(companyId);
-} else {
-setHepaResults([]);
-}
-};
+	const onSelectCompany = (companyId: string) => {
+		setCompanyId(companyId);
+		if (companyId) {
+			getSetHepaFiltersandInitResults(companyId);
+		} else {
+			setHepaResults([]);
+		}
+	};
 
-const getSetHepaResults = async (recordId: string) => {
-try {
-const data = await fetchHepaResultsByRecordId(recordId);
+	const getSetHepaResults = async (recordId: string) => {
+		try {
+			const data = await fetchHepaResultsByRecordId(recordId);
 
-const mapped: IHEPAResult[] =
-(data ?? []).map((row) => ({
-id: row.id,
-companyId: row.company_id,
-managementRecordId: row.management_record_id,
-filterType: row.filter_type as HepaFilterType,
-width: row.width,
-height: row.height,
-depth: row.depth,
-quantity: row.quantity,
-confirm: row.confirm,
-})) ?? [];
-setHepaResults(mapped);
+			const mapped: IHEPAResult[] =
+				(data ?? []).map((row) => ({
+					id: row.id,
+					companyId: row.company_id,
+					managementRecordId: row.management_record_id,
+					filterType: row.filter_type as HepaFilterType,
+					width: row.width,
+					height: row.height,
+					depth: row.depth,
+					quantity: row.quantity,
+					confirm: row.confirm,
+				})) ?? [];
+			setHepaResults(mapped);
 		} catch (error) {
 			console.error(error);
 			setToastMessage({
@@ -123,40 +123,40 @@ setHepaResults(mapped);
 		setCompanyOptions(options);
 	};
 
-const getSetHepaFiltersandInitResults = async (companyId: string) => {
-try {
-const data = await fetchHepaFiltersWithCompanyId(companyId);
-setHepaResults(
-(data ?? []).map((filter) => ({
-companyId,
-filterType: filter.filter_type as HepaFilterType,
-width: filter.width,
-height: filter.height,
-depth: filter.depth,
-quantity: filter.quantity,
-confirm: false,
-}))
-);
-} catch (error) {
-setToastMessage({
-status: 'error',
+	const getSetHepaFiltersandInitResults = async (companyId: string) => {
+		try {
+			const data = await fetchHepaFiltersWithCompanyId(companyId);
+			setHepaResults(
+				(data ?? []).map((filter) => ({
+					companyId,
+					filterType: filter.filter_type as HepaFilterType,
+					width: filter.width,
+					height: filter.height,
+					depth: filter.depth,
+					quantity: filter.quantity,
+					confirm: false,
+				}))
+			);
+		} catch (error) {
+			setToastMessage({
+				status: 'error',
 				message: '데이터를 불러오는데 실패하였습니다',
 			});
 		}
 	};
 
-const onClickFilterConfirm = (row: IHEPAResult) => {
-setHepaResults((prev) =>
-prev.map((res) =>
-res === row
-? {
-...res,
-confirm: !res.confirm,
-}
-: res
-)
-);
-};
+	const onClickFilterConfirm = (row: IHEPAResult) => {
+		setHepaResults((prev) =>
+			prev.map((res) =>
+				res === row
+					? {
+							...res,
+							confirm: !res.confirm,
+						}
+					: res
+			)
+		);
+	};
 
 	const onClickAllCheck = () => {
 		setHepaResults((prev) => {
@@ -200,17 +200,17 @@ confirm: !res.confirm,
 			);
 
 			// 2) hepa_results update
-const hepaResultsWithIds = hepaResults.map((r) => ({
-id: r.id,
-company_id: companyId,
-management_record_id: recordId,
-filter_type: r.filterType,
-width: r.width,
-height: r.height,
-depth: r.depth,
-quantity: r.quantity,
-confirm: r.confirm,
-}));
+			const hepaResultsWithIds = hepaResults.map((r) => ({
+				id: r.id,
+				company_id: companyId,
+				management_record_id: recordId,
+				filter_type: r.filterType,
+				width: r.width,
+				height: r.height,
+				depth: r.depth,
+				quantity: r.quantity,
+				confirm: r.confirm,
+			}));
 			if (hepaResultsWithIds.length > 0) {
 				await updateHepaResultsViaRpc(hepaResultsWithIds);
 			}
@@ -337,7 +337,10 @@ confirm: r.confirm,
 									</Button>
 								</div>
 								<div className='w-full overflow-x-auto'>
-<Table columns={columns} rows={hepaResults} />
+									<Table
+										columns={columns}
+										rows={hepaResults}
+									/>
 								</div>
 							</div>
 						</Card>

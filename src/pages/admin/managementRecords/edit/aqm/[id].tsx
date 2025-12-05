@@ -19,6 +19,7 @@ import {
 import {
 	fetchManagementRecordById,
 	IManagementRecordRow,
+	updateManagementRecord,
 } from '@/src/utils/supabase/managementRecord';
 import { useRouter } from 'next/router';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
@@ -198,7 +199,15 @@ function AdminManagementRecordsEditAQMPage() {
 		}
 		setSaving(true);
 		try {
-			// management_records 메타 업데이트가 필요하면 별도 update 함수 작성
+			await updateManagementRecord(
+				aqmResult.managementRecordId,
+				companyId,
+				date,
+				manager,
+				comment,
+				'aqm'
+			);
+
 			await upsertAqmResult({
 				companyId,
 				recordId: aqmResult.managementRecordId,

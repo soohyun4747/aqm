@@ -27,14 +27,11 @@ import {
 import { fetchVocFiltersByCompanyId } from '@/src/utils/supabase/vocFilters';
 import { DropdownSearchable } from '@/src/components/DropdownSearchable';
 import { usePathname } from 'next/navigation';
-import {
-	VocFilterLabels,
-	VocFilterType,
-} from '@/src/constants/vocFilters';
+import { VocFilterLabels, VocFilterType } from '@/src/constants/vocFilters';
 import { IVocResult } from '.';
 
 function AdminManagementRecordsEditVocPage() {
-const [vocResults, setVocResults] = useState<IVocResult[]>([]);
+	const [vocResults, setVocResults] = useState<IVocResult[]>([]);
 
 	const [date, setDate] = useState<Date>(today);
 	const [companyId, setCompanyId] = useState('');
@@ -67,9 +64,9 @@ const [vocResults, setVocResults] = useState<IVocResult[]>([]);
 				setCompanyId(recordInfo.company_id);
 				setManager(recordInfo.manager_name ?? '');
 
-setComment(recordInfo.comment ?? '');
+				setComment(recordInfo.comment ?? '');
 
-getSetVocResults(recordInfo.id);
+				getSetVocResults(recordInfo.id);
 			}
 		} catch (error) {
 			console.error(error);
@@ -137,9 +134,9 @@ getSetVocResults(recordInfo.id);
 			prev.map((res) =>
 				res === row
 					? {
-						...res,
-						confirm: !res.confirm,
-					}
+							...res,
+							confirm: !res.confirm,
+						}
 					: res
 			)
 		);
@@ -182,13 +179,13 @@ getSetVocResults(recordInfo.id);
 			const managementRecordId = newManagementRecord.id;
 
 			// 2) voc_results 일괄 insert (현재 상태 전체 저장)
-const vocResultsWithIds: IVOCResultRow[] = vocResults.map((r) => ({
-company_id: companyId,
-management_record_id: managementRecordId,
-filter_type: r.filterType,
-quantity: r.quantity,
-confirm: r.confirm,
-}));
+			const vocResultsWithIds: IVOCResultRow[] = vocResults.map((r) => ({
+				company_id: companyId,
+				management_record_id: managementRecordId,
+				filter_type: r.filterType,
+				quantity: r.quantity,
+				confirm: r.confirm,
+			}));
 
 			if (vocResultsWithIds.length > 0) {
 				await createVocResults(vocResultsWithIds);
@@ -235,14 +232,14 @@ confirm: r.confirm,
 			);
 
 			// 2) voc_results update
-const vocResultsWithIds = vocResults.map((r) => ({
-id: r.id,
-company_id: companyId,
-management_record_id: recordId,
-filter_type: r.filterType,
-quantity: r.quantity,
-confirm: r.confirm,
-}));
+			const vocResultsWithIds = vocResults.map((r) => ({
+				id: r.id,
+				company_id: companyId,
+				management_record_id: recordId,
+				filter_type: r.filterType,
+				quantity: r.quantity,
+				confirm: r.confirm,
+			}));
 			if (vocResultsWithIds.length > 0) {
 				await updateVocResults(vocResultsWithIds);
 			}
@@ -259,28 +256,28 @@ confirm: r.confirm,
 		}
 	};
 
-const columns: TableHeader[] = [
-{
-field: 'filterType',
-headerName: '필터 종류',
-render: (value: VocFilterType) => VocFilterLabels[value],
-},
-{
-field: 'quantity',
-headerName: '개수',
-},
-{
-field: '',
-headerName: '확인',
-render: (value, row) => (
-<Checkbox
-label={''}
-onClick={() => onClickFilterConfirm(row as IVocResult)}
-checked={(row as IVocResult).confirm}
-/>
-),
-},
-];
+	const columns: TableHeader[] = [
+		{
+			field: 'filterType',
+			headerName: '필터 종류',
+			render: (value: VocFilterType) => VocFilterLabels[value],
+		},
+		{
+			field: 'quantity',
+			headerName: '개수',
+		},
+		{
+			field: '',
+			headerName: '확인',
+			render: (value, row) => (
+				<Checkbox
+					label={''}
+					onClick={() => onClickFilterConfirm(row as IVocResult)}
+					checked={(row as IVocResult).confirm}
+				/>
+			),
+		},
+	];
 
 	return (
 		<div>
@@ -355,7 +352,10 @@ checked={(row as IVocResult).confirm}
 									</Button>
 								</div>
 								<div className='w-full overflow-x-auto'>
-<Table columns={columns} rows={vocResults} />
+									<Table
+										columns={columns}
+										rows={vocResults}
+									/>
 								</div>
 							</div>
 						</Card>

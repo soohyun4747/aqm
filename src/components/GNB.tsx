@@ -20,7 +20,7 @@ const adminPathTitles: { [key: string]: string } = {
 const companyPathTitles: { [key: string]: string } = {
 	'/calendar': '캘린더',
 	'/managementRecords': '관리기록',
-	'/profile': '프로필'
+	'/profile': '프로필',
 };
 
 const menuId = 'menu';
@@ -174,6 +174,14 @@ export function GNB() {
 									)}
 								</>
 							))}
+							<div className='h-[1px] self-stretch bg-Gray-100' />
+							<div
+								className='px-4 py-3 items-center'
+								onClick={logout}>
+								<p className='body-md-medium text-Gray-900'>
+									로그아웃
+								</p>
+							</div>
 						</div>
 					)}
 				</div>
